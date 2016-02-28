@@ -19,3 +19,5 @@ Data | Co?
 29 IV 2016 | omówienie postępów prac projektowych i ustalenie wymagań końcowych
 3 VI 2016 | przekazanie wykładowcy wersji beta projektów do wstępnej oceny
 15 VI 2016 (środa) | kolokwium (1 godz. zegarowa) + prezentacja (publiczna obrona) projektów
+
+[Terminarz](https://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html) i [strona domowa](https://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html) Wykładowcy.
