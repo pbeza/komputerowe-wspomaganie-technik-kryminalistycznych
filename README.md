@@ -1,8 +1,10 @@
 # Komputerowe wspomaganie technik kryminalistycznych - projekt zespołowy (sem. letni 2015/2016) #
 
-Projekt zespołowy składa się z 2 części, tj.:
-1. zrealizowania projektu (aplikacji),
-2. napisania dokumentacji ww. projektu.
+Projekt zespołowy składa się z 3 części, tj. z:
+
+1. napisania aplikacji,
+1. napisania dokumentacji ww. aplikacji,
+1. prezentacji.
 
 ### Temat projektu ###
 
@@ -37,10 +39,13 @@ Data | Co?
 - [Face Recognition (FBI)](https://www.fbi.gov/about-us/cjis/fingerprints_biometrics/biometric-center-of-excellence/files/face-recognition.pdf),
 - [Face Recognition in OpenCV](http://docs.opencv.org/2.4/modules/contrib/doc/facerec/facerec_api.html).
 
-### Użyte technologie ###
+### Użyte technologie i oprogramowanie ###
 
 Prawdopodobnie:
-- Java,
-- OpenCV.
+- [Java](https://www.java.com/),
+- [OpenCV](http://opencv.org/),
+- [Eclipse](https://eclipse.org/),
+- [Git](https://git-scm.com/),
+- [LaTeX](https://www.latex-project.org/) (do dokumentacji, [AFAIR](https://en.wiktionary.org/wiki/AFAIR) obowiązkowy).
 
 Uzasadnienie: [OpenCV](http://opencv.org/), który ma prawdopodobnie zaimplementowaną identyfikację twarzy przy użyciu *eigenfaces*, jest wspierany w *C++* i *Javie*. Nie istnieją oficjalne porty na *C#*, a istniejące [działają gorzej](http://stackoverflow.com/questions/85569/net-dotnet-wrappers-for-opencv) od oficjalnego [OpenCV](http://opencv.org/).
