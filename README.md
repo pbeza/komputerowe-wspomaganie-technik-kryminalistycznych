@@ -21,3 +21,12 @@ Data | Co?
 15 VI 2016 (środa) | kolokwium (1 godz. zegarowa) + prezentacja (publiczna obrona) projektów
 
 [Terminarz](https://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html) i [strona domowa](https://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html) Wykładowcy.
+
+### Linki ###
+- [Strona przedmiotu](https://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html)
+- [The Eigenfaces method - Face Recognition and Biometric Systems](http://sun.aei.polsl.pl/~mkawulok/stud/fr/lect/07.pdf) (Politechnika Śląska)
+- [Principal component analysis (PCA) - Wikipedia](https://en.wikipedia.org/wiki/Principal_component_analysis)
+- [Eigenface - Wikipedia](https://en.wikipedia.org/wiki/Eigenface)
+- [Eigenfaces (YouTube)](https://www.youtube.com/watch?v=_lY74pXWlS8)
+- [Face Recognition (FBI)](https://www.fbi.gov/about-us/cjis/fingerprints_biometrics/biometric-center-of-excellence/files/face-recognition.pdf)
+- [Face Recognition in OpenCV](http://docs.opencv.org/2.4/modules/contrib/doc/facerec/facerec_api.html)
