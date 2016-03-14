@@ -39,7 +39,7 @@ Data | Co?
 - [Face Recognition (FBI)](https://www.fbi.gov/about-us/cjis/fingerprints_biometrics/biometric-center-of-excellence/files/face-recognition.pdf),
 - [Face Recognition in OpenCV](http://docs.opencv.org/2.4/modules/contrib/doc/facerec/facerec_api.html).
 
-### Użyte technologie i oprogramowanie ###
+### Użyte technologie ###
 
 Prawdopodobnie:
 - [Java](https://www.java.com/),
@@ -48,4 +48,11 @@ Prawdopodobnie:
 - [Git](https://git-scm.com/),
 - [LaTeX](https://www.latex-project.org/) (do dokumentacji, [AFAIR](https://en.wiktionary.org/wiki/AFAIR) obowiązkowy).
 
+Przydatne pluginy do Eclipse'a:
+- [Window Builder](http://www.eclipse.org/windowbuilder/) - [polecany](http://stackoverflow.com/questions/6533243/create-gui-using-eclipse-java) do tworzenia GUI w [Swingu](https://en.wikipedia.org/wiki/Swing_(Java))
+
 Uzasadnienie: [OpenCV](http://opencv.org/), który ma prawdopodobnie zaimplementowaną identyfikację twarzy przy użyciu *eigenfaces*, jest wspierany w *C++* i *Javie*. Nie istnieją oficjalne porty na *C#*, a istniejące [działają gorzej](http://stackoverflow.com/questions/85569/net-dotnet-wrappers-for-opencv) od oficjalnego [OpenCV](http://opencv.org/).
+
+### Inne ###
+
+Przed wrzuceniem kodu do repozytorium [autoformatujemy](http://stackoverflow.com/questions/15655126/how-to-auto-format-code-in-eclipse) kod wciskając <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> lub ustawiając opcję: *Window->Preferences->Java->Editor->SaveActions->Format source code*, aby kod każdorazowo sam się formatował przy zapisywaniu stanu pliku.
