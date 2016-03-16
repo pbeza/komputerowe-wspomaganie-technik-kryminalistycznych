@@ -1,17 +1,22 @@
 package frontend;
 
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -19,19 +24,22 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class MainWindow {
 
 	private JFrame frame;
-	private static final int WIDTH = 1024, HEIGHT = 768;
-	private static final String TITLE = "Eigen faces";
-	private File[] images;
+	final private static int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100;
+	final private static String TITLE = "Eigen faces";
+	final private static String FACES_DATABASE_PATH = "../faces";
+	final DefaultListModel<ImageListCell> facesListModel = new DefaultListModel<ImageListCell>();
+	JList<ImageListCell> listAllFaces;
+	ImageDetailsPanel detailsPanel;
 
-	/**
-	 * Launch the application.
-	 */
 	public static void main(String[] args) {
 		System.out.println("Starting main thread.");
 		EventQueue.invokeLater(() -> {
@@ -48,30 +56,35 @@ public class MainWindow {
 	}
 
 	/**
-	 * Create the application.
-	 *
 	 * @wbp.parser.entryPoint
 	 */
 	public MainWindow() {
 		initialize();
 	}
 
-	/**
-	 * Initialize the contents of the frame.
-	 */
 	private void initialize() {
+
+		// Main window
+
 		frame = new JFrame();
 		frame.setSize(WIDTH, HEIGHT);
 		frame.setTitle(TITLE);
 		frame.setLocationRelativeTo(null); // center window on screen
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setMinimumSize(new Dimension(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT));
+
+		// Menu bar
 
 		final JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
 
+		// File menu item
+
 		final JMenu mnfile = new JMenu("File");
 		mnfile.setMnemonic('F');
 		menuBar.add(mnfile);
+
+		// Open menu item
 
 		final JMenuItem mntmOpen = new JMenuItem(new AbstractAction("Open") {
 
@@ -83,17 +96,15 @@ public class MainWindow {
 				c.setAcceptAllFileFilterUsed(false);
 				final int result = c.showOpenDialog(frame);
 				if (result == JFileChooser.APPROVE_OPTION) {
-					images = c.getSelectedFiles();
-					System.out.println("Loaded files' names:");
-					for (final File f : images) {
-						System.out.println(f);
-					}
+					addFacesToView(c.getSelectedFiles());
 				}
 			}
 		});
 		mntmOpen.setIcon(new ImageIcon(MainWindow.class.getResource("/img/open.png")));
 		mntmOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
 		mnfile.add(mntmOpen);
+
+		// Save menu item
 
 		final JMenuItem mntmSave = new JMenuItem(new AbstractAction("Save") {
 
@@ -110,6 +121,24 @@ public class MainWindow {
 		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
 		mnfile.add(mntmSave);
 
+		// Clear all faces menu item
+
+		final JMenuItem mntmClearAllFaces = new JMenuItem(new AbstractAction("Clear all") {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				facesListModel.clear();
+				System.out.println("All faces removed from database");
+			}
+		});
+		mntmClearAllFaces.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_MASK));
+		mntmClearAllFaces.setIcon(new ImageIcon(MainWindow.class.getResource("/img/remove.png")));
+		mntmSave.setIcon(new ImageIcon(MainWindow.class.getResource("/img/save.png")));
+		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_MASK));
+		mnfile.add(mntmClearAllFaces);
+
+		// Exit menu item
+
 		final JMenuItem mntmExit = new JMenuItem(new AbstractAction("Exit") {
 
 			@Override
@@ -121,16 +150,103 @@ public class MainWindow {
 		mntmExit.setIcon(new ImageIcon(MainWindow.class.getResource("/img/exit.png")));
 		mnfile.add(mntmExit);
 
+		// Tabs pane
+
 		final JTabbedPane tabbedPane = new JTabbedPane(SwingConstants.TOP);
 		frame.getContentPane().add(tabbedPane);
 
-		final JScrollPane scrollPaneAllFaces = new JScrollPane();
+		// All faces tab
+
+		final JSplitPane splitPaneAllFaces = new JSplitPane();
+		splitPaneAllFaces.setResizeWeight(0.75);
 		tabbedPane.addTab("All faces", new ImageIcon(MainWindow.class.getResource("/img/people.png")),
-				scrollPaneAllFaces, "List of all faces stored in database");
+				splitPaneAllFaces, "List of all faces stored in database");
+
+		// Load predefined faces database
+
+		try {
+			System.out.println(System.getProperty("user.dir"));
+			loadPredefinedFacesDatabase();
+		} catch (final IOException e) {
+			System.out.println(
+					"Loading predefined faces database has failed (it's not critical). Details: " + e.getMessage());
+		}
+
+		// Create JList with all faces stored in database for 'All faces' tab
+
+		listAllFaces = new JList<ImageListCell>(facesListModel);
+		listAllFaces.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		listAllFaces.setCellRenderer(new ImageListCellRenderer());
+		listAllFaces.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+		listAllFaces.setVisibleRowCount(0);
+		listAllFaces.addListSelectionListener(new AllFacesListSelectionListener());
+
+		// Scroll pane in left subtab in 'All faces' tab
+
+		final JScrollPane scrollPaneAllFaces = new JScrollPane(listAllFaces);
+		splitPaneAllFaces.setLeftComponent(scrollPaneAllFaces);
+
+		// Details in right subtab in 'All faces' tab
+
+		final JSplitPane splitPaneDetails = new JSplitPane();
+		splitPaneDetails.setResizeWeight(0.75);
+		splitPaneDetails.setOrientation(JSplitPane.VERTICAL_SPLIT);
+		splitPaneAllFaces.setRightComponent(splitPaneDetails);
+
+		// Add details pane to bottm (right) panel
+
+		detailsPanel = new ImageDetailsPanel();
+		splitPaneDetails.setRightComponent(detailsPanel);
+
+		// Create 'Find face' tab
 
 		final JSplitPane splitPaneFindFace = new JSplitPane();
+		splitPaneFindFace.setResizeWeight(0.75);
 		tabbedPane.addTab("Find face", new ImageIcon(MainWindow.class.getResource("/img/find.png")), splitPaneFindFace,
 				"Find face in database");
 	}
 
+	private void loadPredefinedFacesDatabase() throws IOException {
+		final File dir = new File(FACES_DATABASE_PATH);
+		final File[] dirListing = dir.listFiles();
+		if (dirListing == null) {
+			System.out.println("Cannot load database from " + FACES_DATABASE_PATH);
+			return;
+		}
+		for (final File f : dirListing) {
+			final BufferedImage bufImg = ImageIO.read(f);
+			final ImageListCell imgListCell = new ImageListCell(bufImg, f.getName(), f.getAbsolutePath());
+			facesListModel.addElement(imgListCell);
+			System.out.println(f.getAbsolutePath() + " successfully added");
+		}
+	}
+
+	protected void addFacesToView(File[] images) {
+		BufferedImage bufImg = null;
+		System.out.println("Loaded files' names:");
+		for (final File img : images) {
+			try {
+				bufImg = ImageIO.read(img);
+			} catch (final IOException e) {
+				System.out.println("Error during reading " + img.getPath() + " image! Skipping. (Details: "
+						+ e.getMessage() + ").");
+			}
+			final String path = img.getAbsolutePath();
+			facesListModel.addElement(new ImageListCell(bufImg, img.getName(), path));
+			System.out.println(path);
+		}
+	}
+
+	protected class AllFacesListSelectionListener implements ListSelectionListener {
+
+		@Override
+		public void valueChanged(ListSelectionEvent e) {
+			System.out.print("Selected face has changed: ");
+			if (!listAllFaces.isSelectionEmpty()) {
+				final ImageListCell c = listAllFaces.getSelectedValue();
+				System.out.println(c.getText());
+				detailsPanel.setDetails(c);
+			}
+		}
+	}
 }
