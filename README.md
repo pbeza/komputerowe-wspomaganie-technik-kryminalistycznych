@@ -41,7 +41,6 @@ Data | Co?
 
 ### Użyte technologie ###
 
-Prawdopodobnie:
 - [Java](https://www.java.com/),
 - [OpenCV](http://opencv.org/),
 - [Eclipse](https://eclipse.org/),
@@ -55,4 +54,5 @@ Uzasadnienie: [OpenCV](http://opencv.org/), który ma prawdopodobnie zaimplement
 
 ### Inne ###
 
-Przed wrzuceniem kodu do repozytorium [autoformatujemy](http://stackoverflow.com/questions/15655126/how-to-auto-format-code-in-eclipse) kod wciskając <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> lub ustawiając opcję: *Window->Preferences->Java->Editor->SaveActions->Format source code*, aby kod każdorazowo sam się formatował przy zapisywaniu stanu pliku.
+- Przed wrzuceniem kodu do repozytorium [autoformatujemy](http://stackoverflow.com/questions/15655126/how-to-auto-format-code-in-eclipse) kod wciskając <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> lub ustawiając opcję: *Window->Preferences->Java->Editor->SaveActions->Format source code*, aby kod każdorazowo sam się formatował przy zapisywaniu stanu pliku.
+- [Jak zaimportować projekt do Eclipse'a](http://stackoverflow.com/questions/2636201/how-to-create-a-project-from-existing-source-in-eclipse-and-then-find-it)?
