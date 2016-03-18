@@ -33,12 +33,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class MainWindow {
 
 	private JFrame frame;
-	final private static int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100;
-	final private static String TITLE = "Eigen faces";
-	final private static String FACES_DATABASE_PATH = "../faces";
-	final DefaultListModel<ImageListCell> facesListModel = new DefaultListModel<ImageListCell>();
-	JList<ImageListCell> listAllFaces;
-	ImageDetailsPanel detailsPanel;
+	private final static int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100;
+	private final static String TITLE = "Eigen faces";
+	private final static String FACES_DATABASE_PATH = "../faces";
+	private final DefaultListModel<ImageListCell> facesListModel = new DefaultListModel<ImageListCell>();
+	private JList<ImageListCell> listAllFaces;
+	private ZoomableImagePanel previewPane;
+	private ImageDetailsPanel detailsPanel;
 
 	public static void main(String[] args) {
 		System.out.println("Starting main thread.");
@@ -102,6 +103,7 @@ public class MainWindow {
 		});
 		mntmOpen.setIcon(new ImageIcon(MainWindow.class.getResource("/img/open.png")));
 		mntmOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
+		mntmOpen.setToolTipText("Open image files and add them to faces database");
 		mnfile.add(mntmOpen);
 
 		// Save menu item
@@ -119,6 +121,9 @@ public class MainWindow {
 		});
 		mntmSave.setIcon(new ImageIcon(MainWindow.class.getResource("/img/save.png")));
 		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
+		mntmSave.setToolTipText("Save report in text file"); // TODO not
+																// implemented
+																// yet
 		mnfile.add(mntmSave);
 
 		// Clear all faces menu item
@@ -133,8 +138,7 @@ public class MainWindow {
 		});
 		mntmClearAllFaces.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_MASK));
 		mntmClearAllFaces.setIcon(new ImageIcon(MainWindow.class.getResource("/img/remove.png")));
-		mntmSave.setIcon(new ImageIcon(MainWindow.class.getResource("/img/save.png")));
-		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_MASK));
+		mntmClearAllFaces.setToolTipText("Remove all images from faces database");
 		mnfile.add(mntmClearAllFaces);
 
 		// Exit menu item
@@ -148,6 +152,7 @@ public class MainWindow {
 		});
 		mntmExit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
 		mntmExit.setIcon(new ImageIcon(MainWindow.class.getResource("/img/exit.png")));
+		mntmExit.setToolTipText("Close the application");
 		mnfile.add(mntmExit);
 
 		// Tabs pane
@@ -165,7 +170,6 @@ public class MainWindow {
 		// Load predefined faces database
 
 		try {
-			System.out.println(System.getProperty("user.dir"));
 			loadPredefinedFacesDatabase();
 		} catch (final IOException e) {
 			System.out.println(
@@ -193,7 +197,12 @@ public class MainWindow {
 		splitPaneDetails.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		splitPaneAllFaces.setRightComponent(splitPaneDetails);
 
-		// Add details pane to bottm (right) panel
+		// Add preview pane to upper (left) panel
+
+		previewPane = new ZoomableImagePanel();
+		splitPaneDetails.setLeftComponent(previewPane);
+
+		// Add details pane to bottom (right) panel
 
 		detailsPanel = new ImageDetailsPanel();
 		splitPaneDetails.setRightComponent(detailsPanel);
@@ -213,6 +222,7 @@ public class MainWindow {
 			System.out.println("Cannot load database from " + FACES_DATABASE_PATH);
 			return;
 		}
+		facesListModel.clear();
 		for (final File f : dirListing) {
 			final BufferedImage bufImg = ImageIO.read(f);
 			final ImageListCell imgListCell = new ImageListCell(bufImg, f.getName(), f.getAbsolutePath());
@@ -246,6 +256,7 @@ public class MainWindow {
 				final ImageListCell c = listAllFaces.getSelectedValue();
 				System.out.println(c.getText());
 				detailsPanel.setDetails(c);
+				previewPane.setImage(c.getImage());
 			}
 		}
 	}

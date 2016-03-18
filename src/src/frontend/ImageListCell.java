@@ -15,9 +15,6 @@ class ImageListCell extends JLabel {
 	final private static Dimension ICON_SIZE = new Dimension(ICON_WIDTH, ICON_HEIGHT);
 	final private BufferedImage image;
 	final private String filename, fullPath;
-	// final private ImageIcon icon;
-	// final BufferedImage resizedIcon = new BufferedImage(ICON_WIDTH,
-	// ICON_HEIGHT, BufferedImage.TYPE_INT_ARGB);
 
 	public ImageListCell(BufferedImage img, String fname, String path) {
 		super(Integer.toString(id++) + ". " + fname,
@@ -26,11 +23,6 @@ class ImageListCell extends JLabel {
 		filename = fname;
 		fullPath = path;
 		setPreferredSize(ICON_SIZE);
-		// Graphics2D g2 = resizedIcon.createGraphics();
-		// g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-		// RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		// g2.drawImage(img, 0, 0, ICON_WIDTH, ICON_HEIGHT, null);
-		// g2.dispose();
 	}
 
 	public String getFilename() {
@@ -47,5 +39,9 @@ class ImageListCell extends JLabel {
 
 	public int getImageHeight() {
 		return image.getHeight();
+	}
+
+	public BufferedImage getImage() {
+		return image;
 	}
 }
