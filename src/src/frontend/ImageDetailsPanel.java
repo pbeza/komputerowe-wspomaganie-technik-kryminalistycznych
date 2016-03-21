@@ -12,7 +12,7 @@ import javax.swing.border.EmptyBorder;
 
 public class ImageDetailsPanel extends JPanel {
 
-	final JFormattedTextField fullPathField, filenameField, imageWidthField, imageHeightField;
+	final JFormattedTextField fullPathField, filenameField, imageWidthField, imageHeightField, zoomField;
 	final private static int MIN_TEXT_FIELD_WIDTH = 30, MIN_TEXT_FIELD_HEIGHT = 5;
 
 	public ImageDetailsPanel() {
@@ -56,6 +56,13 @@ public class ImageDetailsPanel extends JPanel {
 		imageHeightField.setBorder(BorderFactory.createEmptyBorder());
 		rightTopDetails.add(imageHeightField);
 
+		zoomField = new JFormattedTextField();
+		zoomField.setColumns(10);
+		zoomField.setEditable(false);
+		zoomField.setMinimumSize(new Dimension(MIN_TEXT_FIELD_WIDTH, MIN_TEXT_FIELD_HEIGHT));
+		zoomField.setBorder(BorderFactory.createEmptyBorder());
+		rightTopDetails.add(zoomField);
+
 		final JLabel lblFilename = new JLabel("Filename");
 		lblFilename.setLabelFor(filenameField);
 		leftTopDetails.add(lblFilename);
@@ -71,6 +78,10 @@ public class ImageDetailsPanel extends JPanel {
 		final JLabel lblImageHeight = new JLabel("Height");
 		lblImageHeight.setLabelFor(imageHeightField);
 		leftTopDetails.add(lblImageHeight);
+
+		final JLabel lblZoom = new JLabel("Zoom");
+		lblZoom.setLabelFor(zoomField);
+		leftTopDetails.add(lblZoom);
 	}
 
 	public void setDetails(ImageListCell cell) {
@@ -78,5 +89,10 @@ public class ImageDetailsPanel extends JPanel {
 		fullPathField.setText(cell.getFullPath());
 		imageWidthField.setText(Integer.toString(cell.getImageWidth()) + " px");
 		imageHeightField.setText(Integer.toString(cell.getImageHeight()) + " px");
+		zoomField.setText("100%");
+	}
+
+	public void setZoom(double zoomPercent) {
+		zoomField.setText(String.format("%.2f", zoomPercent));
 	}
 }

@@ -18,7 +18,8 @@ public class ImageListCellRenderer extends DefaultListCellRenderer {
 		}
 		final ImageListCell c = (ImageListCell) value;
 		setIcon(c.getIcon());
-		setText(c.getText());
+		setToolTipText(c.getText());
+		setText("");
 		return this;
 	}
 }

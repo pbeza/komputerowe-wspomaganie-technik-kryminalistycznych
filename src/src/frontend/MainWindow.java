@@ -38,7 +38,7 @@ public class MainWindow {
 	private final static String FACES_DATABASE_PATH = "../faces";
 	private final DefaultListModel<ImageListCell> facesListModel = new DefaultListModel<ImageListCell>();
 	private JList<ImageListCell> listAllFaces;
-	private ZoomableImagePanel previewPane;
+	private ZoomableImagePanelWrapper previewPane;
 	private ImageDetailsPanel detailsPanel;
 
 	public static void main(String[] args) {
@@ -197,15 +197,15 @@ public class MainWindow {
 		splitPaneDetails.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		splitPaneAllFaces.setRightComponent(splitPaneDetails);
 
-		// Add preview pane to upper (left) panel
-
-		previewPane = new ZoomableImagePanel();
-		splitPaneDetails.setLeftComponent(previewPane);
-
 		// Add details pane to bottom (right) panel
 
 		detailsPanel = new ImageDetailsPanel();
 		splitPaneDetails.setRightComponent(detailsPanel);
+
+		// Add preview pane to upper (left) panel
+
+		previewPane = new ZoomableImagePanelWrapper(detailsPanel);
+		splitPaneDetails.setLeftComponent(previewPane);
 
 		// Create 'Find face' tab
 

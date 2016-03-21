@@ -11,7 +11,7 @@ class ImageListCell extends JLabel {
 
 	private static int id = 0;
 	final private static double IMAGE_RATIO = 4.0 / 3.0;
-	final private static int ICON_WIDTH = 200, ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO);
+	final private static int ICON_WIDTH = 180, ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO);
 	final private static Dimension ICON_SIZE = new Dimension(ICON_WIDTH, ICON_HEIGHT);
 	final private BufferedImage image;
 	final private String filename, fullPath;
