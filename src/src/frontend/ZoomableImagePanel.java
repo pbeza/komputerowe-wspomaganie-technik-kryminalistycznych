@@ -1,5 +1,6 @@
 package frontend;
 
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -16,6 +17,7 @@ public class ZoomableImagePanel extends JPanel {
 	}
 
 	protected void setScaledImage(double zoomFactor) {
+
 		final int w = (int) (origImage.getWidth() * zoomFactor);
 		final int h = (int) (origImage.getHeight() * zoomFactor);
 		scaledImage = new BufferedImage(w, h, origImage.getType());
@@ -23,8 +25,8 @@ public class ZoomableImagePanel extends JPanel {
 		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		g2.drawImage(origImage, 0, 0, w, h, null);
 		g2.dispose();
-		invalidate();
-		repaint();
+		setPreferredSize(new Dimension(w, h));
+		revalidate();
 	}
 
 	@Override

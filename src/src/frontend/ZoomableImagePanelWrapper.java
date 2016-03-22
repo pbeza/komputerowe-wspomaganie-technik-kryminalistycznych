@@ -1,6 +1,7 @@
 package frontend;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,7 +22,7 @@ public class ZoomableImagePanelWrapper extends JPanel {
 	private final Timer zoomTimer;
 	private final JButton zoomInButton, zoomOutButton, restoreOriginalButton;
 	private final JScrollPane scrollPaneImageZoom;
-	// private final JPanel panelForCenteringInScrollPane;
+	private final JPanel panelForCenteringInScrollPane;
 	private final ImageDetailsPanel detailsPanel;
 	private final ZoomableImagePanel zoomableImagePanel;
 	private double zoomFactor = INITIAL_ZOOM_FACTOR;
@@ -34,10 +35,11 @@ public class ZoomableImagePanelWrapper extends JPanel {
 		setLayout(new BorderLayout());
 
 		zoomableImagePanel = new ZoomableImagePanel();
-		// panelForCenteringInScrollPane = new JPanel(new GridBagLayout());
-		// panelForCenteringInScrollPane.add(zoomableImage);
-		// scrollPaneImageZoom = new JScrollPane(panelForCenteringInScrollPane);
-		scrollPaneImageZoom = new JScrollPane(zoomableImagePanel);
+		zoomableImagePanel.setToolTipText("Preview");
+
+		panelForCenteringInScrollPane = new JPanel(new GridBagLayout());
+		panelForCenteringInScrollPane.add(zoomableImagePanel);
+		scrollPaneImageZoom = new JScrollPane(panelForCenteringInScrollPane);
 		add(scrollPaneImageZoom, BorderLayout.CENTER);
 
 		final ZoomButtonChangeListener zoomChangeListener = new ZoomButtonChangeListener();
@@ -84,10 +86,8 @@ public class ZoomableImagePanelWrapper extends JPanel {
 				return;
 			}
 			if (zoomInButtonModel.isPressed()) {
-				System.out.println("Zoom in");
 				d = ZOOM_DELTA;
 			} else if (zoomOutButtonModel.isPressed()) {
-				System.out.println("Zoom out");
 				d = -ZOOM_DELTA;
 			} else {
 				System.out.println("Unexpected timer event");
