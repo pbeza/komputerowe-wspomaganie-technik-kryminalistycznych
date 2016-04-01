@@ -32,6 +32,9 @@ Data | Co?
 
 ### Linki ###
 - [Strona przedmiotu](https://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html),
+- [Wykład dr Szeżyńskiej z identyfikacji twarzy](http://staff.elka.pw.edu.pl/~mszezyns/CAF/priv/CAF_w11_identyfikacja_twarzy.pdf)
+- [Materiał linkowany w ww. wykładzie](http://www.shervinemami.info/faceRecognition.html)
+- [Face Recognition with OpenCV](http://docs.opencv.org/2.4/modules/contrib/doc/facerec/facerec_tutorial.html)
 - [The Eigenfaces method - Face Recognition and Biometric Systems (Politechnika Śląska)](http://sun.aei.polsl.pl/~mkawulok/stud/fr/lect/07.pdf),
 - [Principal component analysis (PCA) - Wikipedia](https://en.wikipedia.org/wiki/Principal_component_analysis),
 - [Eigenface - Wikipedia](https://en.wikipedia.org/wiki/Eigenface),
