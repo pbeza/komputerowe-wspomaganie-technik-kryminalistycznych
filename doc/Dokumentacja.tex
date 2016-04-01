@@ -116,6 +116,8 @@ Niniejszy dokument powstał w~ramach dokumentacji projektu zespołowego z~przedm
 \label{wstep}
 \noindent W tym rozdziale przedstawiono krótki opis idei działania tworzonej aplikacji.
 
+%------------------------------------------------------------------------------
+
 \subsection{Cel aplikacji}
 
 W ramach projektu powstanie aplikacja przeznaczona dla systemu~\emph{\href{https://www.microsoft.com/windows/}{Microsoft Windows}}, która będzie miała na celu... \emph{TODO}.
@@ -128,9 +130,37 @@ Rozwinięcie celu aplikacji \emph{TODO}...
 
 %------------------------------------------------------------------------------
 
+\section{Algorytm}
+
+Do rozpoznawania twarzy zostanie zastosowana \emph{metoda analizy głównych składowych}~(ang.~\emph{Principal Component Analysis} -- PCA). Poniżej przedstawiono krótki opis tej metody.
+
+%------------------------------------------------------------------------------
+
+\subsection{Analiza głównych składowych}
+
+Zakładamy, że zdjęcia treningowych twarzy są monochromatyczne i znormalizowane, tzn. twarz jest wyśrodkowana na zdjęciu i wszystkie zdjęcia mają jednakowe wymiary. Dla uproszczenia analizy, załóżmy, że zdjęcia mają wymiary $N\times N$, gdzie $N$ to wysokość i szerokość zdjęcia w pikselach.
+
+\begin{description}[leftmargin=13em,style=nextline]
+	\item[$M$] Liczba zdjęć twarzy treningowych.
+	\item[$\Gamma_1, \Gamma_2, \dotsc, \Gamma_M$] $M$ wektorów o długości $N\cdot N$, reprezentujących $M$ zdjęć twarzy treningowych.
+	\item[$\Psi = \frac{1}{M}\cdot\sum\limits_{n=1}^M\Gamma_n$] Wektor o długości $N\cdot N$, reprezentujący średnią z powyższego zbioru $M$ twarzy treningowych (twarz średnia z twarzy treningowych).
+	\item[$\Phi_i=\Gamma_i-\Psi$] Wektor, będący różnicą między $i$-tym wektorem $\Gamma_i$, reprezentujący zdjęcie $i$-tej twarzy i wektorem reprezentującym średnią $\Psi$ wszystkich $M$ twarzy treningowych.
+	\item[$C=\frac{1}{M}\cdot\sum\limits_{n=1}^M\Phi_n\Phi_n^T=AA^T$] Macierz kowariancji o wymiarach $N^2\times N^2$, gdzie $A=[\Phi_1\Phi_2\dotsc\Phi_M]$. Macierz $A$ ma wymiary~$N^2\times M$.
+	\item[$u_1,u_2,\dotsc,u_K$] $K$ najlepszych wektorów własnych, tj. wektorów odpowiadającym $K$ największym wartościom własnym macierzy $C=AA^T$. Każdy z tych wektorów ma długość $M$.
+\end{description}
+
+Każda twarz w zbiorze treningowym może być zapisana jako kombinacja liniowa najlepszych $K$ wektorów własnych:
+$$\Gamma_i-\Psi=\sum\limits_{j=1}^K w_j u_j\quad$$
+gdzie:
+$$w_j=u_j^T\Phi_i$$
+
+%------------------------------------------------------------------------------
+
 \section{Aplikacja}
 
 Do stworzenia aplikacji zostanie wykorzystane środowisko programistyczne... \emph{TODO}.
+
+%------------------------------------------------------------------------------
 
 \subsection{Dane wejściowe}
 
@@ -153,6 +183,8 @@ Do stworzenia aplikacji zostanie wykorzystane środowisko programistyczne... \em
 \section{Testy}
 
 Ten rozdział opisuje wyniki przeprowadzonych testów funkcjonalnych i~wydajnościowych.
+
+%------------------------------------------------------------------------------
 
 \subsection{Dane testowe}
 
