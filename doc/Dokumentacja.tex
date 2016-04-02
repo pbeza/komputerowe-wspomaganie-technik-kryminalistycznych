@@ -1,6 +1,6 @@
 \documentclass[a4paper,titlepage]{article}
 \usepackage[OT4,plmath]{polski}
-%\usepackage[backend=biber]{biblatex}
+%\usepackage{biblatex}
 \usepackage[margin=1in]{geometry}
 \usepackage[noend]{algpseudocode}
 \usepackage[page]{appendix}
@@ -17,7 +17,7 @@
 \usepackage{enumitem}
 \usepackage{graphicx}
 \usepackage{hyperref}
-\usepackage{indentfirst}
+%\usepackage{indentfirst}
 \usepackage{longtable}
 \usepackage{multirow}
 \usepackage{parskip}
@@ -25,10 +25,10 @@
 \usepackage{setspace}
 \usepackage{verbatimbox}
 \usepackage{wrapfig}
+\usepackage{bm}
+\usepackage{mathtools}
 
 \linespread{1.4}
-
-%\addbibresource{Dokumentacja wstepna.bib}
 
 \renewcommand*\appendixpagename{Załącznik}
 \renewcommand{\qedsymbol}{$\square$}
@@ -36,7 +36,7 @@
 \let\emptyset\varnothing
 
 \makeatother
-\setlength{\parindent}{24pt}
+%\setlength{\parindent}{24pt}
 \theoremstyle{break}
 \newtheorem*{uwaga}{Uwaga}
 \newtheorem{definicja}{Definicja}[section]
@@ -44,6 +44,8 @@
 
 \newcommand{\cmark}{\textcolor{ForestGreen}{\ding{51}}}
 \newcommand{\xmark}{\textcolor{Maroon}{\ding{55}}}
+
+\numberwithin{equation}{subsection}
 
 %------------------------------------------------------------------------------
 
@@ -100,11 +102,11 @@
 
 \begin{figure}[t]
     \centering
-    \hspace{3em}
-    \includegraphics[width=0.45\textwidth]{img/fingerprint}
+    \hspace{-2em}
+    \includegraphics[width=0.45\textwidth]{img/faces}
 \end{figure}
 
-Niniejszy dokument powstał w~ramach dokumentacji projektu zespołowego z~przedmiotu \emph{\href{http://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html}{Komputerowe wspomaganie technik kryminalistycznych}} w semestrze letnim roku akademickiego~2015/2016 na \emph{\href{http://www.mini.pw.edu.pl/}{Wydziale MiNI}~\href{https://www.pw.edu.pl/}{Politechniki Warszawskiej}}. Ma on za zadanie udokumentować ideę działania aplikacji, sposób jej użycia, wykorzystane narzędzia i biblioteki, wyniki testów funkcjonalnych i wydajnościowych oraz wnioski.
+Niniejszy dokument powstał w~ramach dokumentacji projektu zespołowego z~przedmiotu \emph{\href{http://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html}{Komputerowe wspomaganie technik kryminalistycznych}} w semestrze letnim roku akademickiego~2015/2016 na \emph{\href{http://www.mini.pw.edu.pl/}{Wydziale MiNI}~\href{https://www.pw.edu.pl/}{Politechniki Warszawskiej}}. Ma on za zadanie udokumentować ideę działania aplikacji identyfikującą twarze, uzasadnienie wyboru zastosowanych algorytmów, sposób jej użycia, wykorzystane narzędzia i biblioteki, wyniki testów funkcjonalnych i wydajnościowych oraz wnioski.
 
 \end{abstract}
 
@@ -113,64 +115,150 @@ Niniejszy dokument powstał w~ramach dokumentacji projektu zespołowego z~przedm
 %------------------------------------------------------------------------------
 
 \section{Wstęp}
-\label{wstep}
-\noindent W tym rozdziale przedstawiono krótki opis idei działania tworzonej aplikacji.
+\label{sec:wstep}
+
+W tym rozdziale przedstawiono założenia wstępne projektu pt.~,,Identyfikacja twarzy".
+
+%------------------------------------------------------------------------------
+
+\subsection{Identyfikacja twarzy}
+
+Identyfikacja twarzy to przypisanie tożsamości do dwu- lub trzywymiarowego zdjęcia twarzy. Przez ostatnie kilkadziesiąt lat opracowano wiele algorytmów, które służą do rozpoznawania i identyfikacji twarzy. Część z nich jest oparta na sieciach neuronowych, a pozostała część korzysta z klasycznych metod aparatu matematycznego, np. algebry i analizy statystycznej.
+
+W ramach niniejszego projektu powstało rozwiązanie oparte o metody klasyczne, oparte na algebrze, a w szczególności na wyliczaniu wartości własnych i wektorów własnych macierzy, powstałej z analizowanych zdjęć twarzy, celem zamodelowania analizowanych zdjęć w przestrzeni liniowej, rozpiętej przez wyliczone wektory własne. Wykorzystana metoda identyfikacji twarzy to metoda~\emph{eigenfaces}, która opiera się na metodzie analizy głównych składowych~(ang.~\emph{Principal Component Analysis} -- w~skrócie:~PCA).
+
+%------------------------------------------------------------------------------
+
+\subsection{Zastosowania identyfikacji twarzy}
+
+Istnieje wiele zastosowań identyfikacji twarzy. Część z nich dotyczy zastosowań w rozrywce, takiej jak np. gry czy identyfikacja twarzy na zdjęciach serwisów społecznościowych\footnote{W przeciwieństwie do rozpoznawania twarzy, identyfikacja twarzy nie jest jeszcze stosowana na szeroką skalę na największych serwisach społecznościowych.}. Poza zastosowaniami indentyfikacji twarzy w rozrywce, istnieją zastosowania do poważniejszych celów, np. do wspomagania technik kryminalistycznych i szeroko pojętego bezpieczeństwa danych, np.: systemy kontroli dostępu, systemy bezpieczeństwa na lotniskach, policyjne bazy danych osób poszukiwanych (np. zaginionych, poszukiwanych listami gończymi i podejrzanych).
+
+Identyfikacja twarzy w komputerowym wspomaganiu technik kryminalistycznych jest ważnym zagadnieniem dla wszystkich służb dbających o bezpieczeństwo, które posiadają bazy danych ze zdjęciami twarzy tysięcy osób, wśród których może znajdować się zdjęcie osoby identyfikowanej, np. podejrzanej, poszukiwanej lub zaginionej. Niniejsza dokumentacja jest opisem szczegółów implementacyjnych aplikacji służącej do identyfikacji dwuwymiarowych zdjęć twarzy.
 
 %------------------------------------------------------------------------------
 
 \subsection{Cel aplikacji}
 
-W ramach projektu powstanie aplikacja przeznaczona dla systemu~\emph{\href{https://www.microsoft.com/windows/}{Microsoft Windows}}, która będzie miała na celu... \emph{TODO}.
+Celem aplikacji jest zidentyfikowanie zadanej twarzy na podstawie zbioru zdjęć osób z lokalnej bazy danych. Zakładamy, że zdjęcia są znormalizowane, tzn. wszystkie zdjęcia są monochromatyczne, mają jednakowe rozmiary, twarze sfotografowana są frontalnie, tzn.~\emph{en~face} i są wycentrowane.
 
-%------------------------------------------------------------------------------
+Jeśli osoba, której twarz podano na wejście programu nie znajduje się w bazie danych, program powinien zwrócić kilka zdjęć najbardziej podobnych do zadanego wraz z oszacowaniem ich podobieństwa w skali od $0\%$ do $100\%$. W obu przypadkach zdjęcia znalezionych twarzy powinny być posortowane nierosnąco względem podobieństwa do zadanej twarzy.
 
-\subsection{Idea działania aplikacji}
+W przeciwnym razie, tzn. jeśli zdjęcia osoby, której twarz została poddana identyfikacji, znajdują się w bazie, program powinien znaleźć tę twarz i przypisać wartość jej podobieństwa bliską $100\%$ (wartość oczekiwana $=100\%$) oraz ewentualnie kilka innych, podobnych twarzy, z odpowiednio mniejszym podobieństwem wyrażonym w skali od $0\%$ do $100\%$.
 
-Rozwinięcie celu aplikacji \emph{TODO}...
+Pierwszorzędnym celem aplikacji \emph{nie} jest szybkie działanie, co można uzasadnić tym, że algorytmy mające na celu zidentyfikowanie osoby, powinny przede wszystkim nie dopuszcić do przeoczenia osoby, która znajduje się w bazie danych. Tak postawione wymaganie na ogół wymusza zastosowania algorytmów, które działają względnie długo.
 
 %------------------------------------------------------------------------------
 
 \section{Algorytm}
+\label{sec:algorytm}
 
-Do rozpoznawania twarzy zostanie zastosowana \emph{metoda analizy głównych składowych}~(ang.~\emph{Principal Component Analysis} -- PCA). Poniżej przedstawiono krótki opis tej metody.
+Do rozpoznawania twarzy zostanie zastosowana \emph{metoda analizy głównych składowych}~(ang.~\emph{Principal Component Analysis} -- w~skrócie:~PCA). Poniżej przedstawiono opis tej metody na podstawie publikacji autorów metody \emph{eigenfaces}, tzn. profesorów:~\emph{Matthew Turk'a} i \emph{Alex'a Pentland'a}\cite{turk}.
 
 %------------------------------------------------------------------------------
 
 \subsection{Analiza głównych składowych}
 
-Zakładamy, że zdjęcia treningowych twarzy są monochromatyczne i znormalizowane, tzn. twarz jest wyśrodkowana na zdjęciu i wszystkie zdjęcia mają jednakowe wymiary. Dla uproszczenia analizy, załóżmy, że zdjęcia mają wymiary $N\times N$, gdzie $N$ to wysokość i szerokość zdjęcia w pikselach.
+Główna idea metody \emph{eigenfaces}, to przedstawienie zdjęcia jako liniowa kombinacja obrazów bazowych~(patrz równanie~\ref{eq:eigenfaces}), zapisywanych w postaci wektorów, nazywanych również~\emph{eigenfaces}. Dzięki temu obraz możemy przestawić w zwartej postaci wektora $[\omega_1,\dotsc,\omega_M]$ o długości znacznie mniejszej od wymiaru obrazu~$N^2$.
 
-\begin{description}[leftmargin=13em,style=nextline]
-	\item[$M$] Liczba zdjęć twarzy treningowych.
-	\item[$\Gamma_1, \Gamma_2, \dotsc, \Gamma_M$] $M$ wektorów o długości $N\cdot N$, reprezentujących $M$ zdjęć twarzy treningowych.
-	\item[$\Psi = \frac{1}{M}\cdot\sum\limits_{n=1}^M\Gamma_n$] Wektor o długości $N\cdot N$, reprezentujący średnią z powyższego zbioru $M$ twarzy treningowych (twarz średnia z twarzy treningowych).
-	\item[$\Phi_i=\Gamma_i-\Psi$] Wektor, będący różnicą między $i$-tym wektorem $\Gamma_i$, reprezentujący zdjęcie $i$-tej twarzy i wektorem reprezentującym średnią $\Psi$ wszystkich $M$ twarzy treningowych.
-	\item[$C=\frac{1}{M}\cdot\sum\limits_{n=1}^M\Phi_n\Phi_n^T=AA^T$] Macierz kowariancji o wymiarach $N^2\times N^2$, gdzie $A=[\Phi_1\Phi_2\dotsc\Phi_M]$. Macierz $A$ ma wymiary~$N^2\times M$.
-	\item[$u_1,u_2,\dotsc,u_K$] $K$ najlepszych wektorów własnych, tj. wektorów odpowiadającym $K$ największym wartościom własnym macierzy $C=AA^T$. Każdy z tych wektorów ma długość $M$.
-\end{description}
-
-Każda twarz w zbiorze treningowym może być zapisana jako kombinacja liniowa najlepszych $K$ wektorów własnych:
-$$\Gamma_i-\Psi=\sum\limits_{j=1}^K w_j u_j\quad$$
+Załóżmy, że mamy zbiór zdjęć twarzy treningowych, pobranych z bazy danych, w postaci $M$ wektorów $\bm{\Gamma_1},\bm{\Gamma_2},\dotsc,\bm{\Gamma_M}$, z których każdy ma długość $N\cdot N$, gdzie $N$ to długość i wysokość zdjęcia\footnote{Dla uproszczenia oznaczeń w opisie metody zakładamy, że wysokość zdjęcia jest równa szerokości zdjęcia.}. Średnia twarz tego zbioru twarzy testowych jest zdefiniowana jako następujący wektor $\bm{\Psi}$ o długości $N\cdot N$:
+\begin{equation}
+	\bm{\Psi}=\frac{1}{M}\cdot\sum\limits_{n=1}^M\bm{\Gamma_n}
+\end{equation}
+$i$-ta twarz treningowa $\bm{\Gamma_i}$ różni się od twarzy średniej $\bm{\Psi}$ o pewien wektor $\bm{\Phi_i}$:
+\begin{equation}
+	\bm{\Phi_i}=\bm{\Gamma_i}-\bm{\Psi}
+\end{equation}
+Zbiór wektorów $\{\bm{\Phi_1},\bm{\Phi_2},\dotsc,\bm{\Phi_M}\}$ poddajemy metodzie \emph{analizy głównych składowych}, dzięki której otrzymamy zbiór $M$ ortonormalnych\footnote{Ortonormalnych, czyli jednocześnie ortogonalnych i normalnych.} wektorów $\{\bm{u_1},\bm{u_2},\dotsc,\bm{u_M}\}$, które najlepiej obrazują rozkład wartości pikseli. $k$-ty wektor $\bm{u_k}$ jest wybierany tak, aby:
+\begin{equation}
+	\bm{\lambda_k}=\frac{1}{M}\cdot\sum\limits_{n=1}^M(\bm{u_k^T}\bm{\Phi_n})^2
+\end{equation}
+był maksymalny gdzie\footnote{$\delta_{lk}$ jest nazywana deltą lub symbolem \emph{Kroneckera}.}:
+\begin{equation}
+	\bm{u_l^T}\bm{u_k}=\delta_{lk}=
+	\begin{cases}
+		1,&\text{gdy }l=k\\
+		0,&\text{gdy }l\neq k
+	\end{cases}
+\end{equation}
+Wektory $\bm{u_k}$ i skalary $\lambda_k$ to odpowiednio wektory własne i wartości własne następującej macierzy kowariancji:
+\begin{equation}
+	C=\frac{1}{M}\cdot\sum\limits_{n=1}^M\bm{\Phi_n}\bm{\Phi_n^T}=AA^T
+\end{equation}
 gdzie:
-$$w_j=u_j^T\Phi_i$$
+\begin{equation}
+	A=[\bm{\Phi_1}\bm{\Phi_2}\dotsc\bm{\Phi_M}]
+\end{equation}
+Rozmiar macierzy $C$ jest bardzo duży -- wynosi $N^2\times N^2$. Liczenie $N^2$ wartości własnych i wektorów własnych byłoby bardzo czasochłonne dla typowych wymiarów zdjęć.
+
+Jeśli ilość zdjęć w bazie danych $M$ jest mniejsza od wymiaru przestrzeni $N^2$, tzn. $M<N^2$, to otrzymamy tylko $M-1$ znaczących wektorów własnych zamiast $N^2$. Pozostałe wektory własne będą miały wartości własne równe $0$. Na szczęście możemy znaleźć $N^2$-wymiarowe wektory własne najpierw licząc wektory własne macierzy~$M\times M$. Dla 16 zdjęć o wymiarach $128\times 128$, oznacza to, że zamiast liczyć wektory własne macierzy o wymiarach $16384\times 16384$, możemy policzyć wektory własne macierzy $16\times 16$, a następnie zastosować odpowiednią kombinację liniową wektora~$\bm{\Phi_i}$. Rozważmy wektor własny $\bm{v_i}$ macierzy $A^TA$, taki, że:
+\begin{equation}
+	A^TA\bm{v_i}=\mu_i\bm{v_i}
+\end{equation}
+Po przemnożeniu obu stron lewostronnie przez $A$, otrzymujemy, że:
+\begin{equation}
+	\mathrlap{
+		\underbrace{
+			\phantom{AA^T}
+		}_C
+	}A\overbrace{
+		A^T\mathrlap{
+			\underbrace{\phantom{A\bm{v_i}}}_{\bm{u_i}}
+		}A
+	}^L\bm{v_i}
+	=\mu_i\underbrace{A\bm{v_i}}_{\bm{u_i}}
+\end{equation}
+skąd widać, że $A\bm{v_i}$ i $\mu_i$ są odpowiednio wektorami własnymi i wartościami własnymi macierzy kowariancji $C=AA^T$. Warto zauważyć, że wartości własne $\mu_i$ macierzy~$A^TA$ i wartości własne~$\lambda_i$ macierzy $AA^T$ są równe, tzn.~$\mu_i =\lambda_i$.
+
+Skonstruujmy macierz $L=A^TA$ o wymiarach $M\times M$, gdzie $L_{mn}=\bm{\Phi_m^T}\bm{\Phi_n}$ i znajdźmy $M$ wektorów własnych $\bm{v_l}$ macierzy~$L$. Wektory te wyznaczają kombinację liniową $M$ treningowych zdjęć twarzy, która w sumie tworzy wektory $\bm{u_l}$, nazywane \emph{eigenfaces}:
+\begin{equation}
+\label{eq:eigenfaces}
+	\bm{u_l}=\sum\limits_{k=1}^M\bm{v_{lk}}\bm{\Phi_k}\quad\text{gdzie:}\quad l=1,\dotsc,M
+\end{equation}
+Dzięki powyższej analizie złożoność obliczeń istotnie zmalała -- z rzędu liczby pikseli w zdjęciu~$N^2$, do rzędu zdjęć w zbiorze treningowym~$M$. W praktyce zbiór treningowy jest relatywnie mały ($M\ll N^2$) i obliczenia są względnie szybkie. W praktyce można wybrać $M'$, takie, że $M'<M$, ponieważ wystarczy nam kombinacja liniowa, tworząca przybliżoną twarz, a nie idealną. W takim przypadku wektory \emph{eigenfaces} rozpinają podprzestrzeń $M'$-wymiarową pierwotnej $N^2$-wymiarowej przestrzeni zdjęć. Wybór $M'$ wektoróœ własnych spośród wszystkich wektorów własnych macierzy $L$, odbywa się na zasadzie wzięcia tych z nich, które mają największe odpowiadające wartości własne. W publikacji \emph{M.Turka} i \emph{A.Pentland'a} zostałyi z powodzeniem testowane przykłady, dla których $M=16$, a $M'=7$\cite{turk}.
+
+Chcąc zidentyfikować osobę widoczną na zadanym zdjęciu twarzy, reprezentowanym przez wektor $\bm\Gamma$ o długości $N^2$, należy przetransformować ten wektor na ,,przestrzeń twarzy" (ang.~\emph{face space}), rozpiętą przez wektory~$\bm{u_1},\bm{u_2},\dotsc,\bm{u_{M'}}$ licząc współczynniki $\omega_k$ kombinacji liniowej:
+\begin{equation}
+	\omega_k=\bm{u_k^T}(\bm{\Gamma}-\bm{\Psi})\quad\text{gdzie:}\quad k=1,2,\dotsc,M'
+\end{equation}
+Wagi $\omega_k$ tworzą wektor $\Omega^T=[\omega_1,\omega_2,\dotsc,\omega_{M'}]$, który opisuje wkład każdego z wektorów \emph{eigenface} $\bm{u_k}$ w reprezentację zadanego zdjęcia reprezentowanego w ,,przestrzeni twarzy" jako:
+\begin{equation}
+\begin{split}
+	\sum\limits_{k=1}^{M'}\omega_k\bm{u_k}&=[\bm{u_1^T},\bm{u_2^T},\dotsc,\bm{u_{M'}^T}]^T[\omega_1,\omega_2,\dotsc,\omega_{M'}]^T\\&=[\bm{u_1^T},\bm{u_2^T},\dotsc,\bm{u_{M'}^T}]^T\bm{\Omega}
+\end{split}
+\end{equation}
+Tak otrzymany wektor może być użyty do porównania z wektorami dostępnymi w bazie danych np. przez obliczenie odległości dwóch wektorów miarą Euklidesową.
 
 %------------------------------------------------------------------------------
 
 \section{Aplikacja}
+\label{sec:aplikacja}
 
-Do stworzenia aplikacji zostanie wykorzystane środowisko programistyczne... \emph{TODO}.
+Aplikację zaimplementowano w języku \emph{Java}, korzystajac ze środowiska graficznego \emph{Swing}. Preprocessing zdjęć twarzy został napisany w języku skryptowym \emph{Python}.
+
+%------------------------------------------------------------------------------
+
+\subsection{Wykorzystane biblioteki}
+
+\noindent Lista wykorzystanych w projekcie bibliotek:
+\begin{itemize}
+	\item OpenCV
+\end{itemize}
 
 %------------------------------------------------------------------------------
 
 \subsection{Dane wejściowe}
 
-\emph{TODO}
+Za dane wejściowe aplikacji uważamy:
+\begin{enumerate}
+	\item znormalizowane zdjęcie identyfikowanej osoby,
+	\item wczytana baza danych znanych twarzy.
+\end{enumerate}
 
 %------------------------------------------------------------------------------
 
 \subsection{Dane wyjściowe}
 
-\emph{TODO}
+Za dane wejściowe aplikacji uważamy niewielki podzbiór zdjęć twarzy z bazy danych, podobnych do identyfikowanej twarzy, wraz z liczbą z zakresu $0\%$ -- $100\%$, będącą procentowym odzwierciedleniem podobieństwa dwóch zdjęć.
 
 %------------------------------------------------------------------------------
 
@@ -211,7 +299,7 @@ Poniższa tabela przestawia wykaz rozdziałów opracowanych przez poszczególnyc
 \center
 \begin{tabular}{p{2.5cm}|p{3.3cm}|p{3.3cm}|p{3.3cm}}
 & Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
-\parbox{3cm}{\ \\Opracowane \\rozdziały} & -- & -- & --\\
+\parbox{3cm}{\ \\Opracowane \\rozdziały} & \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:aplikacja} & -- & --\\
 \end{tabular}
 \end{table}
 
@@ -223,9 +311,9 @@ Poniższa tabela przestawia podział prac implementacyjnych w ramach projektu.
 \center
 \begin{tabular}{p{2.5cm}|p{3.3cm}|p{3.3cm}|p{3.3cm}}
 & Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
-\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Bla & $\bullet$ Bla & $\bullet$ Bla\\
-& $\bullet$ A & $\bullet$ B & $\bullet$ C \\
-& $\bullet$ D & $\bullet$ E & $\bullet$ F \\
+\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Stworzenie GUI & -- & --\\
+& & &\\
+& & &\\
 \end{tabular}
 \end{table}
 
@@ -233,7 +321,9 @@ Poniższa tabela przestawia podział prac implementacyjnych w ramach projektu.
 
 %------------------------------------------------------------------------------
 
-%\clearpage
+\clearpage
+\bibliographystyle{plain}
 %\printbibliography[title=Bibliografia]
+\bibliography{bibliography}
 
 \end{document}
