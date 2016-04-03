@@ -9,6 +9,13 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -33,10 +40,12 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class MainWindow {
 
 	private JFrame frame;
-	private final static int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100;
+	private final static int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100,
+			MIN_IMAGE_ID = 1;
 	private final static String TITLE = "Eigen faces";
-	private final static String FACES_DATABASE_PATH = "../../faces";
+	private final static String FACES_DATABASE_PATH = "../../faces/YaleFacedatabaseA";
 	private final DefaultListModel<ImageListCell> facesListModel = new DefaultListModel<ImageListCell>();
+	private static int latelyAssignedId = MIN_IMAGE_ID;
 	private JList<ImageListCell> listAllFaces;
 	private ZoomableImagePanelWrapper previewPane;
 	private ImageDetailsPanel detailsPanel;
@@ -97,7 +106,7 @@ public class MainWindow {
 				c.setAcceptAllFileFilterUsed(false);
 				final int result = c.showOpenDialog(frame);
 				if (result == JFileChooser.APPROVE_OPTION) {
-					addFacesToView(c.getSelectedFiles());
+					addFaces(Arrays.asList(c.getSelectedFiles()));
 				}
 			}
 		});
@@ -132,14 +141,30 @@ public class MainWindow {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				facesListModel.clear();
-				System.out.println("All faces removed from database");
+				clearAllImages();
 			}
 		});
 		mntmClearAllFaces.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_MASK));
 		mntmClearAllFaces.setIcon(new ImageIcon(MainWindow.class.getResource("/img/remove.png")));
 		mntmClearAllFaces.setToolTipText("Remove all images from faces database");
 		mnfile.add(mntmClearAllFaces);
+
+		// Load predefined menu item
+
+		final JMenuItem mntmLoadPredefined = new JMenuItem(new AbstractAction("Load predefined") {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				clearAllImages();
+				loadPredefinedImages();
+			}
+		});
+		mntmLoadPredefined.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_J, InputEvent.CTRL_MASK));
+		mntmLoadPredefined.setIcon(new ImageIcon(MainWindow.class.getResource("/img/reload.png")));
+		mntmLoadPredefined
+				.setToolTipText("Remove all loaded images and load images from predefined directory which is '"
+						+ FACES_DATABASE_PATH + "'");
+		mnfile.add(mntmLoadPredefined);
 
 		// Exit menu item
 
@@ -167,15 +192,6 @@ public class MainWindow {
 		tabbedPane.addTab("All faces", new ImageIcon(MainWindow.class.getResource("/img/people.png")),
 				splitPaneAllFaces, "List of all faces stored in database");
 
-		// Load predefined faces database
-
-		try {
-			loadPredefinedFacesDatabase();
-		} catch (final IOException e) {
-			System.out.println(
-					"Loading predefined faces database has failed (it's not critical). Details: " + e.getMessage());
-		}
-
 		// Create JList with all faces stored in database for 'All faces' tab
 
 		listAllFaces = new JList<ImageListCell>(facesListModel);
@@ -201,6 +217,7 @@ public class MainWindow {
 
 		detailsPanel = new ImageDetailsPanel();
 		splitPaneDetails.setRightComponent(detailsPanel);
+		detailsPanel.setTotalImagesNumber(facesListModel.size());
 
 		// Add preview pane to upper (left) panel
 
@@ -213,30 +230,72 @@ public class MainWindow {
 		splitPaneFindFace.setResizeWeight(0.75);
 		tabbedPane.addTab("Find face", new ImageIcon(MainWindow.class.getResource("/img/find.png")), splitPaneFindFace,
 				"Find face in database");
+
+		// Load predefined faces database
+
+		loadPredefinedImages();
 	}
 
-	private void loadPredefinedFacesDatabase() throws IOException {
-		final File dir = new File(FACES_DATABASE_PATH);
+	private void loadPredefinedImages() {
+		ArrayList<String> imagesPathsToLoad = new ArrayList<>();
+		imagesPathsToLoad.addAll(getAllPredefinedFacesImagesPaths(FACES_DATABASE_PATH));
+		Collections.sort(imagesPathsToLoad);
+		addFaces(imagesPathsToLoad);
+	}
+
+	private void clearAllImages() {
+		facesListModel.clear();
+		detailsPanel.clearDetails(0);
+		previewPane.clearImage();
+		latelyAssignedId = MIN_IMAGE_ID;
+		System.out.println("All faces removed from database");
+	}
+
+	/**
+	 * Recursively search database from predefined directory. Note: Clear
+	 * {@code facesListModel} before using this method unless
+	 * {@code facesListModel} is empty.
+	 * 
+	 * @throws IOException
+	 */
+	private ArrayList<String> getAllPredefinedFacesImagesPaths(String path) {
+		final ArrayList<String> allPaths = new ArrayList<>();
+		final File dir = new File(path);
 		final File[] dirListing = dir.listFiles();
 		if (dirListing == null) {
 			System.out.println("Cannot load database from " + FACES_DATABASE_PATH);
-			return;
+			return allPaths;
 		}
-		facesListModel.clear();
 		for (final File f : dirListing) {
-			final BufferedImage bufImg = ImageIO.read(f);
-			if (bufImg == null) {
-				System.out.println(f.getAbsolutePath() + " can't be read as image. Skipping.");
+			String imgPath = f.getPath();
+			if (f.isDirectory()) {
+				allPaths.addAll(getAllPredefinedFacesImagesPaths(imgPath));
 				continue;
 			}
-			final ImageListCell imgListCell = new ImageListCell(bufImg, f.getName(), f.getAbsolutePath());
-			assert(imgListCell != null);
-			facesListModel.addElement(imgListCell);
-			System.out.println(f.getAbsolutePath() + " successfully added");
+			boolean isImage = false;
+			try {
+				isImage = ImageIO.read(f) != null;
+			} catch (IOException e) {
+				isImage = false;
+			}
+			if (!isImage) {
+				System.out.println(imgPath + " can't be read as image. Skipping.");
+				continue;
+			}
+			allPaths.add(imgPath);
 		}
+		return allPaths;
 	}
 
-	protected void addFacesToView(File[] images) {
+	private void addFaces(ArrayList<String> imagesPaths) {
+		ArrayList<File> files = new ArrayList<>(imagesPaths.size());
+		for (String path : imagesPaths) {
+			files.add(new File(path));
+		}
+		addFaces(files);
+	}
+
+	protected void addFaces(List<File> images) {
 		BufferedImage bufImg = null;
 		System.out.println("Loaded files' names:");
 		for (final File img : images) {
@@ -246,10 +305,17 @@ public class MainWindow {
 				System.out.println("Error during reading " + img.getPath() + " image! Skipping. (Details: "
 						+ e.getMessage() + ").");
 			}
-			final String path = img.getAbsolutePath();
-			facesListModel.addElement(new ImageListCell(bufImg, img.getName(), path));
+			String path;
+			try {
+				path = img.getCanonicalPath();
+			} catch (IOException e) {
+				System.out.println("Can't get canonical path. Skipping image.");
+				continue;
+			}
+			facesListModel.addElement(new ImageListCell(latelyAssignedId++, bufImg, img.getName(), path));
 			System.out.println(path);
 		}
+		detailsPanel.setTotalImagesNumber(facesListModel.size());
 	}
 
 	protected class AllFacesListSelectionListener implements ListSelectionListener {

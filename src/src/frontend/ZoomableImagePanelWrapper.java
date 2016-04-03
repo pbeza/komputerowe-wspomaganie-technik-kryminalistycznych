@@ -17,7 +17,7 @@ import javax.swing.event.ChangeListener;
 
 public class ZoomableImagePanelWrapper extends JPanel {
 
-	private final static double ZOOM_DELTA = 0.01, INITIAL_ZOOM_FACTOR = 1.0, MIN_ZOOM = 0.01, MAX_ZOOM = 100.0;
+	private final static double ZOOM_DELTA = 0.05, INITIAL_ZOOM_FACTOR = 1.0, MIN_ZOOM = 0.01, MAX_ZOOM = 100.0;
 	private final static int TIMER_DELAY = 50;
 	private final Timer zoomTimer;
 	private final JButton zoomInButton, zoomOutButton, restoreOriginalButton;
@@ -69,12 +69,22 @@ public class ZoomableImagePanelWrapper extends JPanel {
 	public void setImage(BufferedImage bufImg) {
 		zoomableImagePanel.setImage(bufImg);
 		setZoom(INITIAL_ZOOM_FACTOR);
+		scrollPaneImageZoom.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		scrollPaneImageZoom.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		repaint();
+	}
+
+	public void clearImage() {
+		zoomableImagePanel.clearImage();
+		scrollPaneImageZoom.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPaneImageZoom.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 	}
 
 	private void setZoom(double zoom) {
 		zoomFactor = zoom;
-		zoomableImagePanel.setScaledImage(zoomFactor);
-		detailsPanel.setZoom(zoomFactor);
+		if (zoomableImagePanel.setScaledImage(zoomFactor)) {
+			detailsPanel.setZoom(zoomFactor);
+		}
 	}
 
 	private class ZoomButtonTimerActionListener implements ActionListener {

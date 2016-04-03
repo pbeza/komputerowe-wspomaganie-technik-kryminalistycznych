@@ -3,26 +3,40 @@ package frontend;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
 class ImageListCell extends JLabel {
 
-	private static int id = 0;
-	final private static double IMAGE_RATIO = 4.0 / 3.0;
-	final private static int ICON_WIDTH = 180, ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO);
-	final private static Dimension ICON_SIZE = new Dimension(ICON_WIDTH, ICON_HEIGHT);
-	final private BufferedImage image;
-	final private String filename, fullPath;
+	private final static double IMAGE_RATIO = 4.0 / 3.0;
+	private final static int ICON_WIDTH = 180, ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO);
+	private final static Dimension ICON_SIZE = new Dimension(ICON_WIDTH, ICON_HEIGHT);
+	private final int id;
+	private final BufferedImage image;
+	private final String filename, fullPath;
+	private String mimeType;
 
-	public ImageListCell(BufferedImage img, String fname, String path) {
-		super(Integer.toString(id++) + ". " + fname,
-				new ImageIcon(img.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_DEFAULT)), LEFT);
-		image = img;
-		filename = fname;
-		fullPath = path;
+	public ImageListCell(int id, BufferedImage image, String filename, String fullPath) {
+		super(Integer.toString(id) + ". " + filename,
+				new ImageIcon(image.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_DEFAULT)), LEFT);
+		this.id = id;
+		this.image = image;
+		this.filename = filename;
+		this.fullPath = fullPath;
+		try {
+			this.mimeType = Files.probeContentType(Paths.get(fullPath));
+		} catch (IOException e) {
+			this.mimeType = "unknown";
+		}
 		setPreferredSize(ICON_SIZE);
+	}
+
+	public int getId() {
+		return id;
 	}
 
 	public String getFilename() {
@@ -31,6 +45,10 @@ class ImageListCell extends JLabel {
 
 	public String getFullPath() {
 		return fullPath;
+	}
+
+	public String getMimeType() {
+		return mimeType;
 	}
 
 	public int getImageWidth() {

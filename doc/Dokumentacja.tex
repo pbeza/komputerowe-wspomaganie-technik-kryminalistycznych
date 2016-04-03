@@ -52,7 +52,7 @@
 
 %------------------------------------------------------------------------------
 
-\title{Dokumentacja projektu}
+\title{Dokumentacja projektu\\[0.6em]Identyfikacja twarzy}
 \author{
     \href{mailto:bezap@student.mini.pw.edu.pl}{Patryk~Bęza}\\[0.7em]
     \href{mailto:kozakm@student.mini.pw.edu.pl}{Marek~Kozak}\\[0.7em]
@@ -74,7 +74,7 @@
 \textsc{\large Komputerowe wspomaganie technik kryminalistycznych}\\[0.2cm]
 \textsc{\small Rok akademicki 2015/2016}\\[1.5cm]
 
-\HRule \\[1cm]
+\HRule \\[0.7cm]
 { \huge \bfseries \@title}\\[0.7cm]
 \HRule \\[1.75cm]
 
@@ -163,7 +163,7 @@ W niniejszym dziale przedstawiono opis metody PCA oraz \emph{eigenfaces}, na pod
 
 \subsection{Analiza głównych składowych}
 
-Jednym z głównych problemów z jakim mamy do czynienia w identyfikacji twarzy ze zdjęć, jest ich duży wymiar. Dwuwymiarowe, monochromatyczne zdjęcie zdjęcie o wymiarach $p\times q$, rozpina przestrzeń $m=p\cdot q$-wymiarową. Zdjęcie o wymiarach $100\times 100$~pikseli, rozpina przestrzeń $10000$-wymiarową. Istnieje potrzeba zmniejszenia tej przestrzeni kosztem możliwie małych różnic między oryginalnym zdjęciem, a zdjęciem reprezentowanym w ,,skompresowanej" przestrzeni liniowej. Okazuje się, że do celów identyfikacji twarzy, nie wszystkie wymiary/osie są jednakowo istotne. Będziemy chcieli zachować tylko te wymiary, dla których wariancja jest największa, tak, aby skutecznie rozróżniać zdjęcia twarzy, korzystając z możliwie najmniejszej ilości wymiarów\cite{www:opencv}.
+Jednym z głównych problemów z jakim mamy do czynienia w identyfikacji twarzy ze zdjęć, jest ich duży wymiar. Dwuwymiarowe, monochromatyczne zdjęcie zdjęcie o wymiarach, rozpina przestrzeń $m=p\cdot q$-wymiarową. Zdjęcie o wymiarach $100\times 100$~pikseli, rozpina przestrzeń $10000$-wymiarową. Istnieje potrzeba zmniejszenia tej przestrzeni kosztem możliwie małych różnic między oryginalnym zdjęciem, a zdjęciem reprezentowanym w ,,skompresowanej" przestrzeni liniowej. Okazuje się, że do celów identyfikacji twarzy, nie wszystkie wymiary/osie są jednakowo istotne. Będziemy chcieli zachować tylko te wymiary, dla których wariancja jest największa, tak, aby skutecznie rozróżniać zdjęcia twarzy, korzystając z możliwie najmniejszej ilości wymiarów\cite{www:opencv}.
 
 Główna idea metody \emph{eigenfaces}, to przedstawienie zdjęcia jako liniowa kombinacja obrazów bazowych~(patrz równanie~\ref{eq:eigenfaces}), zapisywanych w postaci wektorów, nazywanych również~\emph{eigenfaces}. Dzięki temu obraz możemy przestawić w zwartej postaci wektora $[\omega_1,\dotsc,\omega_M]$, o długości znacznie mniejszej od wymiaru obrazu~$N^2$.
 
@@ -181,13 +181,14 @@ Zbiór wektorów $\{\bm{\Phi_1},\bm{\Phi_2},\dotsc,\bm{\Phi_M}\}$ poddajemy meto
 \end{equation}
 był maksymalny gdzie\footnote{$\delta_{lk}$ jest nazywana deltą lub symbolem \emph{Kroneckera}.}:
 \begin{equation}
+\label{ortogonalnosc}
 	\bm{u_l^T}\bm{u_k}=\delta_{lk}=
 	\begin{cases}
 		1,&\text{gdy }l=k\\
 		0,&\text{gdy }l\neq k
 	\end{cases}
 \end{equation}
-Wektory $\bm{u_k}$ i skalary $\lambda_k$ to odpowiednio wektory własne i wartości własne następującej macierzy kowariancji:
+Równanie \ref{ortogonalnosc} mówi, że każde dwa, różne wektory $\bm{u_k}$, $\bm{u_l}$, gdzie $k\neq l$, są ortogonalne względem siebie. Wektory $\bm{u_k}$ i skalary $\lambda_k$ to odpowiednio wektory własne i wartości własne następującej macierzy kowariancji:
 \begin{equation}
 	C=\frac{1}{M}\cdot\sum\limits_{n=1}^M\bm{\Phi_n}\bm{\Phi_n^T}=AA^T
 \end{equation}
@@ -197,7 +198,7 @@ gdzie:
 \end{equation}
 Rozmiar macierzy $C$ jest bardzo duży -- wynosi $N^2\times N^2$. Liczenie $N^2$ wartości własnych i wektorów własnych byłoby bardzo czasochłonne dla typowych wymiarów zdjęć.
 
-Jeśli ilość zdjęć w bazie danych $M$ jest mniejsza od wymiaru przestrzeni $N^2$, tzn. $M<N^2$, to otrzymamy tylko $M-1$ znaczących wektorów własnych zamiast $N^2$. Pozostałe wektory własne będą miały wartości własne równe $0$. Na szczęście możemy znaleźć $N^2$-wymiarowe wektory własne najpierw licząc wektory własne macierzy~$M\times M$. Dla 16 zdjęć o wymiarach $128\times 128$, oznacza to, że zamiast liczyć wektory własne macierzy o wymiarach $16384\times 16384$, możemy policzyć wektory własne macierzy $16\times 16$, a następnie zastosować odpowiednią kombinację liniową wektora~$\bm{\Phi_i}$. Rozważmy wektor własny $\bm{v_i}$ macierzy $A^TA$, taki, że:
+Jeśli ilość zdjęć w bazie danych $M$ jest mniejsza od wymiaru przestrzeni $N^2$, tzn. $M<N^2$, to otrzymamy tylko $M-1$ znaczących wektorów własnych zamiast $N^2$. Pozostałe wektory własne będą miały wartości własne równe $0$. Na szczęście możemy znaleźć $N^2$-wymiarowe wektory własne najpierw licząc wektory własne mniejszej macierzy, tzn. macierzy~$M\times M$. Dla 16 zdjęć o wymiarach $128\times 128$, oznacza to, że zamiast liczyć wektory własne macierzy o wymiarach\footnote{$128\cdot 128=16384$.} $p\times q$ $16384\times 16384$, możemy policzyć wektory własne macierzy $A^TA$, która ma wymiary $16\times 16$, a następnie zastosować odpowiednią kombinację liniową wektora~$\bm{\Phi_i}$. Rozważmy zatem wektor własny $\bm{v_i}$ macierzy $A^TA$, taki, że:
 \begin{equation}
 	A^TA\bm{v_i}=\mu_i\bm{v_i}
 \end{equation}
@@ -221,9 +222,9 @@ Skonstruujmy macierz $L=A^TA$ o wymiarach $M\times M$, gdzie $L_{mn}=\bm{\Phi_m^
 \label{eq:eigenfaces}
 	\bm{u_l}=\sum\limits_{k=1}^M\bm{v_{lk}}\bm{\Phi_k}\quad\text{gdzie:}\quad l=1,\dotsc,M
 \end{equation}
-Dzięki powyższej analizie złożoność obliczeń istotnie zmalała -- z rzędu liczby pikseli w zdjęciu~$N^2$, do rzędu zdjęć w zbiorze treningowym~$M$. W praktyce zbiór treningowy jest relatywnie mały ($M\ll N^2$) i obliczenia są względnie szybkie. W praktyce można wybrać $M'$, takie, że $M'<M$, ponieważ wystarczy nam kombinacja liniowa, tworząca przybliżoną twarz, a nie idealną. W takim przypadku wektory \emph{eigenfaces} rozpinają podprzestrzeń $M'$-wymiarową pierwotnej $N^2$-wymiarowej przestrzeni zdjęć. Wybór $M'$ wektorów własnych spośród wszystkich wektorów własnych macierzy $L$, odbywa się na zasadzie wzięcia tych z nich, które mają największe odpowiadające wartości własne. W publikacji \emph{M.Turka} i \emph{A.Pentland'a} zostały z powodzeniem testowane przykłady, dla których $M=16$, a $M'=7$\cite{turk}.
+Dzięki powyższej analizie złożoność obliczeń istotnie zmalała -- z rzędu liczby pikseli w zdjęciu~$N^2$, do rzędu zdjęć w zbiorze treningowym~$M$. W praktyce zbiór treningowy jest relatywnie mały (tzn.~$M\ll N^2$) i obliczenia są względnie szybkie. W praktyce można wybrać $M'$, takie, że $M'<M$, ponieważ wystarczy nam kombinacja liniowa, tworząca przybliżoną twarz, a nie idealnie odzwzorowaną. W takim przypadku wektory \emph{eigenfaces} rozpinają podprzestrzeń $M'$-wymiarową pierwotnej $N^2$-wymiarowej przestrzeni zdjęć. Wybór $M'$ wektorów własnych spośród wszystkich wektorów własnych macierzy $L$, odbywa się na zasadzie wzięcia tych z nich, które mają największe odpowiadające wartości własne. W publikacji \emph{M.Turka} i \emph{A.Pentland'a} zostały z powodzeniem testowane przykłady, dla których $M=16$, a $M'=7$\cite{turk}.
 
-Chcąc zidentyfikować osobę widoczną na zadanym zdjęciu twarzy, reprezentowanym przez wektor $\bm\Gamma$ o długości $N^2$, należy przetransformować ten wektor na ,,przestrzeń twarzy" (ang.~\emph{face space}), rozpiętą przez wektory~$\bm{u_1},\bm{u_2},\dotsc,\bm{u_{M'}}$ licząc współczynniki $\omega_k$ kombinacji liniowej:
+Chcąc zidentyfikować osobę widoczną na zadanym zdjęciu twarzy, reprezentowanym przez wektor $\bm\Gamma$ o długości $N^2$, należy przetransformować ten wektor na ,,przestrzeń twarzy" (ang.~\emph{face space}), rozpiętą przez wektory~$\bm{u_1},\bm{u_2},\dotsc,\bm{u_{M'}}$ licząc współczynniki~(wagi) $\omega_k$ kombinacji liniowej:
 \begin{equation}
 	\omega_k=\bm{u_k^T}(\bm{\Gamma}-\bm{\Psi})\quad\text{gdzie:}\quad k=1,2,\dotsc,M'
 \end{equation}
@@ -240,7 +241,7 @@ Tak otrzymany wektor może być użyty do porównania z wektorami dostępnymi w 
 \section{Aplikacja}
 \label{sec:aplikacja}
 
-Aplikację zaimplementowano w języku \emph{Java}, korzystając ze środowiska graficznego \emph{Swing}. Preprocessing zdjęć twarzy został napisany w języku skryptowym \emph{Python}.
+Aplikację zaimplementowano w języku \emph{Java}, korzystając ze środowiska graficznego \emph{Swing}.
 
 %------------------------------------------------------------------------------
 
@@ -265,7 +266,7 @@ Za dane wejściowe aplikacji uważamy:
 
 \subsection{Dane wyjściowe}
 
-Za dane wejściowe aplikacji uważamy niewielki podzbiór zdjęć twarzy z bazy danych, podobnych do identyfikowanej twarzy, wraz z liczbą z zakresu $0\%$ -- $100\%$, będącą procentowym odzwierciedleniem podobieństwa dwóch zdjęć.
+Za dane wejściowe aplikacji uważamy niewielki podzbiór zdjęć twarzy z bazy danych, podobnych do identyfikowanej twarzy, wraz z liczbą z zakresu $0\%$ -- $100\%$, będącą procentowym odzwierciedleniem podobieństwa twarzy identyfikowanej i zwróconej jako wynik działania programu.
 
 %------------------------------------------------------------------------------
 
