@@ -35,7 +35,7 @@ public class MainWindow {
 	private JFrame frame;
 	private final static int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100;
 	private final static String TITLE = "Eigen faces";
-	private final static String FACES_DATABASE_PATH = "../faces";
+	private final static String FACES_DATABASE_PATH = "../../faces";
 	private final DefaultListModel<ImageListCell> facesListModel = new DefaultListModel<ImageListCell>();
 	private JList<ImageListCell> listAllFaces;
 	private ZoomableImagePanelWrapper previewPane;
@@ -225,7 +225,12 @@ public class MainWindow {
 		facesListModel.clear();
 		for (final File f : dirListing) {
 			final BufferedImage bufImg = ImageIO.read(f);
+			if (bufImg == null) {
+				System.out.println(f.getAbsolutePath() + " can't be read as image. Skipping.");
+				continue;
+			}
 			final ImageListCell imgListCell = new ImageListCell(bufImg, f.getName(), f.getAbsolutePath());
+			assert(imgListCell != null);
 			facesListModel.addElement(imgListCell);
 			System.out.println(f.getAbsolutePath() + " successfully added");
 		}

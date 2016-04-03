@@ -1,6 +1,10 @@
 \documentclass[a4paper,titlepage]{article}
+\usepackage{amssymb}
 \usepackage[OT4,plmath]{polski}
-%\usepackage{biblatex}
+\usepackage[polish]{babel}
+\usepackage{csquotes}
+\DeclareQuoteAlias{croatian}{polish} % cudzysłowy w bibliografii
+\usepackage[style=numeric,sorting=nty,isbn=false,abbreviate = false,backend=biber]{biblatex}
 \usepackage[margin=1in]{geometry}
 \usepackage[noend]{algpseudocode}
 \usepackage[page]{appendix}
@@ -10,10 +14,8 @@
 \usepackage{algorithm}
 \usepackage{amsfonts}
 \usepackage{amsmath}
-\usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{array}
-\usepackage{csquotes}
 \usepackage{enumitem}
 \usepackage{graphicx}
 \usepackage{hyperref}
@@ -46,6 +48,7 @@
 \newcommand{\xmark}{\textcolor{Maroon}{\ding{55}}}
 
 \numberwithin{equation}{subsection}
+\addbibresource{Dokumentacja.bib}
 
 %------------------------------------------------------------------------------
 
@@ -131,7 +134,7 @@ W ramach niniejszego projektu powstało rozwiązanie oparte o metody klasyczne, 
 
 \subsection{Zastosowania identyfikacji twarzy}
 
-Istnieje wiele zastosowań identyfikacji twarzy. Część z nich dotyczy zastosowań w rozrywce, takiej jak np. gry czy identyfikacja twarzy na zdjęciach serwisów społecznościowych\footnote{W przeciwieństwie do rozpoznawania twarzy, identyfikacja twarzy nie jest jeszcze stosowana na szeroką skalę na największych serwisach społecznościowych.}. Poza zastosowaniami indentyfikacji twarzy w rozrywce, istnieją zastosowania do poważniejszych celów, np. do wspomagania technik kryminalistycznych i szeroko pojętego bezpieczeństwa danych, np.: systemy kontroli dostępu, systemy bezpieczeństwa na lotniskach, policyjne bazy danych osób poszukiwanych (np. zaginionych, poszukiwanych listami gończymi i podejrzanych).
+Istnieje wiele zastosowań identyfikacji twarzy. Część z nich dotyczy zastosowań w rozrywce, takiej jak np. gry czy identyfikacja twarzy na zdjęciach serwisów społecznościowych\footnote{W przeciwieństwie do rozpoznawania twarzy, identyfikacja twarzy nie jest jeszcze stosowana na szeroką skalę na największych serwisach społecznościowych.}. Poza zastosowaniami identyfikacji twarzy w rozrywce, istnieją zastosowania do poważniejszych celów, np. do wspomagania technik kryminalistycznych i szeroko pojętego bezpieczeństwa danych, np.: systemy kontroli dostępu, systemy bezpieczeństwa na lotniskach, policyjne bazy danych osób poszukiwanych (np. zaginionych, poszukiwanych listami gończymi i podejrzanych).
 
 Identyfikacja twarzy w komputerowym wspomaganiu technik kryminalistycznych jest ważnym zagadnieniem dla wszystkich służb dbających o bezpieczeństwo, które posiadają bazy danych ze zdjęciami twarzy tysięcy osób, wśród których może znajdować się zdjęcie osoby identyfikowanej, np. podejrzanej, poszukiwanej lub zaginionej. Niniejsza dokumentacja jest opisem szczegółów implementacyjnych aplikacji służącej do identyfikacji dwuwymiarowych zdjęć twarzy.
 
@@ -145,20 +148,24 @@ Jeśli osoba, której twarz podano na wejście programu nie znajduje się w bazi
 
 W przeciwnym razie, tzn. jeśli zdjęcia osoby, której twarz została poddana identyfikacji, znajdują się w bazie, program powinien znaleźć tę twarz i przypisać wartość jej podobieństwa bliską $100\%$ (wartość oczekiwana $=100\%$) oraz ewentualnie kilka innych, podobnych twarzy, z odpowiednio mniejszym podobieństwem wyrażonym w skali od $0\%$ do $100\%$.
 
-Pierwszorzędnym celem aplikacji \emph{nie} jest szybkie działanie, co można uzasadnić tym, że algorytmy mające na celu zidentyfikowanie osoby, powinny przede wszystkim nie dopuszcić do przeoczenia osoby, która znajduje się w bazie danych. Tak postawione wymaganie na ogół wymusza zastosowania algorytmów, które działają względnie długo.
+Pierwszorzędnym celem aplikacji \emph{nie} jest szybkie działanie, co można uzasadnić tym, że algorytmy mające na celu zidentyfikowanie osoby, powinny przede wszystkim nie dopuścić do przeoczenia osoby, która znajduje się w bazie danych. Tak postawione wymaganie na ogół wymusza zastosowania algorytmów, które działają względnie długo.
 
 %------------------------------------------------------------------------------
 
 \section{Algorytm}
 \label{sec:algorytm}
 
-Do rozpoznawania twarzy zostanie zastosowana \emph{metoda analizy głównych składowych}~(ang.~\emph{Principal Component Analysis} -- w~skrócie:~PCA). Poniżej przedstawiono opis tej metody na podstawie publikacji autorów metody \emph{eigenfaces}, tzn. profesorów:~\emph{Matthew Turk'a} i \emph{Alex'a Pentland'a}\cite{turk}.
+Do rozpoznawania twarzy została zastosowana \emph{metoda analizy głównych składowych}~(ang.~\emph{Principal Component Analysis} -- w~skrócie:~PCA), zaproponowana niezależnie przez angielskiego matematyka \emph{Karla Pearson'a}~(1901) oraz ekonoma i statystyka \emph{Harolda Hotelling'a}~(1933).
+
+W niniejszym dziale przedstawiono opis metody PCA oraz \emph{eigenfaces}, na podstawie publikacji autorów metody \emph{eigenfaces} -- prof.~\emph{Matthew Turk'a} i prof.~\emph{Alex'a Pentland'a}\cite{turk}.
 
 %------------------------------------------------------------------------------
 
 \subsection{Analiza głównych składowych}
 
-Główna idea metody \emph{eigenfaces}, to przedstawienie zdjęcia jako liniowa kombinacja obrazów bazowych~(patrz równanie~\ref{eq:eigenfaces}), zapisywanych w postaci wektorów, nazywanych również~\emph{eigenfaces}. Dzięki temu obraz możemy przestawić w zwartej postaci wektora $[\omega_1,\dotsc,\omega_M]$ o długości znacznie mniejszej od wymiaru obrazu~$N^2$.
+Jednym z głównych problemów z jakim mamy do czynienia w identyfikacji twarzy ze zdjęć, jest ich duży wymiar. Dwuwymiarowe, monochromatyczne zdjęcie zdjęcie o wymiarach $p\times q$, rozpina przestrzeń $m=p\cdot q$-wymiarową. Zdjęcie o wymiarach $100\times 100$~pikseli, rozpina przestrzeń $10000$-wymiarową. Istnieje potrzeba zmniejszenia tej przestrzeni kosztem możliwie małych różnic między oryginalnym zdjęciem, a zdjęciem reprezentowanym w ,,skompresowanej" przestrzeni liniowej. Okazuje się, że do celów identyfikacji twarzy, nie wszystkie wymiary/osie są jednakowo istotne. Będziemy chcieli zachować tylko te wymiary, dla których wariancja jest największa, tak, aby skutecznie rozróżniać zdjęcia twarzy, korzystając z możliwie najmniejszej ilości wymiarów\cite{www:opencv}.
+
+Główna idea metody \emph{eigenfaces}, to przedstawienie zdjęcia jako liniowa kombinacja obrazów bazowych~(patrz równanie~\ref{eq:eigenfaces}), zapisywanych w postaci wektorów, nazywanych również~\emph{eigenfaces}. Dzięki temu obraz możemy przestawić w zwartej postaci wektora $[\omega_1,\dotsc,\omega_M]$, o długości znacznie mniejszej od wymiaru obrazu~$N^2$.
 
 Załóżmy, że mamy zbiór zdjęć twarzy treningowych, pobranych z bazy danych, w postaci $M$ wektorów $\bm{\Gamma_1},\bm{\Gamma_2},\dotsc,\bm{\Gamma_M}$, z których każdy ma długość $N\cdot N$, gdzie $N$ to długość i wysokość zdjęcia\footnote{Dla uproszczenia oznaczeń w opisie metody zakładamy, że wysokość zdjęcia jest równa szerokości zdjęcia.}. Średnia twarz tego zbioru twarzy testowych jest zdefiniowana jako następujący wektor $\bm{\Psi}$ o długości $N\cdot N$:
 \begin{equation}
@@ -214,7 +221,7 @@ Skonstruujmy macierz $L=A^TA$ o wymiarach $M\times M$, gdzie $L_{mn}=\bm{\Phi_m^
 \label{eq:eigenfaces}
 	\bm{u_l}=\sum\limits_{k=1}^M\bm{v_{lk}}\bm{\Phi_k}\quad\text{gdzie:}\quad l=1,\dotsc,M
 \end{equation}
-Dzięki powyższej analizie złożoność obliczeń istotnie zmalała -- z rzędu liczby pikseli w zdjęciu~$N^2$, do rzędu zdjęć w zbiorze treningowym~$M$. W praktyce zbiór treningowy jest relatywnie mały ($M\ll N^2$) i obliczenia są względnie szybkie. W praktyce można wybrać $M'$, takie, że $M'<M$, ponieważ wystarczy nam kombinacja liniowa, tworząca przybliżoną twarz, a nie idealną. W takim przypadku wektory \emph{eigenfaces} rozpinają podprzestrzeń $M'$-wymiarową pierwotnej $N^2$-wymiarowej przestrzeni zdjęć. Wybór $M'$ wektoróœ własnych spośród wszystkich wektorów własnych macierzy $L$, odbywa się na zasadzie wzięcia tych z nich, które mają największe odpowiadające wartości własne. W publikacji \emph{M.Turka} i \emph{A.Pentland'a} zostałyi z powodzeniem testowane przykłady, dla których $M=16$, a $M'=7$\cite{turk}.
+Dzięki powyższej analizie złożoność obliczeń istotnie zmalała -- z rzędu liczby pikseli w zdjęciu~$N^2$, do rzędu zdjęć w zbiorze treningowym~$M$. W praktyce zbiór treningowy jest relatywnie mały ($M\ll N^2$) i obliczenia są względnie szybkie. W praktyce można wybrać $M'$, takie, że $M'<M$, ponieważ wystarczy nam kombinacja liniowa, tworząca przybliżoną twarz, a nie idealną. W takim przypadku wektory \emph{eigenfaces} rozpinają podprzestrzeń $M'$-wymiarową pierwotnej $N^2$-wymiarowej przestrzeni zdjęć. Wybór $M'$ wektorów własnych spośród wszystkich wektorów własnych macierzy $L$, odbywa się na zasadzie wzięcia tych z nich, które mają największe odpowiadające wartości własne. W publikacji \emph{M.Turka} i \emph{A.Pentland'a} zostały z powodzeniem testowane przykłady, dla których $M=16$, a $M'=7$\cite{turk}.
 
 Chcąc zidentyfikować osobę widoczną na zadanym zdjęciu twarzy, reprezentowanym przez wektor $\bm\Gamma$ o długości $N^2$, należy przetransformować ten wektor na ,,przestrzeń twarzy" (ang.~\emph{face space}), rozpiętą przez wektory~$\bm{u_1},\bm{u_2},\dotsc,\bm{u_{M'}}$ licząc współczynniki $\omega_k$ kombinacji liniowej:
 \begin{equation}
@@ -233,7 +240,7 @@ Tak otrzymany wektor może być użyty do porównania z wektorami dostępnymi w 
 \section{Aplikacja}
 \label{sec:aplikacja}
 
-Aplikację zaimplementowano w języku \emph{Java}, korzystajac ze środowiska graficznego \emph{Swing}. Preprocessing zdjęć twarzy został napisany w języku skryptowym \emph{Python}.
+Aplikację zaimplementowano w języku \emph{Java}, korzystając ze środowiska graficznego \emph{Swing}. Preprocessing zdjęć twarzy został napisany w języku skryptowym \emph{Python}.
 
 %------------------------------------------------------------------------------
 
@@ -322,8 +329,6 @@ Poniższa tabela przestawia podział prac implementacyjnych w ramach projektu.
 %------------------------------------------------------------------------------
 
 \clearpage
-\bibliographystyle{plain}
-%\printbibliography[title=Bibliografia]
-\bibliography{bibliography}
+\printbibliography[title=Bibliografia]
 
 \end{document}
