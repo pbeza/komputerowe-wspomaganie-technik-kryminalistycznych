@@ -9,11 +9,8 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,13 +36,15 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class MainWindow {
 
-	private JFrame frame;
-	private final static int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100,
+	private static final String IMG_FIND_PNG = "/img/find.png", IMG_PEOPLE_PNG = "/img/people.png",
+			IMG_EXIT_PNG = "/img/exit.png", IMG_RELOAD_PNG = "/img/reload.png", IMG_REMOVE_PNG = "/img/remove.png",
+			IMG_SAVE_PNG = "/img/save.png", IMG_OPEN_PNG = "/img/open.png",
+			FACES_DATABASE_PATH = "../../faces/YaleFacedatabaseA", TITLE = "Eigenfaces - Face identification program";
+	private static final int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100,
 			MIN_IMAGE_ID = 1;
-	private final static String TITLE = "Eigen faces";
-	private final static String FACES_DATABASE_PATH = "../../faces/YaleFacedatabaseA";
-	private final DefaultListModel<ImageListCell> facesListModel = new DefaultListModel<ImageListCell>();
 	private static int latelyAssignedId = MIN_IMAGE_ID;
+	private final DefaultListModel<ImageListCell> facesListModel = new DefaultListModel<ImageListCell>();
+	private JFrame frame;
 	private JList<ImageListCell> listAllFaces;
 	private ZoomableImagePanelWrapper previewPane;
 	private ImageDetailsPanel detailsPanel;
@@ -110,7 +109,7 @@ public class MainWindow {
 				}
 			}
 		});
-		mntmOpen.setIcon(new ImageIcon(MainWindow.class.getResource("/img/open.png")));
+		mntmOpen.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
 		mntmOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
 		mntmOpen.setToolTipText("Open image files and add them to faces database");
 		mnfile.add(mntmOpen);
@@ -128,7 +127,7 @@ public class MainWindow {
 				}
 			}
 		});
-		mntmSave.setIcon(new ImageIcon(MainWindow.class.getResource("/img/save.png")));
+		mntmSave.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SAVE_PNG)));
 		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
 		mntmSave.setToolTipText("Save report in text file"); // TODO not
 																// implemented
@@ -145,7 +144,7 @@ public class MainWindow {
 			}
 		});
 		mntmClearAllFaces.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_MASK));
-		mntmClearAllFaces.setIcon(new ImageIcon(MainWindow.class.getResource("/img/remove.png")));
+		mntmClearAllFaces.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_REMOVE_PNG)));
 		mntmClearAllFaces.setToolTipText("Remove all images from faces database");
 		mnfile.add(mntmClearAllFaces);
 
@@ -160,7 +159,7 @@ public class MainWindow {
 			}
 		});
 		mntmLoadPredefined.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_J, InputEvent.CTRL_MASK));
-		mntmLoadPredefined.setIcon(new ImageIcon(MainWindow.class.getResource("/img/reload.png")));
+		mntmLoadPredefined.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_RELOAD_PNG)));
 		mntmLoadPredefined
 				.setToolTipText("Remove all loaded images and load images from predefined directory which is '"
 						+ FACES_DATABASE_PATH + "'");
@@ -176,7 +175,7 @@ public class MainWindow {
 			}
 		});
 		mntmExit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
-		mntmExit.setIcon(new ImageIcon(MainWindow.class.getResource("/img/exit.png")));
+		mntmExit.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_EXIT_PNG)));
 		mntmExit.setToolTipText("Close the application");
 		mnfile.add(mntmExit);
 
@@ -189,8 +188,13 @@ public class MainWindow {
 
 		final JSplitPane splitPaneAllFaces = new JSplitPane();
 		splitPaneAllFaces.setResizeWeight(0.75);
-		tabbedPane.addTab("All faces", new ImageIcon(MainWindow.class.getResource("/img/people.png")),
-				splitPaneAllFaces, "List of all faces stored in database");
+		tabbedPane.addTab("All faces", new ImageIcon(MainWindow.class.getResource(IMG_PEOPLE_PNG)), splitPaneAllFaces,
+				"List of all faces stored in database");
+
+		initializeAllFacesTab(tabbedPane, splitPaneAllFaces);
+	}
+
+	private void initializeAllFacesTab(final JTabbedPane tabbedPane, final JSplitPane splitPaneAllFaces) {
 
 		// Create JList with all faces stored in database for 'All faces' tab
 
@@ -228,7 +232,7 @@ public class MainWindow {
 
 		final JSplitPane splitPaneFindFace = new JSplitPane();
 		splitPaneFindFace.setResizeWeight(0.75);
-		tabbedPane.addTab("Find face", new ImageIcon(MainWindow.class.getResource("/img/find.png")), splitPaneFindFace,
+		tabbedPane.addTab("Find face", new ImageIcon(MainWindow.class.getResource(IMG_FIND_PNG)), splitPaneFindFace,
 				"Find face in database");
 
 		// Load predefined faces database

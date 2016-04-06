@@ -36,11 +36,11 @@ public class ImageDetailsPanel extends JPanel {
 		add(rightTopDetails, BorderLayout.CENTER);
 		rightTopDetails.setLayout(new GridLayout(0, 1));
 
-		final JFormattedTextField[] fieldsToAdd = { idField, filenameField, fullPathField, mimeTypeField, imageWidthField,
-				imageHeightField, zoomField, totalImagesNumberField };
+		final JFormattedTextField[] fieldsToAdd = { idField, filenameField, fullPathField, mimeTypeField,
+				imageWidthField, imageHeightField, zoomField, totalImagesNumberField };
 
-		final JLabel[] labelsToAdd = { lblId, lblFilename, lblFullPath, lblMimeType, lblImageWidth, lblImageHeight, lblZoom,
-				lblTotalImagesNumber };
+		final JLabel[] labelsToAdd = { lblId, lblFilename, lblFullPath, lblMimeType, lblImageWidth, lblImageHeight,
+				lblZoom, lblTotalImagesNumber };
 
 		assert (labelsToAdd.length == fieldsToAdd.length);
 

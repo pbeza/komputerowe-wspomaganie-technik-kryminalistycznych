@@ -7,7 +7,6 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 public class ZoomableImagePanel extends JPanel {
 
@@ -16,7 +15,7 @@ public class ZoomableImagePanel extends JPanel {
 	public void setImage(BufferedImage bufImg) {
 		origImage = bufImg;
 	}
-	
+
 	public void clearImage() {
 		origImage = null;
 		scaledImage = null;
