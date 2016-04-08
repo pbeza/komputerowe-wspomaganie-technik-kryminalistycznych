@@ -1,4 +1,4 @@
-package backend;
+package backend_tests;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;

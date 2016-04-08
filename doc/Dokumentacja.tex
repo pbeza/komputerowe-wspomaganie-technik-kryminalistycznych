@@ -29,6 +29,13 @@
 \usepackage{wrapfig}
 \usepackage{bm}
 \usepackage{mathtools}
+\usepackage{afterpage}
+
+\newcommand\blankpage{%
+	\null
+	\thispagestyle{empty}%
+	\addtocounter{page}{-1}%
+	\newpage}
 
 \linespread{1.4}
 
@@ -96,8 +103,10 @@
 \end{titlepage}
 
 %\maketitle
+\blankpage
 \tableofcontents
 \clearpage
+\blankpage
 
 %------------------------------------------------------------------------------
 
@@ -319,9 +328,9 @@ Poniższa tabela przestawia podział prac implementacyjnych w ramach projektu.
 \center
 \begin{tabular}{p{2.5cm}|p{3.3cm}|p{3.3cm}|p{3.3cm}}
 & Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
-\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Stworzenie GUI & -- & --\\
-& & &\\
-& & &\\
+\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Implementacja algorytmu & -- & --\\
+& $\bullet$ Implementacja GUI & &\\
+& $\bullet$ Implementacja testów jednostkowych & &\\
 \end{tabular}
 \end{table}
 
