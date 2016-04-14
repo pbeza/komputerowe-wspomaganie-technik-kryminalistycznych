@@ -53,7 +53,7 @@ public class CsvParser {
 		}
 		Path facePath = Paths.get(RELATIVE_FACES_PATH, pathAndLabel[0]);
 		int faceLabel = Integer.parseInt(pathAndLabel[1]);
-		String canonicalFacePath = new URI(facePath.toString()).normalize().getPath();
+		String canonicalFacePath = facePath.toFile().getCanonicalPath();
 		processFaceImage(faceLabel, canonicalFacePath);
 	}
 

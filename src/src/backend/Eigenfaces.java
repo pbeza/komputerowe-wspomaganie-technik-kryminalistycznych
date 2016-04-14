@@ -85,7 +85,12 @@ public class Eigenfaces {
 	}
 
 	public void train() throws IOException, URISyntaxException {
-		loadImagesAndLabelsFromCsv();
+		try {
+			loadImagesAndLabelsFromCsv();
+		} catch (IOException | URISyntaxException e) {
+			System.out.println("Error during loading images from database. Details: " + e.getMessage());
+			throw e;
+		}
 		eigenfacesRecognizer = Face.createEigenFaceRecognizer();
 		eigenfacesRecognizer.train(learningSetFaces, matLearningSetFacesLabels);
 		isModelTrained = true;
@@ -130,7 +135,7 @@ public class Eigenfaces {
 
 		String faceToIdentifyPath = null;
 		String learningSetCsvPath = DEFAULT_FACES_LEARNING_SET_CSV_PATH;
-		
+
 		if (args.length == 2) {
 			learningSetCsvPath = args[1];
 		} else if (args.length != 1) {

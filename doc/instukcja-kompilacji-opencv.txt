@@ -1,0 +1,58 @@
+Instrukcja kompilacji OpenCV i OpenCV contrib
+---------------------------------------------
+
+URL: http://docs.opencv.org/3.1.0/de/d25/tutorial_dnn_build.html#gsc.tab=0
+
+0. Zainstalować wszystkie zależności, tj.: git, CMake, Java 8 JDK, Microsoft Visual Studio, Python, ant i wiele innych, a następnie dodać te narzędzia do PATH i ich zmiennych środowiskowych (jeśli przy instalacji same się nie dodały).
+
+1. Pobrać repozytoria do jednego katalogu:
+
+$ git clone https://github.com/Itseez/opencv.git
+$ git clone https://github.com/Itseez/opencv_contrib.git
+
+2. Otworzyć cmake-gui i wybrać np.:
+
+Where is the source code:
+	C:/Users/Patryk/Downloads/opencv
+Where to build binaries:
+	C:/Users/Patryk/Downloads/opencv/build
+
+3. TODO http://answers.opencv.org/question/88162/build-opencv-31-contrib-face-module-for-java/ Zamienić w CMakefile'ach wszystkich modułów z katalogu opencv_contrib: "WRAP python" na "WRAP python java" poza modułem 'bgsegm' (katalog 'bgsegm' usunąć). Można to zautomatyzować - patrz komentarz: http://stackoverflow.com/questions/31710250/build-opencv-with-contrib-modules-and-java-wrapper.
+
+4. Kliknąć 'Configure' i po wyskoczeniu okna z napisem 'Specify the generator for the project' wybrać np. 'Visual Studio 12 2013 Win64'. Resztę pozostawić zaznaczoną domyślnie.
+
+5. Po zakończeniu wstępnego konfigurowania w cmake-gui pojawią się opcje wczytane z CMakefile'a oraz raport z wykrywania niezbędnego oprogramowania (zaleca się przejrzeć raport, aby doinstalować brakujące oprogramowanie). Należy zmienić kilka z nich, ponieważ są istotne dla dalszej kompilacji OpenCV i jego modułów. W szczególności należy zwrócić uwagę, aby były wybrane następujące opcje:
+OPENCV_EXTRA_MODULES_PATH=C:\Users\Patryk\Downloads\opencv_contrib\modules
+BUILD_opencv_java=ON
+WITH_CUDA=OFF
+WITH_MATLAB=OFF
+CMAKE_BUILD_TYPE=Release
+BUILD_opencv_dnn=OFF // w przeciwnym razie będą problemy z Google'owym Protobuf'em
+TODO:
+ODZNACZYĆ:
+bgsegm, xfeatures2d, ximgproc, text, reg, aruco, BUILD_SHARED_LIBS
+
+Problemy mogą wynikać z wyboru opcji 64 bit.
+
+UWAGA: face zależy od: face opencv_core opencv_imgproc opencv_objdetec
+//BUILD_LIBPROTOBUF_FROM_SOURCES
+//CUDA_SDK_ROOT_DIR=?
+//GLIB_LIBRARY=?
+//JAVA_AWT_INCLUDE_PATH=?
+//JAVA_AWT_LIBRARY=?
+//JAVA_=?
+
+CAFFE?
+PROTOBUF_LIBRARY?
+PROTOBUF_INCLUDE_DIR?
+OpenGL?
+
+6. Ponownie kliknąć 'Configure' i sprawdzić czy nie ma błędów. Jeśli są, to najprawdopodobniej brakuje jakiegoś oprogramowania, które należy doinstalować. Jeśli nie ma, to należy zwrócić uwagę m.in. na to czy w wynikowym raporcie pojawiło się:
+
+Java wrappers:               YES
+
+Jeśli nie, to musimy cofnąć się do poprzednich kroków, aby wymusić budowanie wrappera, będącego plikiem JAR.
+
+7. Kliknąć 'Generate'. Jeśli operacja ta powiedzie się, to zostanie wygenerowany 'Solution' Microsoft Visual Studio w wersji takiej, jak wybraliśmy w kroku 4. Należy uruchomić wygenerowany Solution 'OpenCV.sln', który zostanie umieszczony w katalogu wybranym w pkt. 2., tj. w naszym wypadku w 'C:\Users\Patryk\Downloads\opencv\build'.
+
+8. Wybrać opcję 'Release' i rozpocząć kompilację wybierając opcję 'Build > Build Solution', która na przeciętnym komputerze trwa kilkanaście/dziesiąt minut. Po kompilacji folder 'build' waży w zależności od ilości dodatkowych modułów od 2.5GB do 7.5GB.
