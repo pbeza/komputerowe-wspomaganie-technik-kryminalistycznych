@@ -10,7 +10,9 @@ Links with training sets:
 
 http://vision.ucsd.edu/datasets/yale_face_dataset_original/yalefaces.zip
 
-extract to 'YaleFacedatabaseA' directory.
+extract to 'YaleFacedatabaseA' directory. If link is dead, here is the mirror:
+
+https://drive.google.com/open?id=0B0crrndBQGyGTGxEV0Z4MHlFN2s
 
 
 2. Yale Facedatabase B (cropped version)

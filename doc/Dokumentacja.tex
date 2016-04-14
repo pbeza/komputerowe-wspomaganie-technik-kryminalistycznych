@@ -258,8 +258,21 @@ Aplikację zaimplementowano w języku \emph{Java}, korzystając ze środowiska g
 
 \noindent Lista wykorzystanych w projekcie bibliotek:
 \begin{itemize}
-	\item OpenCV
+	\item \emph{OpenCV 3.1} rozszerzona o moduły z repozytorium \emph{OpenCV Contrib},
+	\item standardowe biblioteki Javy (np. \emph{JUnit}).
 \end{itemize}
+
+%------------------------------------------------------------------------------
+
+\subsection{Napotkane problemy konfiguracji}
+
+Zdecydowanie największą trudnością konfiguracji projektu, która pochłonęła sporą część całego projektu, była kompilacja modułu \emph{OpenCV Faces} (i jego zależności), który jest implementacją algorytmu \emph{eigenfaces}. Szczególnie dużo czasu zajęło poprawne jej skompilowanie na systemie operacyjnym \emph{Windows~10}. Kompilacja na systemie \emph{Linux Debian} była również czasochłonna, ale nie w takim stopniu jak na \emph{Windows}.
+
+Główną przyczyną trudności konfiguracji projektu był fakt, że moduł \emph{OpenCV Faces} jest wersją rozwojową, która nie jest dołączona do standardowej istalacji \emph{OpenCV}. Ponadto \emph{OpenCV} i wszystkie jego moduły, w tym moduł \emph{Faces}, jest napisany w C++ i aby włączyć \emph{wrapper}\footnote{Przez \emph{wrapper} rozumie się wygenerowany automatycznie, na podstawie kodu źródłowego napisanego w C++, plik \emph{JAR}, który jest interfejsem implementacji \emph{OpenCV}, napisanej w C++ i skompilowanej do postaci binarnej \emph{*.DLL} i \emph{*.SO}, odpowiednio na \emph{Windowsie} i \emph{Linuksie}. Mechanizm ten nosi nazwę \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java Native Interface}}.} do \emph{Javy}, należy przeprowadzić kompilację \emph{OpenCV} i \emph{OpenCV Contrib} samodzielnie, co nie byłoby dużym problemem gdyby nie to, że po drodze należy zmodyfikować kilka nieudokumentowanych miejsc w kodzie modułu \emph{Faces}, ponieważ oficjalnie, tylko moduły z głównego wydania \emph{OpenCV} mają wsparcie \emph{wrapperem} \emph{Javy}.
+
+Mniejszą trudnością, a bardziej uciążliwością, był fakt, że system \emph{Windows} nie jest domyślnie przystosowany dla pracy programisty, co wiązało się z koniecznością ręcznego konfigurowania co najmniej kilku zmiennych środowiskowych i instalowania wielu zależności. Niektóre z nich to: \emph{git}, \emph{CMake}, \emph{Java~8~JDK}, \emph{Python}, \emph{ant}, \emph{MinGW}/\emph{Microsoft Visual Studio}, \emph{Eclipse}.
+
+Wyżej wymienione problemy były oczywiście jednorazowe, tzn. użytkownik końcowy nie musi się nimi przejować, ponieważ wszystkie biblioteki zostały dostarczone w ramach skompilowanej wersji projektu.
 
 %------------------------------------------------------------------------------
 
@@ -314,7 +327,7 @@ Poniższa tabela przestawia wykaz rozdziałów opracowanych przez poszczególnyc
 
 \begin{table}[H]
 \center
-\begin{tabular}{p{2.5cm}|p{3.3cm}|p{3.3cm}|p{3.3cm}}
+\begin{tabular}{p{2.5cm}|p{4cm}|p{4cm}|p{4cm}}
 & Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
 \parbox{3cm}{\ \\Opracowane \\rozdziały} & \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:aplikacja} & -- & --\\
 \end{tabular}
@@ -326,11 +339,13 @@ Poniższa tabela przestawia podział prac implementacyjnych w ramach projektu.
 
 \begin{table}[H]
 \center
-\begin{tabular}{p{2.5cm}|p{3.3cm}|p{3.3cm}|p{3.3cm}}
+\begin{tabular}{p{2.5cm}|p{4cm}|p{4cm}|p{4cm}}
 & Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
-\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Implementacja algorytmu & -- & --\\
-& $\bullet$ Implementacja GUI & &\\
-& $\bullet$ Implementacja testów jednostkowych & &\\
+\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Obsługa algorytmu \emph{eigenfaces} w \emph{Javie} & -- & --\\
+& $\bullet$ Konfiguracja środowiska i kompilacja \emph{OpenCV} z modułem \emph{Faces} na system \emph{Windows} i \emph{Linux} & &\\
+& $\bullet$ Implementacja interfejsu graficznego w \emph{Javie} & &\\
+& $\bullet$ Implementacja testów jednostkowych w \emph{Javie} & &\\
+& $\bullet$ Implementacja skryptu generującego plik CSV z listą zdjęć z bazy danych w \emph{Pythonie} & &\\
 \end{tabular}
 \end{table}
 
