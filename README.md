@@ -55,6 +55,26 @@ Przydatne pluginy do Eclipse'a:
 
 Uzasadnienie: [OpenCV](http://opencv.org/), który ma prawdopodobnie zaimplementowaną identyfikację twarzy przy użyciu *eigenfaces*, jest wspierany w *C++* i *Javie*. Nie istnieją oficjalne porty na *C#*, a istniejące [działają gorzej](http://stackoverflow.com/questions/85569/net-dotnet-wrappers-for-opencv) od oficjalnego [OpenCV](http://opencv.org/).
 
+### Wymagania końcowe ###
+
+Postać finalna - wymagania końcowe podane na laboratorium 29.04.2016:
+- Aplikacja ma być bezproblemowo uruchamiana, np. dzięki użyciu *VirtualBox'a* (preferowane *vdi* + wskazówki konfiguracji). Mniej chętnie: binaria + instrukcja instalacji.
+- Instrukcja użytkownika (*osobno* od dokumentacji technicznej).
+- Dokumentacja techniczna - w tym: problem, uzasadniony wybór metody, źródła, instrukcja kompilacji/instalacji, zdjęcia "profili" i blokowy schemat tego co się dzieje w aplikacji.
+- Dziennik zdarzeń (logi ze stemplami czasowymi). Włącznie z logowaniem logowania, wylogowania i zamknięciem aplikacji.
+- *Prawdziwa* baza danych:
+  - przeglądanie materiału porównawczego,
+  - niewymagane jest dodawanie materiału do bazy danych przez użytkownika.
+- Testy na zmodyfikowanych zdjęciach (przeskalowanych, zmodyfikowanych, zdjęcie lalek, lwich paszczy itp.). Aplikacja nie ma prawa się "wywalić", może co najwyżej odrzucać próbki.
+- Uwierzytelnienie login + hasło (bez konieczności dodawania nowego użytkownika).
+- Możliwość ustawienia linii oczu z logowaniem.
+- Obrazy oryginalne są tylko do odczytu (*read-only*).
+- Raportowanie w jakiś sposób postępu obliczeń (np. pasek postępu).
+- Wyświetlenie listy kandydatów i umożliwienie wyboru lub odpowiedzi *żaden z nich* (logowanie).
+- Możliwość ustawiania parametrów obliczeń.
+- Logi traktować jako wydruk dla sądu (niewymagane przeglądanie logów w aplikacji).
+- Prezentacja, a w ramach niej demonstracja i skrócony opis działania.
+
 ### Inne ###
 
 - Przed wrzuceniem kodu do repozytorium [autoformatujemy](http://stackoverflow.com/questions/15655126/how-to-auto-format-code-in-eclipse) kod wciskając <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> lub ustawiając opcję: *Window->Preferences->Java->Editor->SaveActions->Format source code*, aby kod każdorazowo sam się formatował przy zapisywaniu stanu pliku.
