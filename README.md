@@ -1,11 +1,5 @@
 # Komputerowe wspomaganie technik kryminalistycznych - projekt zespołowy (sem. letni 2015/2016) #
 
-Projekt zespołowy składa się z 3 części, tj. z:
-
-1. napisania aplikacji,
-1. napisania dokumentacji ww. aplikacji,
-1. prezentacji.
-
 ### Temat projektu ###
 
 > Identyfikacja twarzy.
@@ -15,7 +9,7 @@ Projekt zespołowy składa się z 3 części, tj. z:
 - [Eigenface](https://www.google.pl/search?q=Eigenface),
 - [Principal component analysis (PCA) (analiza głównych składowych)](https://en.wikipedia.org/wiki/Principal_component_analysis),
 - [Eigenvalues and eigenvectors (wartości i wektory własne)](https://en.wikipedia.org/wiki/Eigenvalues_and_eigenvectors),
-- [Face identification (**nie** *recognition*)](https://www.google.pl/search?q=face+identification).
+- [Face identification (**nie** *face recognition*)](https://www.google.pl/search?q=face+identification).
 
 ### Deadline'y ###
 
@@ -57,7 +51,7 @@ Uzasadnienie: [OpenCV](http://opencv.org/), który ma prawdopodobnie zaimplement
 
 ### Wymagania końcowe ###
 
-Postać finalna - wymagania końcowe podane na laboratorium 29.04.2016:
+Postać finalna ma spełniać następujące wymagania końcowe (podane na laboratorium *29.04.2016*):
 - Aplikacja ma być bezproblemowo uruchamiana, np. dzięki użyciu *VirtualBox'a* (preferowane *vdi* + wskazówki konfiguracji). Mniej chętnie: binaria + instrukcja instalacji.
 - Instrukcja użytkownika (*osobno* od dokumentacji technicznej).
 - Dokumentacja techniczna - w tym: problem, uzasadniony wybór metody, źródła, instrukcja kompilacji/instalacji, zdjęcia "profili" i blokowy schemat tego co się dzieje w aplikacji.
