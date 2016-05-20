@@ -17,125 +17,132 @@ import javax.swing.event.ChangeListener;
 
 public class ZoomableImagePanelWrapper extends JPanel {
 
-	private final static double ZOOM_DELTA = 0.05, INITIAL_ZOOM_FACTOR = 1.0, MIN_ZOOM = 0.01, MAX_ZOOM = 100.0;
-	private final static int TIMER_DELAY = 50;
-	private final Timer zoomTimer;
-	private final JButton zoomInButton, zoomOutButton, restoreOriginalButton;
-	private final JScrollPane scrollPaneImageZoom;
-	private final JPanel panelForCenteringInScrollPane;
-	private final ImageDetailsPanel detailsPanel;
-	private final ZoomableImagePanel zoomableImagePanel;
-	private double zoomFactor = INITIAL_ZOOM_FACTOR;
-	private final ButtonModel zoomInButtonModel, zoomOutButtonModel;
+    private final static double ZOOM_DELTA = 0.05, INITIAL_ZOOM_FACTOR = 1.0,
+            MIN_ZOOM = 0.01, MAX_ZOOM = 100.0;
+    private final static int TIMER_DELAY = 50;
+    private final Timer zoomTimer;
+    private final JButton zoomInButton, zoomOutButton, restoreOriginalButton;
+    private final JScrollPane scrollPaneImageZoom;
+    private final JPanel panelForCenteringInScrollPane;
+    private final ImageDetailsPanel detailsPanel;
+    private final ZoomableImagePanel zoomableImagePanel;
+    private double zoomFactor = INITIAL_ZOOM_FACTOR;
+    private final ButtonModel zoomInButtonModel, zoomOutButtonModel;
 
-	public ZoomableImagePanelWrapper(ImageDetailsPanel detailsPanel) {
-		zoomTimer = new Timer(TIMER_DELAY, new ZoomButtonTimerActionListener());
-		this.detailsPanel = detailsPanel;
+    public ZoomableImagePanelWrapper(ImageDetailsPanel detailsPanel) {
+        zoomTimer = new Timer(TIMER_DELAY, new ZoomButtonTimerActionListener());
+        this.detailsPanel = detailsPanel;
 
-		setLayout(new BorderLayout());
+        setLayout(new BorderLayout());
 
-		zoomableImagePanel = new ZoomableImagePanel();
-		zoomableImagePanel.setToolTipText("Preview");
+        zoomableImagePanel = new ZoomableImagePanel();
+        zoomableImagePanel.setToolTipText("Preview");
 
-		panelForCenteringInScrollPane = new JPanel(new GridBagLayout());
-		panelForCenteringInScrollPane.add(zoomableImagePanel);
-		scrollPaneImageZoom = new JScrollPane(panelForCenteringInScrollPane);
-		add(scrollPaneImageZoom, BorderLayout.CENTER);
+        panelForCenteringInScrollPane = new JPanel(new GridBagLayout());
+        panelForCenteringInScrollPane.add(zoomableImagePanel);
+        scrollPaneImageZoom = new JScrollPane(panelForCenteringInScrollPane);
+        add(scrollPaneImageZoom, BorderLayout.CENTER);
 
-		final ZoomButtonChangeListener zoomChangeListener = new ZoomButtonChangeListener();
-		zoomInButton = new JButton("+");
-		zoomInButton.setToolTipText("Zoom in");
-		zoomInButtonModel = zoomInButton.getModel();
-		zoomInButtonModel.addChangeListener(zoomChangeListener);
+        final ZoomButtonChangeListener zoomChangeListener = new ZoomButtonChangeListener();
+        zoomInButton = new JButton("+");
+        zoomInButton.setToolTipText("Zoom in");
+        zoomInButtonModel = zoomInButton.getModel();
+        zoomInButtonModel.addChangeListener(zoomChangeListener);
 
-		zoomOutButton = new JButton("-");
-		zoomOutButton.setToolTipText("Zoom out");
-		zoomOutButtonModel = zoomOutButton.getModel();
-		zoomOutButtonModel.addChangeListener(zoomChangeListener);
+        zoomOutButton = new JButton("-");
+        zoomOutButton.setToolTipText("Zoom out");
+        zoomOutButtonModel = zoomOutButton.getModel();
+        zoomOutButtonModel.addChangeListener(zoomChangeListener);
 
-		final ZoomButtonActionListener zoomActionListener = new ZoomButtonActionListener();
-		restoreOriginalButton = new JButton("Original");
-		restoreOriginalButton.addActionListener(zoomActionListener);
-		restoreOriginalButton.setToolTipText("Restore original image size");
+        final ZoomButtonActionListener zoomActionListener = new ZoomButtonActionListener();
+        restoreOriginalButton = new JButton("Original");
+        restoreOriginalButton.addActionListener(zoomActionListener);
+        restoreOriginalButton.setToolTipText("Restore original image size");
 
-		final JPanel bottomZoomInOutPanel = new JPanel(new GridLayout());
-		bottomZoomInOutPanel.add(zoomInButton);
-		bottomZoomInOutPanel.add(restoreOriginalButton);
-		bottomZoomInOutPanel.add(zoomOutButton);
+        final JPanel bottomZoomInOutPanel = new JPanel(new GridLayout());
+        bottomZoomInOutPanel.add(zoomInButton);
+        bottomZoomInOutPanel.add(restoreOriginalButton);
+        bottomZoomInOutPanel.add(zoomOutButton);
 
-		add(bottomZoomInOutPanel, BorderLayout.SOUTH);
-	}
+        add(bottomZoomInOutPanel, BorderLayout.SOUTH);
+    }
 
-	public void setImage(BufferedImage bufImg) {
-		zoomableImagePanel.setImage(bufImg);
-		setZoom(INITIAL_ZOOM_FACTOR);
-		scrollPaneImageZoom.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		scrollPaneImageZoom.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		repaint();
-	}
+    public void setImage(BufferedImage bufImg) {
+        zoomableImagePanel.setImage(bufImg);
+        setZoom(INITIAL_ZOOM_FACTOR);
+        scrollPaneImageZoom.setHorizontalScrollBarPolicy(
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPaneImageZoom.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        repaint();
+    }
 
-	public void clearImage() {
-		zoomableImagePanel.clearImage();
-		scrollPaneImageZoom.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollPaneImageZoom.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-	}
+    public void clearImage() {
+        zoomableImagePanel.clearImage();
+        scrollPaneImageZoom.setHorizontalScrollBarPolicy(
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPaneImageZoom.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+    }
 
-	private void setZoom(double zoom) {
-		zoomFactor = zoom;
-		if (zoomableImagePanel.setScaledImage(zoomFactor)) {
-			detailsPanel.setZoom(zoomFactor);
-		}
-	}
+    private void setZoom(double zoom) {
+        zoomFactor = zoom;
+        if (zoomableImagePanel.setScaledImage(zoomFactor)) {
+            detailsPanel.setZoom(zoomFactor);
+        }
+    }
 
-	private class ZoomButtonTimerActionListener implements ActionListener {
+    private class ZoomButtonTimerActionListener implements ActionListener {
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			double d;
-			if (e.getSource() != zoomTimer) {
-				return;
-			}
-			if (zoomInButtonModel.isPressed()) {
-				d = ZOOM_DELTA;
-			} else if (zoomOutButtonModel.isPressed()) {
-				d = -ZOOM_DELTA;
-			} else {
-				System.out.println("Unexpected timer event");
-				return;
-			}
-			final double newZoomFactor = zoomFactor + d;
-			if (newZoomFactor <= MIN_ZOOM) {
-				System.out.println("Cannot zoom out more");
-				return;
-			} else if (newZoomFactor > MAX_ZOOM) {
-				System.out.println("Cannot zoom in more");
-				return;
-			}
-			setZoom(newZoomFactor);
-		}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            double d;
+            if (e.getSource() != zoomTimer) {
+                return;
+            }
+            if (zoomInButtonModel.isPressed()) {
+                d = ZOOM_DELTA;
+            } else if (zoomOutButtonModel.isPressed()) {
+                d = -ZOOM_DELTA;
+            } else {
+                System.out.println("Unexpected timer event");
+                return;
+            }
+            final double newZoomFactor = zoomFactor + d;
+            if (newZoomFactor <= MIN_ZOOM) {
+                System.out.println("Cannot zoom out more");
+                return;
+            } else if (newZoomFactor > MAX_ZOOM) {
+                System.out.println("Cannot zoom in more");
+                return;
+            }
+            setZoom(newZoomFactor);
+        }
 
-	}
+    }
 
-	private class ZoomButtonActionListener implements ActionListener {
+    private class ZoomButtonActionListener implements ActionListener {
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			if (e.getSource() == restoreOriginalButton) {
-				setZoom(INITIAL_ZOOM_FACTOR);
-			}
-		}
-	}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource() == restoreOriginalButton) {
+                setZoom(INITIAL_ZOOM_FACTOR);
+            }
+        }
+    }
 
-	private class ZoomButtonChangeListener implements ChangeListener {
+    private class ZoomButtonChangeListener implements ChangeListener {
 
-		@Override
-		public void stateChanged(ChangeEvent e) {
+        @Override
+        public void stateChanged(ChangeEvent e) {
 
-			if (!zoomTimer.isRunning() && (zoomInButtonModel.isPressed() || zoomOutButtonModel.isPressed())) {
-				zoomTimer.start();
-			} else if (zoomTimer.isRunning() && !zoomInButtonModel.isPressed() && !zoomOutButtonModel.isPressed()) {
-				zoomTimer.stop();
-			}
-		}
-	}
+            if (!zoomTimer.isRunning() && (zoomInButtonModel.isPressed()
+                    || zoomOutButtonModel.isPressed())) {
+                zoomTimer.start();
+            } else if (zoomTimer.isRunning() && !zoomInButtonModel.isPressed()
+                    && !zoomOutButtonModel.isPressed()) {
+                zoomTimer.stop();
+            }
+        }
+    }
 }
