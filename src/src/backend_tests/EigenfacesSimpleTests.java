@@ -27,32 +27,27 @@ public class EigenfacesSimpleTests {
     }
 
     private void createTests() {
-        String[] fnames = { "subject09.happy", "subject13.rightlight",
-                "subject14.surprised" };
+        String[] fnames = { "subject09.happy", "subject13.rightlight", "subject14.surprised" };
         int[] expectedLabels = { 9, 13, 14 };
         assert (fnames.length == expectedLabels.length);
         for (int i = 0; i < fnames.length; i++) {
-            facesFromTrainingFacesSet.put(PATH_PREFIX + fnames[i],
-                    expectedLabels[i]);
+            facesFromTrainingFacesSet.put(PATH_PREFIX + fnames[i], expectedLabels[i]);
         }
     }
 
     @Test
     public void testImageFromTrainingSet() {
-        for (Map.Entry<String, Integer> p : facesFromTrainingFacesSet
-                .entrySet()) {
+        for (Map.Entry<String, Integer> p : facesFromTrainingFacesSet.entrySet()) {
             String facePath = p.getKey();
             int expectedLabel = p.getValue();
             int predictedLabel = -1;
             try {
-                predictedLabel = eigenfaces.predictFaces(facePath,
-                        expectedLabel);
+                predictedLabel = eigenfaces.predictFaces(facePath, expectedLabel);
             } catch (IOException | URISyntaxException e) {
                 fail("Exception: " + e.getMessage());
             }
             if (expectedLabel != predictedLabel) {
-                fail("Expected label = " + expectedLabel
-                        + ", predicted label = " + predictedLabel);
+                fail("Expected label = " + expectedLabel + ", predicted label = " + predictedLabel);
             }
         }
     }

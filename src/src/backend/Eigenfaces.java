@@ -16,8 +16,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 public class Eigenfaces {
 
     private final static String DEFAULT_FACES_LEARNING_SET_CSV_PATH = "../../faces/faces.csv";
-    private final static int UNKNOWN_LABEL = -1,
-            LABELS_MARTIX_TYPE = CvType.CV_32SC1;
+    private final static int UNKNOWN_LABEL = -1, LABELS_MARTIX_TYPE = CvType.CV_32SC1;
 
     private List<Mat> learningSetFaces;
     private List<Integer> learningSetFacesLabels;
@@ -43,33 +42,26 @@ public class Eigenfaces {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
-    public int predictFaces(String faceToIdentifyPath)
-            throws IOException, URISyntaxException {
+    public int predictFaces(String faceToIdentifyPath) throws IOException, URISyntaxException {
         return predictFaces(faceToIdentifyPath, UNKNOWN_LABEL);
     }
 
-    public int predictFaces(String faceToIdentifyPath, int faceToIdentifyLabel)
-            throws IOException, URISyntaxException {
+    public int predictFaces(String faceToIdentifyPath, int faceToIdentifyLabel) throws IOException, URISyntaxException {
 
-        File tmpPngFile = TempPngFileCreator
-                .createTmpPngCopy(faceToIdentifyPath);
+        File tmpPngFile = TempPngFileCreator.createTmpPngCopy(faceToIdentifyPath);
         String tmpFaceCanonicalPath = tmpPngFile.getCanonicalPath();
-        Mat faceToIdentify = Imgcodecs.imread(tmpFaceCanonicalPath,
-                CsvParser.IMREAD_FLAGS);
+        Mat faceToIdentify = Imgcodecs.imread(tmpFaceCanonicalPath, CsvParser.IMREAD_FLAGS);
         if (!tmpPngFile.delete()) {
-            System.out.println("Warning! Temporary file was't deleted! "
-                    + tmpFaceCanonicalPath);
+            System.out.println("Warning! Temporary file was't deleted! " + tmpFaceCanonicalPath);
         }
         return predictFaces(faceToIdentify, faceToIdentifyLabel);
     }
 
-    public int predictFaces(Mat faceToIdentify)
-            throws IOException, URISyntaxException {
+    public int predictFaces(Mat faceToIdentify) throws IOException, URISyntaxException {
         return predictFaces(faceToIdentify, UNKNOWN_LABEL);
     }
 
-    public int predictFaces(Mat faceToIdentify, int faceToIdentifyLabel)
-            throws IOException, URISyntaxException {
+    public int predictFaces(Mat faceToIdentify, int faceToIdentifyLabel) throws IOException, URISyntaxException {
 
         this.faceToIdentify = faceToIdentify;
         this.faceToIdentifyLabel = faceToIdentifyLabel;
@@ -91,12 +83,10 @@ public class Eigenfaces {
         this.predictedLabel = label_out[0];
         this.predictedConfidence = confidence_out[0];
 
-        System.out.println(
-                String.format("Predicted class = %d with confidence %f",
-                        predictedLabel, predictedConfidence));
+        System.out
+                .println(String.format("Predicted class = %d with confidence %f", predictedLabel, predictedConfidence));
         System.out.print("Actual class = ");
-        System.out.println(faceToIdentifyLabel == UNKNOWN_LABEL ? "unknown"
-                : faceToIdentifyLabel);
+        System.out.println(faceToIdentifyLabel == UNKNOWN_LABEL ? "unknown" : faceToIdentifyLabel);
 
         return predictedLabel;
     }
@@ -105,9 +95,7 @@ public class Eigenfaces {
         try {
             loadImagesAndLabelsFromCsv();
         } catch (IOException | URISyntaxException e) {
-            System.out.println(
-                    "Error during loading images from database. Details: "
-                            + e.getMessage());
+            System.out.println("Error during loading images from database. Details: " + e.getMessage());
             throw e;
         }
         eigenfacesRecognizer = Face.createEigenFaceRecognizer();
@@ -115,8 +103,7 @@ public class Eigenfaces {
         isModelTrained = true;
     }
 
-    private void loadImagesAndLabelsFromCsv()
-            throws IOException, URISyntaxException {
+    private void loadImagesAndLabelsFromCsv() throws IOException, URISyntaxException {
 
         csvParser.readCsv(learningSetFaces, learningSetFacesLabels);
 
@@ -159,8 +146,7 @@ public class Eigenfaces {
         if (args.length == 2) {
             learningSetCsvPath = args[1];
         } else if (args.length != 1) {
-            System.out.println(
-                    "USAGE: eigenfaces <face_to_identify_path> [learning_set_CSV_path]");
+            System.out.println("USAGE: eigenfaces <face_to_identify_path> [learning_set_CSV_path]");
             return;
         }
 
@@ -170,8 +156,7 @@ public class Eigenfaces {
         try {
             e.predictFaces(faceToIdentifyPath);
         } catch (IOException | URISyntaxException e1) {
-            System.out.println(
-                    "Application has failed. Details: " + e1.getMessage());
+            System.out.println("Application has failed. Details: " + e1.getMessage());
             System.out.println("Stack trace:");
             e1.printStackTrace();
         }
