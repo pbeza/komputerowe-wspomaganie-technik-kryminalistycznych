@@ -11,6 +11,7 @@ import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +40,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import backend.Log;
+import backend.Eigenfaces;
 import backend.Login;
 
 public class MainWindow {
@@ -46,8 +48,8 @@ public class MainWindow {
     private final static Log log = Log.getLogger();
     private static final String IMG_FIND_PNG = "/img/find.png", IMG_PEOPLE_PNG = "/img/people.png",
             IMG_EXIT_PNG = "/img/exit.png", IMG_RELOAD_PNG = "/img/reload.png", IMG_REMOVE_PNG = "/img/remove.png",
-            IMG_SAVE_PNG = "/img/save.png", IMG_OPEN_PNG = "/img/open.png",
-            FACES_DATABASE_PATH = "../../faces/YaleFacedatabaseA", TITLE = "Eigenfaces - Face identification program";
+            IMG_SAVE_PNG = "/img/save.png", IMG_OPEN_PNG = "/img/open.png", IMG_SEARCH_PNG = "/img/search.png",
+            FACES_DATABASE_PATH = "././faces/YaleFacedatabaseA", TITLE = "Eigenfaces - Face identification program";
     private static final int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100,
             MIN_IMAGE_ID = 1;
     private static int latelyAssignedId = MIN_IMAGE_ID;
@@ -75,6 +77,9 @@ public class MainWindow {
     private ZoomableImagePanelWrapper previewPaneFindFaces;
     private ImageDetailsPanel detailsPanelAllFaces;
     private ImageDetailsPanel detailsPanelFindFaces;
+
+    private ImageListCell faceToFindInDatabase = null;
+    Eigenfaces eigenfaces = new Eigenfaces();
 
     public static void main(String[] args) {
         log.fine("Starting main thread.");
@@ -144,7 +149,7 @@ public class MainWindow {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                final JFileChooser c = new JFileChooser();
+                final JFileChooser c = new JFileChooser(System.getProperty("user.dir"));
                 c.setMultiSelectionEnabled(true);
                 c.addChoosableFileFilter(new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes()));
                 c.setAcceptAllFileFilterUsed(false);
@@ -222,6 +227,67 @@ public class MainWindow {
         mntmExit.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_EXIT_PNG)));
         mntmExit.setToolTipText("Close the application");
         mnfile.add(mntmExit);
+
+        // File menu item
+
+        final JMenu mnImageToFind = new JMenu("Face to find");
+        mnImageToFind.setMnemonic('I');
+        menuBar.add(mnImageToFind);
+
+        // Open menu item for image of face to find in database
+
+        final JMenuItem mntmOpenImageToFind = new JMenuItem(new AbstractAction("Open Image") {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final JFileChooser c = new JFileChooser(System.getProperty("user.dir"));
+                c.setMultiSelectionEnabled(false);
+                c.addChoosableFileFilter(new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes()));
+                c.setAcceptAllFileFilterUsed(false);
+                final int result = c.showOpenDialog(frame);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    setImageToFind(c.getSelectedFile());
+                }
+            }
+        });
+        mntmOpenImageToFind.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
+        mntmOpenImageToFind.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.ALT_MASK));
+        mntmOpenImageToFind.setToolTipText("Open image of face to find in database");
+        mnImageToFind.add(mntmOpenImageToFind);
+
+        // Search for face in database
+
+        final JMenuItem mntmSearchForFaceInDatabase = new JMenuItem(new AbstractAction("Search face") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (faceToFindInDatabase == null) {
+                    log.info("No image to find");
+                    return;
+                }
+                try {
+                    eigenfaces.train();
+                } catch (IOException | URISyntaxException e2) {
+                    log.warning("Exception during traning database " + e2.getMessage());
+                    e2.printStackTrace();
+                    return;
+                }
+                String facePath = faceToFindInDatabase.getFullPath();
+                int predictedLabel = -1;
+                try {
+                    predictedLabel = eigenfaces.predictFaces(facePath);
+                } catch (IOException | URISyntaxException e1) {
+                    log.warning("Exception during prediction: " + e1.getMessage());
+                    return;
+                }
+                log.fine("Face is most similar to face number : " + predictedLabel);
+            }
+
+        });
+        mntmSearchForFaceInDatabase.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SEARCH_PNG)));// TODO
+                                                                                                         // IMG_SEARCH_PNG
+        mntmSearchForFaceInDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.ALT_MASK));
+        mntmSearchForFaceInDatabase.setToolTipText("Search for face in database");
+        mnImageToFind.add(mntmSearchForFaceInDatabase);
 
         // Tabs pane
 
@@ -386,27 +452,51 @@ public class MainWindow {
      * Add images of faces from list of files to {@code facesListModel}
      */
     protected void addFaces(List<File> images) {
-        BufferedImage bufImg = null;
         log.info("Loaded files' names:");
         for (final File img : images) {
-            try {
-                bufImg = ImageIO.read(img);
-            } catch (final IOException e) {
-                log.warning("Error during reading " + img.getPath() + " image! Skipping. (Details: " + e.getMessage()
-                        + ").");
-                continue;
+            ImageListCell cell = createImageCell(img);
+            if (cell != null) {
+                facesAllListModel.addElement(cell);
+                log.finer(cell.getFullPath());
             }
-            String path;
-            try {
-                path = img.getCanonicalPath();
-            } catch (IOException e) {
-                log.warning("Can't get canonical path. Skipping image.");
-                continue;
-            }
-            facesAllListModel.addElement(new ImageListCell(latelyAssignedId++, bufImg, img.getName(), path));
-            log.info(path);
         }
         detailsPanelAllFaces.setTotalImagesNumber(facesAllListModel.size());
+    }
+
+    private ImageListCell createImageCell(File img) {
+        BufferedImage bufImg = null;
+        try {
+            bufImg = ImageIO.read(img);
+        } catch (final IOException e) {
+            log.warning(
+                    "Error during reading " + img.getPath() + " image! Skipping. (Details: " + e.getMessage() + ").");
+            return null;
+        }
+        String path;
+        try {
+            path = img.getCanonicalPath();
+        } catch (IOException e) {
+            log.warning("Can't get canonical path. Skipping image.");
+            return null;
+        }
+        log.info(path);
+        return new ImageListCell(latelyAssignedId++, bufImg, img.getName(), path);
+    }
+
+    private void setImageToFind(File img) {
+        log.finer("Loaded image to find in database");
+        ImageListCell cell = createImageCell(img);
+        if (cell != null) {
+            faceToFindInDatabase = cell;
+            log.finer(cell.getFullPath());
+            detailsPanelFindFaces.setDetails(cell);
+            previewPaneFindFaces.setImage(cell.getImage());
+        }
+    }
+
+    private int getLabelFromFilePath(String facePath) {
+
+        return 0;
     }
 
     /***

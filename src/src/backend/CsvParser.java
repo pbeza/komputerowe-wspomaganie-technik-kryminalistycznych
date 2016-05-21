@@ -18,7 +18,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 public class CsvParser {
 
     public final static int IMREAD_FLAGS = Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE;
-    public final static String CSV_SEPARATOR = ";", RELATIVE_FACES_PATH = "../../faces";
+    public final static String CSV_SEPARATOR = ";", RELATIVE_FACES_PATH = "././faces";
     private final static Logger log = Log.getLogger();
 
     private final String facesCsvPath;

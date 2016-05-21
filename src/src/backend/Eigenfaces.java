@@ -15,9 +15,8 @@ import org.opencv.face.FaceRecognizer;
 import org.opencv.imgcodecs.Imgcodecs;
 
 public class Eigenfaces {
-
+    private final static String DEFAULT_FACES_LEARNING_SET_CSV_PATH = "././faces/faces.csv";
     private final static Logger log = Log.getLogger();
-    private final static String DEFAULT_FACES_LEARNING_SET_CSV_PATH = "../../faces/faces.csv";
     private final static int UNKNOWN_LABEL = -1, LABELS_MARTIX_TYPE = CvType.CV_32SC1;
 
     private final List<Mat> learningSetFaces;
