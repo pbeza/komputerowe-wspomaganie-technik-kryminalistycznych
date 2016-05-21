@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -18,8 +19,9 @@ public class CsvParser {
 
     public final static int IMREAD_FLAGS = Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE;
     public final static String CSV_SEPARATOR = ";", RELATIVE_FACES_PATH = "../../faces";
+    private final static Logger log = Log.getLogger();
 
-    private String facesCsvPath;
+    private final String facesCsvPath;
     private List<Mat> mats;
     private List<Integer> labels;
 
@@ -68,7 +70,7 @@ public class CsvParser {
         // Remove temporary PNG.
 
         if (!tmpPngFile.delete()) {
-            System.out.println("Warning! Temporary file was't deleted! " + tmpFaceCanonicalPath);
+            log.warning("Warning! Temporary file " + tmpFaceCanonicalPath + " was't deleted!");
         }
         mats.add(imgMat);
         labels.add(label);

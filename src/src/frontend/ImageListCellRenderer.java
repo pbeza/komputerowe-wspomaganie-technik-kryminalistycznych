@@ -1,11 +1,16 @@
 package frontend;
 
 import java.awt.Component;
+import java.util.logging.Logger;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
 
+import backend.Log;
+
 public class ImageListCellRenderer extends DefaultListCellRenderer {
+
+    private final static Logger log = Log.getLogger();
 
     @Override
     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
@@ -13,7 +18,7 @@ public class ImageListCellRenderer extends DefaultListCellRenderer {
 
         super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         if (!(value instanceof ImageListCell)) {
-            System.out.println("Unrecognized type in getListCellRendererComponent");
+            log.finer("Unrecognized type in getListCellRendererComponent");
             return this;
         }
         final ImageListCell c = (ImageListCell) value;

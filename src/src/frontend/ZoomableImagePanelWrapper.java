@@ -6,20 +6,25 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.util.logging.Logger;
 
 import javax.swing.ButtonModel;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import backend.Log;
 
 /***
  * Represents panel which allows to resize by clicking
  */
 public class ZoomableImagePanelWrapper extends JPanel {
 
+    private final static Logger log = Log.getLogger();
     private final static double ZOOM_DELTA = 0.05, INITIAL_ZOOM_FACTOR = 1.0, MIN_ZOOM = 0.01, MAX_ZOOM = 100.0;
     private final static int TIMER_DELAY = 50;
     private final Timer zoomTimer;
@@ -72,15 +77,15 @@ public class ZoomableImagePanelWrapper extends JPanel {
     public void setImage(BufferedImage bufImg) {
         zoomableImagePanel.setImage(bufImg);
         setZoom(INITIAL_ZOOM_FACTOR);
-        scrollPaneImageZoom.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPaneImageZoom.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPaneImageZoom.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPaneImageZoom.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         repaint();
     }
 
     public void clearImage() {
         zoomableImagePanel.clearImage();
-        scrollPaneImageZoom.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPaneImageZoom.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        scrollPaneImageZoom.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPaneImageZoom.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
     }
 
     private void setZoom(double zoom) {
@@ -103,17 +108,18 @@ public class ZoomableImagePanelWrapper extends JPanel {
             } else if (zoomOutButtonModel.isPressed()) {
                 d = -ZOOM_DELTA;
             } else {
-                System.out.println("Unexpected timer event");
+                log.warning("Unexpected timer event");
                 return;
             }
             final double newZoomFactor = zoomFactor + d;
             if (newZoomFactor <= MIN_ZOOM) {
-                System.out.println("Cannot zoom out more");
+                log.finer("Cannot zoom out more");
                 return;
             } else if (newZoomFactor > MAX_ZOOM) {
-                System.out.println("Cannot zoom in more");
+                log.finer("Cannot zoom in more");
                 return;
             }
+            log.finer("Setting zoom factor equals " + newZoomFactor);
             setZoom(newZoomFactor);
         }
 
@@ -124,6 +130,7 @@ public class ZoomableImagePanelWrapper extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() == restoreOriginalButton) {
+                log.finer("Restoring original image size");
                 setZoom(INITIAL_ZOOM_FACTOR);
             }
         }

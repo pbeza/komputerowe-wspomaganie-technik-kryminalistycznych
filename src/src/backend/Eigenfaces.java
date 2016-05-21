@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -15,17 +16,18 @@ import org.opencv.imgcodecs.Imgcodecs;
 
 public class Eigenfaces {
 
+    private final static Logger log = Log.getLogger();
     private final static String DEFAULT_FACES_LEARNING_SET_CSV_PATH = "../../faces/faces.csv";
     private final static int UNKNOWN_LABEL = -1, LABELS_MARTIX_TYPE = CvType.CV_32SC1;
 
-    private List<Mat> learningSetFaces;
-    private List<Integer> learningSetFacesLabels;
+    private final List<Mat> learningSetFaces;
+    private final List<Integer> learningSetFacesLabels;
     private Mat matLearningSetFacesLabels;
     private int predictedLabel;
     private double predictedConfidence;
     private Mat faceToIdentify;
     private int faceToIdentifyLabel;
-    private CsvParser csvParser;
+    private final CsvParser csvParser;
     private FaceRecognizer eigenfacesRecognizer;
     private boolean isModelTrained;
 
@@ -52,7 +54,7 @@ public class Eigenfaces {
         String tmpFaceCanonicalPath = tmpPngFile.getCanonicalPath();
         Mat faceToIdentify = Imgcodecs.imread(tmpFaceCanonicalPath, CsvParser.IMREAD_FLAGS);
         if (!tmpPngFile.delete()) {
-            System.out.println("Warning! Temporary file was't deleted! " + tmpFaceCanonicalPath);
+            log.warning("Warning! Temporary file " + tmpFaceCanonicalPath + " was't deleted!");
         }
         return predictFaces(faceToIdentify, faceToIdentifyLabel);
     }
@@ -80,13 +82,11 @@ public class Eigenfaces {
         double[] confidence_out = new double[1];
 
         eigenfacesRecognizer.predict(faceToIdentify, label_out, confidence_out);
-        this.predictedLabel = label_out[0];
-        this.predictedConfidence = confidence_out[0];
+        predictedLabel = label_out[0];
+        predictedConfidence = confidence_out[0];
 
-        System.out
-                .println(String.format("Predicted class = %d with confidence %f", predictedLabel, predictedConfidence));
-        System.out.print("Actual class = ");
-        System.out.println(faceToIdentifyLabel == UNKNOWN_LABEL ? "unknown" : faceToIdentifyLabel);
+        log.info(String.format("Predicted class = %d with confidence %f", predictedLabel, predictedConfidence));
+        log.info("Actual class = " + (faceToIdentifyLabel == UNKNOWN_LABEL ? "unknown" : faceToIdentifyLabel));
 
         return predictedLabel;
     }
@@ -95,7 +95,7 @@ public class Eigenfaces {
         try {
             loadImagesAndLabelsFromCsv();
         } catch (IOException | URISyntaxException e) {
-            System.out.println("Error during loading images from database. Details: " + e.getMessage());
+            log.severe("Error during loading images from database. Details: " + e.getMessage());
             throw e;
         }
         eigenfacesRecognizer = Face.createEigenFaceRecognizer();
@@ -118,7 +118,7 @@ public class Eigenfaces {
     /**
      * Converts list of faces' labels to labels matrix required by OpenCV Java
      * API.
-     * 
+     *
      * @see http://stackoverflow.com/questions/25748096/opencv-in-java-use-mat-
      *      instead-of-vector-for-labels
      * @param labels
@@ -135,7 +135,7 @@ public class Eigenfaces {
 
     /**
      * Simple test interface for stand-alone tests.
-     * 
+     *
      * @param args
      */
     public static void main(String[] args) {
@@ -156,9 +156,8 @@ public class Eigenfaces {
         try {
             e.predictFaces(faceToIdentifyPath);
         } catch (IOException | URISyntaxException e1) {
-            System.out.println("Application has failed. Details: " + e1.getMessage());
-            System.out.println("Stack trace:");
-            e1.printStackTrace();
+            log.severe("Application has failed. Details: " + e1.getMessage());
+            log.severe("Stack trace: " + e1.getMessage());
         }
     }
 }

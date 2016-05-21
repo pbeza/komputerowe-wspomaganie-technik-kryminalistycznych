@@ -5,7 +5,9 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +20,6 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -32,20 +33,21 @@ import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import backend.Log;
 import backend.Login;
 
 public class MainWindow {
 
+    private final static Log log = Log.getLogger();
     private static final String IMG_FIND_PNG = "/img/find.png", IMG_PEOPLE_PNG = "/img/people.png",
             IMG_EXIT_PNG = "/img/exit.png", IMG_RELOAD_PNG = "/img/reload.png", IMG_REMOVE_PNG = "/img/remove.png",
             IMG_SAVE_PNG = "/img/save.png", IMG_OPEN_PNG = "/img/open.png",
-            FACES_DATABASE_PATH = "././faces/YaleFacedatabaseA", // windows
-                                                                 // "../../faces/YaleFacedatabaseA"
-            TITLE = "Eigenfaces - Face identification program";
+            FACES_DATABASE_PATH = "../../faces/YaleFacedatabaseA", TITLE = "Eigenfaces - Face identification program";
     private static final int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100,
             MIN_IMAGE_ID = 1;
     private static int latelyAssignedId = MIN_IMAGE_ID;
@@ -75,28 +77,28 @@ public class MainWindow {
     private ImageDetailsPanel detailsPanelFindFaces;
 
     public static void main(String[] args) {
-        System.out.println("Starting main thread.");
+        log.fine("Starting main thread.");
         EventQueue.invokeLater(() -> {
-            System.out.println("Starting frotend thread.");
+            log.fine("Starting frotend thread.");
             try {
                 final PasswordDialog p = new PasswordDialog(null, "Test");
                 p.setLocationRelativeTo(null);
-                p.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                p.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 if (p.showDialog() && Login.authenticate(p.getName(), p.getPass())) {
                     final MainWindow window = new MainWindow();
                     window.frame.setVisible(true);
                 } else {
                     final String msg = "Sorry, wrong login or password. Exiting!";
                     JOptionPane.showMessageDialog(null, msg);
-                    System.out.println(msg);
+                    log.info(msg);
                     System.exit(0);
                 }
             } catch (final Exception e) {
-                e.printStackTrace();
+                log.severe("Critical error. Details: " + e.getMessage());
             }
-            System.out.println("Exiting frotend thread.");
+            log.fine("Exiting frotend thread.");
         });
-        System.out.println("Exiting main thread.");
+        log.fine("Exiting main thread.");
     }
 
     /**
@@ -116,6 +118,14 @@ public class MainWindow {
         frame.setLocationRelativeTo(null); // center window on screen
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setMinimumSize(new Dimension(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT));
+        WindowListener exitListener = new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                log.info("Exiting from application. Bye!");
+                log.closeHandlers();
+            }
+        };
+        frame.addWindowListener(exitListener);
 
         // Menu bar
 
@@ -159,15 +169,13 @@ public class MainWindow {
                 final int result = c.showSaveDialog(frame);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     // TODO add saving file code
-                    System.out.println("Saved file path: " + c.getSelectedFile());
+                    // log.info("Saved file path: " + c.getSelectedFile());
                 }
             }
         });
         mntmSave.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SAVE_PNG)));
         mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
-        mntmSave.setToolTipText("Save report in text file"); // TODO not
-        // implemented
-        // yet
+        mntmSave.setToolTipText("Save report in text file");
         mnfile.add(mntmSave);
 
         // Clear all faces menu item
@@ -324,14 +332,14 @@ public class MainWindow {
         detailsPanelAllFaces.clearDetails(0);
         previewPaneAllFaces.clearImage();
         latelyAssignedId = MIN_IMAGE_ID;
-        System.out.println("All faces removed from database");
+        log.info("All faces removed from database");
     }
 
     /**
      * Recursively search database from predefined directory. Note: Clear
      * {@code facesListModel} before using this method unless
      * {@code facesListModel} is empty.
-     * 
+     *
      * @throws IOException
      */
     private ArrayList<String> getAllPredefinedFacesImagesPaths(String path) {
@@ -339,7 +347,7 @@ public class MainWindow {
         final File dir = new File(path);
         final File[] dirListing = dir.listFiles();
         if (dirListing == null) {
-            System.out.println("Cannot load database from " + path + " : path is wrong or IO error occured");
+            log.warning("Cannot load database from " + path + " : path is wrong or IO error occured");
             return allPaths;
         }
         for (final File f : dirListing) {
@@ -355,7 +363,7 @@ public class MainWindow {
                 isImage = false;
             }
             if (!isImage) {
-                System.out.println(imgPath + " can't be read as image. Skipping.");
+                log.warning(imgPath + " can't be read as image. Skipping.");
                 continue;
             }
             allPaths.add(imgPath);
@@ -379,24 +387,24 @@ public class MainWindow {
      */
     protected void addFaces(List<File> images) {
         BufferedImage bufImg = null;
-        System.out.println("Loaded files' names:");
+        log.info("Loaded files' names:");
         for (final File img : images) {
             try {
                 bufImg = ImageIO.read(img);
             } catch (final IOException e) {
-                System.out.println("Error during reading " + img.getPath() + " image! Skipping. (Details: "
-                        + e.getMessage() + ").");
+                log.warning("Error during reading " + img.getPath() + " image! Skipping. (Details: " + e.getMessage()
+                        + ").");
                 continue;
             }
             String path;
             try {
                 path = img.getCanonicalPath();
             } catch (IOException e) {
-                System.out.println("Can't get canonical path. Skipping image.");
+                log.warning("Can't get canonical path. Skipping image.");
                 continue;
             }
             facesAllListModel.addElement(new ImageListCell(latelyAssignedId++, bufImg, img.getName(), path));
-            System.out.println(path);
+            log.info(path);
         }
         detailsPanelAllFaces.setTotalImagesNumber(facesAllListModel.size());
     }
@@ -407,10 +415,10 @@ public class MainWindow {
     protected class AllFacesListSelectionListener implements ListSelectionListener {
         @Override
         public void valueChanged(ListSelectionEvent e) {
-            System.out.print("Selected face has changed: ");
+            log.fine("Selected face has changed: ");
             if (!listAllFaces.isSelectionEmpty()) {
                 final ImageListCell c = listAllFaces.getSelectedValue();
-                System.out.println(c.getText());
+                log.fine(c.getText());
                 detailsPanelAllFaces.setDetails(c);
                 previewPaneAllFaces.setImage(c.getImage());
             }
