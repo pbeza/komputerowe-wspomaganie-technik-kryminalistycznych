@@ -28,12 +28,15 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -52,7 +55,10 @@ public class MainWindow {
             FACES_DATABASE_PATH = "././faces/YaleFacedatabaseA", TITLE = "Eigenfaces - Face identification program";
     private static final int WIDTH = 1024, HEIGHT = 768, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100,
             MIN_IMAGE_ID = 1;
+    private static final double SPLIT_PANE_MAIN_DEVIDER = 0.97;
     private static int latelyAssignedId = MIN_IMAGE_ID;
+
+    JSplitPane splitPaneMain;
     /***
      * List of images(full image and UI icon), source (permanent binding) for
      * {@code listAllFaces}
@@ -79,7 +85,12 @@ public class MainWindow {
     private ImageDetailsPanel detailsPanelFindFaces;
 
     private ImageListCell faceToFindInDatabase = null;
-    Eigenfaces eigenfaces = new Eigenfaces();
+    private Eigenfaces eigenfaces = new Eigenfaces();
+    private boolean duringSearchingInDatabase = false;
+
+    JMenuItem mntmOpenImageToFind;
+    JMenuItem mntmSearchForFaceInDatabase;
+    JProgressBar progressBar;
 
     public static void main(String[] args) {
         log.fine("Starting main thread.");
@@ -236,10 +247,15 @@ public class MainWindow {
 
         // Open menu item for image of face to find in database
 
-        final JMenuItem mntmOpenImageToFind = new JMenuItem(new AbstractAction("Open Image") {
+        mntmOpenImageToFind = new JMenuItem(new AbstractAction("Open Image") {
 
             @Override
             public void actionPerformed(ActionEvent e) {
+                log.finest("open 1 duringSearchingInDatabase=" + duringSearchingInDatabase);
+                if (duringSearchingInDatabase) {
+                    log.fine("Currently we search in database, change face after process");
+                    return;
+                }
                 final JFileChooser c = new JFileChooser(System.getProperty("user.dir"));
                 c.setMultiSelectionEnabled(false);
                 c.addChoosableFileFilter(new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes()));
@@ -247,6 +263,7 @@ public class MainWindow {
                 final int result = c.showOpenDialog(frame);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     setImageToFind(c.getSelectedFile());
+                    mntmSearchForFaceInDatabase.setEnabled(true);
                 }
             }
         });
@@ -257,42 +274,32 @@ public class MainWindow {
 
         // Search for face in database
 
-        final JMenuItem mntmSearchForFaceInDatabase = new JMenuItem(new AbstractAction("Search face") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (faceToFindInDatabase == null) {
-                    log.info("No image to find");
-                    return;
-                }
-                try {
-                    eigenfaces.train();
-                } catch (IOException | URISyntaxException e2) {
-                    log.warning("Exception during traning database " + e2.getMessage());
-                    e2.printStackTrace();
-                    return;
-                }
-                String facePath = faceToFindInDatabase.getFullPath();
-                int predictedLabel = -1;
-                try {
-                    predictedLabel = eigenfaces.predictFaces(facePath);
-                } catch (IOException | URISyntaxException e1) {
-                    log.warning("Exception during prediction: " + e1.getMessage());
-                    return;
-                }
-                log.fine("Face is most similar to face number : " + predictedLabel);
-            }
-
-        });
+        // final JMenuItem
+        mntmSearchForFaceInDatabase = new JMenuItem(searchForFaceInDatabaseListener());
         mntmSearchForFaceInDatabase.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SEARCH_PNG)));// TODO
                                                                                                          // IMG_SEARCH_PNG
         mntmSearchForFaceInDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.ALT_MASK));
         mntmSearchForFaceInDatabase.setToolTipText("Search for face in database");
+        mntmSearchForFaceInDatabase.setEnabled(false);
         mnImageToFind.add(mntmSearchForFaceInDatabase);
+
+        // mainSplit pane gora i dol
+        splitPaneMain = new JSplitPane();
+        splitPaneMain.setDividerLocation(0.9);
+        splitPaneMain.setResizeWeight(0.9);
+        splitPaneMain.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        frame.getContentPane().add(splitPaneMain);
+
+        // progress bar
+        progressBar = new JProgressBar(0, 100);
+        progressBar.setValue(0);
+        progressBar.setStringPainted(true);
+        splitPaneMain.setBottomComponent(progressBar);
 
         // Tabs pane
 
         final JTabbedPane tabbedPane = new JTabbedPane(SwingConstants.TOP);
-        frame.getContentPane().add(tabbedPane);
+        splitPaneMain.setTopComponent(tabbedPane);
 
         // All faces tab
 
@@ -381,6 +388,19 @@ public class MainWindow {
         // Load predefined faces database
 
         loadPredefinedImages();
+
+        // set size of progress bar
+        restoreDefaults();
+    }
+
+    private void restoreDefaults() {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                splitPaneMain.setDividerLocation(SPLIT_PANE_MAIN_DEVIDER);
+            }
+        });
     }
 
     /***
@@ -513,5 +533,78 @@ public class MainWindow {
                 previewPaneAllFaces.setImage(c.getImage());
             }
         }
+    }
+
+    private AbstractAction searchForFaceInDatabaseListener() {
+        return new AbstractAction("Search face") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                mntmSearchForFaceInDatabase.setEnabled(false);
+                mntmOpenImageToFind.setEnabled(false);
+                new Thread(new Runnable() {
+                    public void run() {
+                        (new SearchForFaceInDatabase()).execute();
+                    }
+                }).start();
+
+            }
+
+            // SwingWorker(T,V) 
+            //  T- type of param which is returned by doInBackgroud,
+            //  V - parameter showing progress
+            //      usage publish(V progress) 
+            //      process(List<V>)- show result to UI
+            class SearchForFaceInDatabase extends SwingWorker<Object, Integer> {
+                @Override
+                public Object doInBackground() {
+                    searchInDatabase();
+                    return null;
+                }
+
+                private void searchInDatabase() {
+                    publish(10);
+                    if (faceToFindInDatabase == null) {
+                        log.info("No image to find");
+                        return;
+                    }
+                    try {
+                        eigenfaces.train();
+                    } catch (IOException | URISyntaxException e2) {
+                        log.warning("Exception during traning database " + e2.getMessage());
+                        e2.printStackTrace();
+                        return;
+                    }
+                    publish(50);
+                    String facePath = faceToFindInDatabase.getFullPath();
+                    int predictedLabel = -1;
+                    try {
+                        predictedLabel = eigenfaces.predictFaces(facePath);
+                    } catch (IOException | URISyntaxException e1) {
+                        log.warning("Exception during prediction: " + e1.getMessage());
+                        return;
+                    }
+                    log.fine("Face is most similar to face number : " + predictedLabel);
+                    publish(100);
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        mntmOpenImageToFind.setEnabled(true);
+                        mntmSearchForFaceInDatabase.setEnabled(true);
+                    } catch (Exception ignore) {
+                    }
+                }
+
+                @Override
+                protected void process(List<Integer> progressValues) {
+                    for (Integer i : progressValues) {
+                        progressBar.setValue(i);
+                    }
+                }
+            }
+        };
+
     }
 }

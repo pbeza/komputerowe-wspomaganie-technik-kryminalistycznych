@@ -13,7 +13,7 @@ public class Log extends Logger {
 
     private final static String LOG_PATH = "./log.txt";
     private final static Level LOGGER_LOG_LEVEL = Level.FINEST, FILE_LOG_LEVEL = Level.FINEST,
-            CONSOLE_LOG_LEVEL = Level.INFO;
+            CONSOLE_LOG_LEVEL = Level.FINEST;
     private final static Log eigenfacesLogger = new Log();
     private FileHandler fileHandler;
     private Handler consoleHandler;

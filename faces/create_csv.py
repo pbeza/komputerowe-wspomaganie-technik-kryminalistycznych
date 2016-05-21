@@ -31,6 +31,8 @@ REG = re.compile("^[^0-9]*(\d\d).*$")
 
 def save_images_to_csv(path):
 	lines = []
+	last_group = 0
+	current_inx_in_group = 0
 	for dirname, dirnames, filenames in os.walk(BASE_PATH):
 		for filename in filenames:
 			rel_path = os.path.join(dirname, filename)
@@ -38,7 +40,13 @@ def save_images_to_csv(path):
 				continue
 			res = REG.match(rel_path)
 			assert res != None
-			lines.append("{0}{1}{2}".format(rel_path, SEPARATOR, res.group(1)))
+			this_group = int(res.group(1))
+			if last_group != this_group:
+				current_inx_in_group = 0
+			current_inx = this_group*100 +current_inx_in_group
+			lines.append("{0}{1}{2}".format(rel_path, SEPARATOR, current_inx))
+			last_group = this_group
+			current_inx_in_group += 1
 	with open(OUTPUT_FILE_PATH, 'w+') as f:
 		lines.sort()
 		for l in lines:
