@@ -1,0 +1,19 @@
+Install Eclipse Hibernate Tool:
+  http://download.jboss.org/jbosstools/updates/stable/mars/
+  http://download.jboss.org/jbosstools/updates/stable/
+
+create table FACES (
+  id    SERIAL NOT NULL,
+  label INT    NOT NULL,
+  image BYTEA  NOT NULL,
+  PRIMARY KEY (id)
+);
+
+login: eigenuser
+pass: eigenfaces
+
+ psql -h localhost -d template1 -U eigenuser -W
+ 
+jdbc:postgresql:template1
+grant select, insert, update, delete on faces to eigenuser;
+GRANT ALL PRIVILEGES ON DATABASE "template1" to eigenuser;
