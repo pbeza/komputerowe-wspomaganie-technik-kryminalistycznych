@@ -42,8 +42,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import backend.Log;
 import backend.Eigenfaces;
+import backend.Log;
 import backend.Login;
 
 public class MainWindow {
@@ -69,7 +69,7 @@ public class MainWindow {
      */
     private JList<ImageListCell> listAllFaces;
     /***
-     * List of images(full image and UI icon), source (permanent binding) for
+     * List of images (full image and UI icon), source (permanent binding) for
      * {@code listFindFaces}
      */
     private final DefaultListModel<ImageListCell> facesFindListModel = new DefaultListModel<ImageListCell>();
@@ -85,8 +85,8 @@ public class MainWindow {
     private ImageDetailsPanel detailsPanelFindFaces;
 
     private ImageListCell faceToFindInDatabase = null;
-    private Eigenfaces eigenfaces = new Eigenfaces();
-    private boolean duringSearchingInDatabase = false;
+    private final Eigenfaces eigenfaces = new Eigenfaces();
+    private final boolean duringSearchingInDatabase = false;
 
     JMenuItem mntmOpenImageToFind;
     JMenuItem mntmSearchForFaceInDatabase;
@@ -97,7 +97,7 @@ public class MainWindow {
         EventQueue.invokeLater(() -> {
             log.fine("Starting frotend thread.");
             try {
-                final PasswordDialog p = new PasswordDialog(null, "Test");
+                final PasswordDialog p = new PasswordDialog(null, "Authentication");
                 p.setLocationRelativeTo(null);
                 p.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 if (p.showDialog() && Login.authenticate(p.getName(), p.getPass())) {
@@ -107,6 +107,7 @@ public class MainWindow {
                     final String msg = "Sorry, wrong login or password. Exiting!";
                     JOptionPane.showMessageDialog(null, msg);
                     log.info(msg);
+                    MainWindow.closeLog();
                     System.exit(0);
                 }
             } catch (final Exception e) {
@@ -115,6 +116,11 @@ public class MainWindow {
             log.fine("Exiting frotend thread.");
         });
         log.fine("Exiting main thread.");
+    }
+
+    public static void closeLog() {
+        log.info("Exiting from application. Bye!");
+        log.closeHandlers();
     }
 
     /**
@@ -137,8 +143,7 @@ public class MainWindow {
         WindowListener exitListener = new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                log.info("Exiting from application. Bye!");
-                log.closeHandlers();
+                closeLog();
             }
         };
         frame.addWindowListener(exitListener);
@@ -241,7 +246,7 @@ public class MainWindow {
 
         // File menu item
 
-        final JMenu mnImageToFind = new JMenu("Face to find");
+        final JMenu mnImageToFind = new JMenu("Identify");
         mnImageToFind.setMnemonic('I');
         menuBar.add(mnImageToFind);
 
@@ -267,6 +272,7 @@ public class MainWindow {
                 }
             }
         });
+        mntmOpenImageToFind.setText("Open");
         mntmOpenImageToFind.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
         mntmOpenImageToFind.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.ALT_MASK));
         mntmOpenImageToFind.setToolTipText("Open image of face to find in database");
@@ -276,6 +282,7 @@ public class MainWindow {
 
         // final JMenuItem
         mntmSearchForFaceInDatabase = new JMenuItem(searchForFaceInDatabaseListener());
+        mntmSearchForFaceInDatabase.setText("Find");
         mntmSearchForFaceInDatabase.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SEARCH_PNG)));// TODO
                                                                                                          // IMG_SEARCH_PNG
         mntmSearchForFaceInDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.ALT_MASK));
@@ -394,13 +401,7 @@ public class MainWindow {
     }
 
     private void restoreDefaults() {
-        SwingUtilities.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                splitPaneMain.setDividerLocation(SPLIT_PANE_MAIN_DEVIDER);
-            }
-        });
+        SwingUtilities.invokeLater(() -> splitPaneMain.setDividerLocation(SPLIT_PANE_MAIN_DEVIDER));
     }
 
     /***
@@ -473,7 +474,7 @@ public class MainWindow {
      */
     protected void addFaces(List<File> images) {
         log.info("Loaded files' names:");
-        for (final File img : images) {
+        for (File img : images) {
             ImageListCell cell = createImageCell(img);
             if (cell != null) {
                 facesAllListModel.addElement(cell);
@@ -542,19 +543,15 @@ public class MainWindow {
 
                 mntmSearchForFaceInDatabase.setEnabled(false);
                 mntmOpenImageToFind.setEnabled(false);
-                new Thread(new Runnable() {
-                    public void run() {
-                        (new SearchForFaceInDatabase()).execute();
-                    }
-                }).start();
+                new Thread(() -> new SearchForFaceInDatabase().execute()).start();
 
             }
 
-            // SwingWorker(T,V) 
-            //  T- type of param which is returned by doInBackgroud,
-            //  V - parameter showing progress
-            //      usage publish(V progress) 
-            //      process(List<V>)- show result to UI
+            // SwingWorker(T,V)
+            // T - type of param which is returned by doInBackgroud,
+            // V - parameter showing progress
+            // usage publish(V progress)
+            // process(List<V>) - show result to UI
             class SearchForFaceInDatabase extends SwingWorker<Object, Integer> {
                 @Override
                 public Object doInBackground() {
@@ -570,9 +567,9 @@ public class MainWindow {
                     }
                     try {
                         eigenfaces.train();
-                    } catch (IOException | URISyntaxException e2) {
-                        log.warning("Exception during traning database " + e2.getMessage());
-                        e2.printStackTrace();
+                    } catch (IOException | URISyntaxException e) {
+                        log.warning("Exception during traning database " + e.getMessage());
+                        e.printStackTrace();
                         return;
                     }
                     publish(50);
@@ -580,11 +577,11 @@ public class MainWindow {
                     int predictedLabel = -1;
                     try {
                         predictedLabel = eigenfaces.predictFaces(facePath);
-                    } catch (IOException | URISyntaxException e1) {
-                        log.warning("Exception during prediction: " + e1.getMessage());
+                    } catch (IOException | URISyntaxException e) {
+                        log.warning("Exception during prediction: " + e.getMessage());
                         return;
                     }
-                    log.fine("Face is most similar to face number : " + predictedLabel);
+                    log.fine("Face is most similar to face number: " + predictedLabel);
                     publish(100);
                 }
 
@@ -605,6 +602,5 @@ public class MainWindow {
                 }
             }
         };
-
     }
 }

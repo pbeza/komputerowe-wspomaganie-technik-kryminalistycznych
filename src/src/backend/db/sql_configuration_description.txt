@@ -1,0 +1,51 @@
+Notatki z konfiguracji PostgreSQL
+---------------------------------
+
+Przydatne mogą okazać się dodatki Eclipse Hibernate Tool:
+
+  http://download.jboss.org/jbosstools/updates/stable/mars/
+  http://download.jboss.org/jbosstools/updates/stable/
+
+---
+
+Sposób tworzenia tabeli z twarzami:
+
+create table FACES (
+  id    SERIAL        NOT NULL,
+  label INT    UNIQUE NOT NULL,
+  image BYTEA         NOT NULL,
+  PRIMARY KEY (id)
+);
+
+---
+
+Dane do logowania do bazy danych:
+
+login: eigenuser
+pass: eigenfaces
+
+---
+
+Sposób logowania do bazy danych:
+
+psql -h localhost -d template1 -U eigenuser -W
+
+---
+ 
+Konfiguracja/dodawanie kont użytkowników bazy danych PostgreSQL:
+
+su -
+su - postgres
+psql -d template1
+
+GRANT select, insert, update, delete ON faces TO eigenuser;
+GRANT ALL PRIVILEGES ON DATABASE "template1" TO eigenuser;
+GRANT USAGE, SELECT ON SEQUENCE faces_id_seq TO eigenuser;
+
+---
+
+Aby zacząć automatyczną numerację kolumny ID od 0:
+
+ALTER SEQUENCE faces_id_seq RESTART WITH 0;
+
+nie jest to w ogóle potrzebne, ale będzie ładniej jak będzie numeracja od 0.

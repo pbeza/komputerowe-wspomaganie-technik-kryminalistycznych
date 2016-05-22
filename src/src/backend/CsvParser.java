@@ -9,6 +9,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -18,21 +19,24 @@ import org.opencv.imgcodecs.Imgcodecs;
 public class CsvParser {
 
     public final static int IMREAD_FLAGS = Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE;
-    public final static String CSV_SEPARATOR = ";", RELATIVE_FACES_PATH = "././faces";
+    public final static String CSV_SEPARATOR = ";", RELATIVE_FACES_PATH = "../../faces",
+            FACES_LEARNING_SET_CSV_PATH = "../../faces/faces.csv";
     private final static Logger log = Log.getLogger();
 
     private final String facesCsvPath;
-    private List<Mat> mats;
-    private List<Integer> labels;
+    private List<Mat> mats = new ArrayList<>();
+    private List<Integer> labels = new ArrayList<>();
+    private List<String> canonicalPaths = new ArrayList<>();
 
     public CsvParser(String facesCsvPath) {
         this.facesCsvPath = facesCsvPath;
     }
 
-    public void readCsv(List<Mat> mats, List<Integer> labels) throws IOException, URISyntaxException {
-
+    public void readCsv(List<Mat> mats, List<Integer> labels, List<String> canonicalPaths)
+            throws IOException, URISyntaxException {
         this.mats = mats;
         this.labels = labels;
+        this.canonicalPaths = canonicalPaths;
 
         if (!Files.exists(Paths.get(facesCsvPath))) {
             throw new FileNotFoundException(facesCsvPath + " CSV file with faces' images wasn't found");
@@ -44,6 +48,11 @@ public class CsvParser {
                 processFaceImage(line);
             }
         }
+    }
+
+    public void readCsv(List<Mat> mats, List<Integer> labels) throws IOException, URISyntaxException {
+        List<String> p = new ArrayList<>();
+        readCsv(mats, labels, p);
     }
 
     private void processFaceImage(String line) throws URISyntaxException, IOException {
@@ -74,5 +83,6 @@ public class CsvParser {
         }
         mats.add(imgMat);
         labels.add(label);
+        canonicalPaths.add(faceCanonicalPath);
     }
 }

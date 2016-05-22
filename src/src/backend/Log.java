@@ -1,6 +1,9 @@
 package backend;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
@@ -11,7 +14,8 @@ import java.util.logging.SimpleFormatter;
 
 public class Log extends Logger {
 
-    private final static String LOG_PATH = "./log.txt";
+    private final static String LOG_DIR = "logs/",
+            LOG_PATH = LOG_DIR + new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss").format(new Date()) + ".log";
     private final static Level LOGGER_LOG_LEVEL = Level.FINEST, FILE_LOG_LEVEL = Level.FINEST,
             CONSOLE_LOG_LEVEL = Level.FINEST;
     private final static Log eigenfacesLogger = new Log();
@@ -20,8 +24,10 @@ public class Log extends Logger {
 
     private Log() {
         super("eigenfaces", null);
+        File dir = new File(LOG_DIR);
+        dir.mkdir();
         setLevel(LOGGER_LOG_LEVEL);
-        final SimpleFormatter formatter = new SimpleFormatter();
+        SimpleFormatter formatter = new SimpleFormatter();
         addLogFileHandler(formatter);
         addLogConsoleHandler(formatter);
     }

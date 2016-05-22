@@ -15,7 +15,6 @@ import org.opencv.face.FaceRecognizer;
 import org.opencv.imgcodecs.Imgcodecs;
 
 public class Eigenfaces {
-    private final static String DEFAULT_FACES_LEARNING_SET_CSV_PATH = "././faces/faces.csv";
     private final static Logger log = Log.getLogger();
     private final static int UNKNOWN_LABEL = -1, LABELS_MARTIX_TYPE = CvType.CV_32SC1;
 
@@ -31,7 +30,7 @@ public class Eigenfaces {
     private boolean isModelTrained;
 
     public Eigenfaces() {
-        this(DEFAULT_FACES_LEARNING_SET_CSV_PATH);
+        this(CsvParser.FACES_LEARNING_SET_CSV_PATH);
     }
 
     public Eigenfaces(String facesCsvPath) {
@@ -140,7 +139,7 @@ public class Eigenfaces {
     public static void main(String[] args) {
 
         String faceToIdentifyPath = null;
-        String learningSetCsvPath = DEFAULT_FACES_LEARNING_SET_CSV_PATH;
+        String learningSetCsvPath = CsvParser.FACES_LEARNING_SET_CSV_PATH;
 
         if (args.length == 2) {
             learningSetCsvPath = args[1];
