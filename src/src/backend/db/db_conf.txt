@@ -11,9 +11,12 @@ Przydatne mogą okazać się dodatki Eclipse Hibernate Tool:
 Sposób tworzenia tabeli z twarzami:
 
 create table FACES (
-  id    SERIAL        NOT NULL,
-  label INT    UNIQUE NOT NULL,
-  image BYTEA         NOT NULL,
+  id        SERIAL            NOT NULL,
+  label     INT       UNIQUE  NOT NULL,
+  image     BYTEA             NOT NULL,
+  filename  VARCHAR   UNIQUE  NOT NULL,
+  filetype  CHAR(16)          NOT NULL,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (id)
 );
 
@@ -41,6 +44,20 @@ psql -d template1
 GRANT select, insert, update, delete ON faces TO eigenuser;
 GRANT ALL PRIVILEGES ON DATABASE "template1" TO eigenuser;
 GRANT USAGE, SELECT ON SEQUENCE faces_id_seq TO eigenuser;
+
+---
+
+Dumpowanie bazy danych PostgeSQL i przywracanie bazy danych:
+
+https://www.postgresql.org/docs/current/static/backup-dump.html
+
+Zrzut bazy danych do pliku:
+
+pg_dump dbname > outfile
+
+Przywrócenie bazy danych z pliku:
+
+psql dbname < infile
 
 ---
 

@@ -29,25 +29,31 @@ public class DatabaseConnectionManager {
     private final Configuration configuration;
 
     public static void main(String[] args) {
-        final int labelId = 100;
-        DatabaseConnectionManager m = DatabaseConnectionManager.getInstance();
-
-        // Load face from database by label ID
-
-        FaceEntity fe = m.getSingleFaceFromDatabaseByLabelId(labelId);
-        if (fe == null) {
-            System.out.println("Face with labelID = " + labelId + " wasn't found");
-        }
-
-        // Load face from database by primary key ID
-
-        final int primaryKeyId = 169;
-        m.saveFaceFromDatabaseToFileByPrimaryKeyId(primaryKeyId, "face_with_ID_" + primaryKeyId + ".gif");
-
-        // Close connection and log handlers
-
-        log.closeHandlers();
-        m.closeConnection();
+        addAllFacesFromPredefinedCsv();
+        // Simple usage:
+        //
+        // final int labelId = 100;
+        // DatabaseConnectionManager m =
+        // DatabaseConnectionManager.getInstance();
+        //
+        // // Load face from database by label ID
+        //
+        // FaceEntity fe = m.getSingleFaceFromDatabaseByLabelId(labelId);
+        // if (fe == null) {
+        // System.out.println("Face with labelID = " + labelId + " wasn't
+        // found");
+        // }
+        //
+        // // Load face from database by primary key ID
+        //
+        // final int primaryKeyId = 169;
+        // m.saveFaceFromDatabaseToFileByPrimaryKeyId(primaryKeyId,
+        // "face_with_ID_" + primaryKeyId + ".gif");
+        //
+        // // Close connection and log handlers
+        //
+        // log.closeHandlers();
+        // m.closeConnection();
     }
 
     private DatabaseConnectionManager() {
@@ -112,13 +118,18 @@ public class DatabaseConnectionManager {
                 log.severe("Failed to readAllBytes from image " + path + ". Details: " + e.getMessage());
                 return false;
             }
-            int faceId = addFaceToDatabase(label, img);
+            String filetype = "unknown";
+            try {
+                filetype = Files.probeContentType(path);
+            } catch (IOException e) {
+            }
+            int faceId = addFaceToDatabase(label, img, path.getFileName().toString(), filetype);
             log.info("Face with label ID = " + faceId + " added successfully");
         }
         return true;
     }
 
-    public Integer addFaceToDatabase(int label, byte[] faceImage) {
+    public Integer addFaceToDatabase(int label, byte[] faceImage, String filename, String filetype) {
         Session session = sessionFactory.openSession();
         Transaction tx = null;
         Integer faceID = null;
@@ -127,6 +138,8 @@ public class DatabaseConnectionManager {
             FaceEntity face = new FaceEntity();
             face.setLabel(label);
             face.setImage(faceImage);
+            face.setFilename(filename);
+            face.setFiletype(filetype);
             faceID = (Integer) session.save(face);
             tx.commit();
         } catch (HibernateException e) {

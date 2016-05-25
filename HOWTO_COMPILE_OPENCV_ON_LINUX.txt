@@ -1,0 +1,28 @@
+Pobierz i skonfiguruj opencv_contrib zgodnie z http://stackoverflow.com/questions/31710250/build-opencv-with-contrib-modules-and-java-wrapper
+Chodzi o zamianę w CMakeLists.txt takich linijek:
+
+apt-get build-dep opencv
+
+Usunąć wszystkie podfoldery 'modules' poza 'faces'
+
+ocv_define_module(face opencv_core opencv_imgproc opencv_objdetect WRAP python)
+
+na:
+
+ocv_define_module(face opencv_core opencv_imgproc opencv_objdetect WRAP python java)
+
+Następnie trzeba odpalić:
+
+ln -s /usr/include/linux/videodev.h /usr/include/linux/videodev2.h
+
+cmake -D CMAKE_BUILD_TYPE=RELEASE -D BUILD_SHARED_LIBS=OFF -D WITH_CUDA=OFF -DOPENCV_EXTRA_MODULES_PATH=/tmp/opencv_contrib/modules ..
+
+cmake -D CMAKE_BUILD_TYPE=RELEASE -D BUILD_SHARED_LIBS=OFF -D WITH_CUDA=OFF -D WITH_LIBV4L=OFF -DOPENCV_EXTRA_MODULES_PATH=/tmp/opencv_contrib/modules ..
+
+Może wystarczyłoby:
+-DBUILD_opencv_java=ON
+BUILD_opencv_contrib=ON
+
+Żeby dołączyć OpenCV w Eclipse wchodzimy w Properties projektu, a dalej:
+
+Java Build Path > Add JAR > Dodajemy libopencv-310.jar > Native library location > Edit... > Wpisać lokację pliku libopencv-310.so albo .dll

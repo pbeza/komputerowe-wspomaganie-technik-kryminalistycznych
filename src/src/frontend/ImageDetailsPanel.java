@@ -10,8 +10,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-/***
- * Represents panel showing details of image
+/**
+ * Represents panel displaying details of the image.
  */
 public class ImageDetailsPanel extends JPanel {
 
@@ -45,7 +45,7 @@ public class ImageDetailsPanel extends JPanel {
         final JLabel[] labelsToAdd = { lblId, lblFilename, lblFullPath, lblMimeType, lblImageWidth, lblImageHeight,
                 lblZoom, lblTotalImagesNumber };
 
-        assert (labelsToAdd.length == fieldsToAdd.length);
+        assert labelsToAdd.length == fieldsToAdd.length;
 
         for (int i = 0; i < fieldsToAdd.length; i++) {
             fieldsToAdd[i].setColumns(10);
@@ -61,8 +61,8 @@ public class ImageDetailsPanel extends JPanel {
     public void setDetails(ImageListCell cell) {
         idField.setText(String.format("%03d", cell.getId()));
         filenameField.setText(cell.getFilename());
-        fullPathField.setText(cell.getFullPath());
-        fullPathField.setToolTipText(cell.getFullPath());
+        fullPathField.setText(""); // TODO
+        fullPathField.setToolTipText(""); // TODO
         mimeTypeField.setText(cell.getMimeType());
         imageWidthField.setText(Integer.toString(cell.getImageWidth()) + " px");
         imageHeightField.setText(Integer.toString(cell.getImageHeight()) + " px");

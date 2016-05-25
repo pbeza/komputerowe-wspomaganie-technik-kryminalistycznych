@@ -19,7 +19,7 @@ import javax.swing.event.ChangeListener;
 
 import backend.Log;
 
-/***
+/**
  * Represents panel which allows to resize by clicking
  */
 public class ZoomableImagePanelWrapper extends JPanel {
