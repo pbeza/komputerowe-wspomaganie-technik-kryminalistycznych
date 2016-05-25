@@ -1,11 +1,13 @@
 package backend.db;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.persistence.Column;
@@ -15,9 +17,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import backend.Log;
+
 @Entity
 @Table(name = "faces")
 public class FaceEntity {
+
+    public final static int UNKNOWN_ID = -1, UNKNOWN_LABEL_ID = -1;
+    private final static Timestamp UNKNOWN_TIMESTAMP = null;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,6 +47,35 @@ public class FaceEntity {
     private Timestamp timestamp;
 
     public FaceEntity() {
+    }
+
+    private FaceEntity(BufferedImage bufferedImage, String filename, String filetype) {
+        this(UNKNOWN_LABEL_ID, bufferedImage, filename, filetype);
+    }
+
+    public FaceEntity(int label, BufferedImage bufferedImage, String filename, String filetype) {
+        this(label, (DataBufferByte) bufferedImage.getData().getDataBuffer(), filename, filetype);
+    }
+
+    private FaceEntity(int label, DataBufferByte imageDataBufferByte, String filename, String filetype) {
+        this(label, imageDataBufferByte.getData(), filename, filetype);
+    }
+
+    private FaceEntity(byte[] image, String filename, String filetype) {
+        this(UNKNOWN_LABEL_ID, image, filename, filetype);
+    }
+
+    private FaceEntity(int label, byte[] image, String filename, String filetype) {
+        this(UNKNOWN_ID, label, image, filename, filetype, UNKNOWN_TIMESTAMP);
+    }
+
+    private FaceEntity(int id, int label, byte[] image, String filename, String filetype, Timestamp timestamp) {
+        this.id = id;
+        this.label = label;
+        this.image = image;
+        this.filename = filename;
+        this.filetype = filetype;
+        this.timestamp = timestamp;
     }
 
     public int getId() {
@@ -109,10 +145,14 @@ public class FaceEntity {
 
     public BufferedImage convertToBufferedImage() {
         ByteArrayInputStream bais = new ByteArrayInputStream(image);
+        BufferedImage bufferedImage;
         try {
-            return ImageIO.read(bais);
+            bufferedImage = ImageIO.read(bais);
         } catch (IOException e) {
+            Logger log = Log.getLogger();
+            log.severe("Cannot convert byte[] to BufferedImage");
             throw new RuntimeException(e);
         }
+        return bufferedImage;
     }
 }

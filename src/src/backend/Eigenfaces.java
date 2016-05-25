@@ -15,12 +15,13 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.face.Face;
 import org.opencv.face.FaceRecognizer;
+import org.opencv.imgproc.Imgproc;
 
-import frontend.ImageListCell;
+import backend.db.FaceEntity;
 
 public class Eigenfaces {
     private final static Logger log = Log.getLogger();
-    private final static int UNKNOWN_LABEL = -1, LABELS_MARTIX_TYPE = CvType.CV_8UC3;// CvCV_32SC1
+    private final static int UNKNOWN_LABEL = -1, LABELS_MARTIX_TYPE = CvType.CV_32SC1; // CV_8UC3
     private final FaceRecognizer eigenfacesRecognizer;
     private int predictedLabel;
     private double predictedConfidence;
@@ -34,14 +35,14 @@ public class Eigenfaces {
         eigenfacesRecognizer = Face.createEigenFaceRecognizer();
     }
 
-    public void train(List<ImageListCell> learningSetFaceEntities) {
+    public void train(List<FaceEntity> learningSetFaceEntities) {
         int n = learningSetFaceEntities.size();
         List<Integer> labels = new ArrayList<>(n);
         List<byte[]> images = new ArrayList<>(n);
-        for (ImageListCell f : learningSetFaceEntities) {
-            int label = f.getLabelId();
-            BufferedImage faceImage = f.getImage();
-            byte[] faceImageArray = convertBufferedImageToByteArray(faceImage);
+        for (FaceEntity f : learningSetFaceEntities) {
+            int label = f.getLabel() / 100; // FIXME TODO add label column to
+                                            // database!!!
+            byte[] faceImageArray = f.getImage();
             labels.add(label);
             images.add(faceImageArray);
         }
@@ -60,6 +61,7 @@ public class Eigenfaces {
         for (byte[] b : learningSetFaceEntities) {
             Mat m = new Mat();
             m.put(0, 0, b);
+            learningSetFaces.add(m);
         }
         Mat matLearningSetFacesLabels = labelsToMat(learningSetFacesLabels);
         eigenfacesRecognizer.train(learningSetFaces, matLearningSetFacesLabels);
@@ -112,8 +114,12 @@ public class Eigenfaces {
         final int rows = labels.size(), cols = 1, type = LABELS_MARTIX_TYPE;
         Mat resLabels = new Mat(rows, cols, type);
         for (int i = 0; i < rows; i++) {
-            resLabels.put(i, 0, labels.get(i));
+            int l = labels.get(i);
+            resLabels.put(i, 0, l); // FIXME TODO exception here!!!
         }
+        // TODO experiment
+        Mat result = new Mat();
+        Imgproc.cvtColor(resLabels, result, Imgproc.COLOR_RGB2GRAY);
         return resLabels;
     }
 
@@ -121,7 +127,6 @@ public class Eigenfaces {
         WritableRaster faceRaster = faceToIdentify.getRaster();
         DataBuffer faceDataBuffer = faceRaster.getDataBuffer();
         DataBufferByte faceDataBufferByte = (DataBufferByte) faceDataBuffer;
-        byte[] face = faceDataBufferByte.getData();
-        return face;
+        return faceDataBufferByte.getData();
     }
 }

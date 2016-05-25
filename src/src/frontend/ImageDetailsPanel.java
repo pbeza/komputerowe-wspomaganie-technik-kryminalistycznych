@@ -59,7 +59,7 @@ public class ImageDetailsPanel extends JPanel {
     }
 
     public void setDetails(ImageListCell cell) {
-        idField.setText(String.format("%03d", cell.getId()));
+        idField.setText(String.format("%03d", cell.getDisplayedId()));
         filenameField.setText(cell.getFilename());
         fullPathField.setText(""); // TODO
         fullPathField.setToolTipText(""); // TODO
