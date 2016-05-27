@@ -13,10 +13,11 @@ public class ImageListCellRenderer extends DefaultListCellRenderer {
     private final static Logger log = Log.getLogger();
 
     @Override
-    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
-            boolean cellHasFocus) {
+    public Component getListCellRendererComponent(JList<?> list, Object value,
+            int index, boolean isSelected, boolean cellHasFocus) {
 
-        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        super.getListCellRendererComponent(list, value, index, isSelected,
+                cellHasFocus);
         if (!(value instanceof ImageListCell)) {
             log.finer("Unrecognized type in getListCellRendererComponent");
             return this;

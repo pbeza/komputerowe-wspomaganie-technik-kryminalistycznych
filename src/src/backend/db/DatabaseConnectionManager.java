@@ -70,8 +70,10 @@ public class DatabaseConnectionManager {
     public static void addAllFacesFromPredefinedCsv() {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         DatabaseConnectionManager m = new DatabaseConnectionManager();
-        boolean isSuccess = m.addFacesToDatabaseFromCsv(CsvParser.FACES_LEARNING_SET_CSV_PATH);
-        String msg = "Loading files from " + CsvParser.FACES_LEARNING_SET_CSV_PATH
+        boolean isSuccess = m.addFacesToDatabaseFromCsv(
+                CsvParser.FACES_LEARNING_SET_CSV_PATH);
+        String msg = "Loading files from "
+                + CsvParser.FACES_LEARNING_SET_CSV_PATH
                 + (isSuccess ? " ended successfully" : " failed");
         Level logLevel = isSuccess ? Level.INFO : Level.SEVERE;
         log.log(logLevel, msg);
@@ -82,7 +84,8 @@ public class DatabaseConnectionManager {
         sessionFactory.close();
     }
 
-    public boolean saveFaceFromDatabaseToFileByPrimaryKeyId(int id, String outputPath) {
+    public boolean saveFaceFromDatabaseToFileByPrimaryKeyId(int id,
+            String outputPath) {
         FaceEntity fe = getSingleFaceFromDatabaseByPrimaryKeyId(id);
         boolean wasFaceFound = fe != null;
         if (wasFaceFound) {
@@ -101,10 +104,12 @@ public class DatabaseConnectionManager {
         try {
             parser.readCsv(mats, labels, canonicalPaths);
         } catch (IOException | URISyntaxException e) {
-            log.severe("Adding images to database has failed. Details: " + e.getMessage());
+            log.severe("Adding images to database has failed. Details: "
+                    + e.getMessage());
             return false;
         }
-        if (mats.size() != labels.size() || labels.size() != canonicalPaths.size()) {
+        if (mats.size() != labels.size()
+                || labels.size() != canonicalPaths.size()) {
             log.severe("Reading CSV has failed. Arrays length mismatch.");
             return false;
         }
@@ -115,7 +120,8 @@ public class DatabaseConnectionManager {
             try {
                 img = Files.readAllBytes(path);
             } catch (IOException e) {
-                log.severe("Failed to readAllBytes from image " + path + ". Details: " + e.getMessage());
+                log.severe("Failed to readAllBytes from image " + path
+                        + ". Details: " + e.getMessage());
                 return false;
             }
             String filetype = "unknown";
@@ -123,13 +129,15 @@ public class DatabaseConnectionManager {
                 filetype = Files.probeContentType(path);
             } catch (IOException e) {
             }
-            int faceId = addFaceToDatabase(label, img, path.getFileName().toString(), filetype);
+            int faceId = addFaceToDatabase(label, img,
+                    path.getFileName().toString(), filetype);
             log.info("Face with label ID = " + faceId + " added successfully");
         }
         return true;
     }
 
-    public Integer addFaceToDatabase(int label, byte[] faceImage, String filename, String filetype) {
+    public Integer addFaceToDatabase(int label, byte[] faceImage,
+            String filename, String filetype) {
         Session session = sessionFactory.openSession();
         Transaction tx = null;
         Integer faceID = null;
@@ -146,7 +154,8 @@ public class DatabaseConnectionManager {
             if (tx != null) {
                 tx.rollback();
             }
-            log.severe("Hibernate exception. Details: " + e.getMessage() + e.getCause());
+            log.severe("Hibernate exception. Details: " + e.getMessage()
+                    + e.getCause());
             throw e;
         } finally {
             session.close();
@@ -159,7 +168,8 @@ public class DatabaseConnectionManager {
         return getSingleFaceFromDatabase(query);
     }
 
-    public FaceEntity getSingleFaceFromDatabaseByPrimaryKeyId(int primaryKeyId) {
+    public FaceEntity getSingleFaceFromDatabaseByPrimaryKeyId(
+            int primaryKeyId) {
         String query = "FROM FaceEntity FE WHERE FE.id = " + primaryKeyId;
         return getSingleFaceFromDatabase(query);
     }
@@ -184,7 +194,8 @@ public class DatabaseConnectionManager {
             tx = session.beginTransaction();
             l = session.createQuery(query).list();
             for (FaceEntity face : l) {
-                log.fine("Loaded image: face ID: " + face.getId() + ", label ID: " + face.getLabel());
+                log.fine("Loaded image: face ID: " + face.getId()
+                        + ", label ID: " + face.getLabel());
             }
             tx.commit();
         } catch (HibernateException e) {

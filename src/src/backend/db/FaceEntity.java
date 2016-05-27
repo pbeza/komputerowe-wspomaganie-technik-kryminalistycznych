@@ -3,6 +3,7 @@ package backend.db;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,7 +18,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
+
 import backend.Log;
+import backend.TempPngFileCreator;
 
 @Entity
 @Table(name = "faces")
@@ -49,15 +54,19 @@ public class FaceEntity {
     public FaceEntity() {
     }
 
-    private FaceEntity(BufferedImage bufferedImage, String filename, String filetype) {
+    private FaceEntity(BufferedImage bufferedImage, String filename,
+            String filetype) {
         this(UNKNOWN_LABEL_ID, bufferedImage, filename, filetype);
     }
 
-    public FaceEntity(int label, BufferedImage bufferedImage, String filename, String filetype) {
-        this(label, (DataBufferByte) bufferedImage.getData().getDataBuffer(), filename, filetype);
+    public FaceEntity(int label, BufferedImage bufferedImage, String filename,
+            String filetype) {
+        this(label, (DataBufferByte) bufferedImage.getData().getDataBuffer(),
+                filename, filetype);
     }
 
-    private FaceEntity(int label, DataBufferByte imageDataBufferByte, String filename, String filetype) {
+    private FaceEntity(int label, DataBufferByte imageDataBufferByte,
+            String filename, String filetype) {
         this(label, imageDataBufferByte.getData(), filename, filetype);
     }
 
@@ -65,11 +74,13 @@ public class FaceEntity {
         this(UNKNOWN_LABEL_ID, image, filename, filetype);
     }
 
-    private FaceEntity(int label, byte[] image, String filename, String filetype) {
+    private FaceEntity(int label, byte[] image, String filename,
+            String filetype) {
         this(UNKNOWN_ID, label, image, filename, filetype, UNKNOWN_TIMESTAMP);
     }
 
-    private FaceEntity(int id, int label, byte[] image, String filename, String filetype, Timestamp timestamp) {
+    private FaceEntity(int id, int label, byte[] image, String filename,
+            String filetype, Timestamp timestamp) {
         this.id = id;
         this.label = label;
         this.image = image;
@@ -126,7 +137,8 @@ public class FaceEntity {
         this.timestamp = timestamp;
     }
 
-    public void saveFaceImageToFile(String outputPath) {
+    public static void saveFaceImageToFile(byte[] imageArray,
+            String outputPath) {
         FileOutputStream fos;
         try {
             fos = new FileOutputStream(outputPath);
@@ -135,7 +147,7 @@ public class FaceEntity {
             return;
         }
         try {
-            fos.write(getImage());
+            fos.write(imageArray);
             fos.close();
         } catch (IOException e) {
             System.err.println("Failed to write " + outputPath);
@@ -143,8 +155,16 @@ public class FaceEntity {
         }
     }
 
+    public void saveFaceImageToFile(String outputPath) {
+        FaceEntity.saveFaceImageToFile(image, outputPath);
+    }
+
     public BufferedImage convertToBufferedImage() {
-        ByteArrayInputStream bais = new ByteArrayInputStream(image);
+        return FaceEntity.convertToBufferedImage(image);
+    }
+
+    public static BufferedImage convertToBufferedImage(byte[] imageArray) {
+        ByteArrayInputStream bais = new ByteArrayInputStream(imageArray);
         BufferedImage bufferedImage;
         try {
             bufferedImage = ImageIO.read(bais);
@@ -154,5 +174,26 @@ public class FaceEntity {
             throw new RuntimeException(e);
         }
         return bufferedImage;
+    }
+
+    public static Mat convertGifToMat(String faceGifImagePath)
+            throws IOException {
+        final int IMREAD_FLAGS = Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE;
+        File tmpPngFile = TempPngFileCreator.createTmpPngCopy(faceGifImagePath);
+        String tmpFaceCanonicalPath = tmpPngFile.getCanonicalPath();
+        Mat imgMat = Imgcodecs.imread(tmpFaceCanonicalPath, IMREAD_FLAGS); // 243x320,
+                                                                           // CV_8UC1
+
+        // Remove temporary PNG.
+
+        Log log = Log.getLogger();
+        if (!tmpPngFile.delete()) {
+            log.warning("Warning! Temporary file " + tmpFaceCanonicalPath
+                    + " was't deleted!");
+        }
+        if (imgMat.empty()) {
+            log.warning("Matrix m is empty!");
+        }
+        return imgMat;
     }
 }
