@@ -8,20 +8,6 @@ Przydatne mogą okazać się dodatki Eclipse Hibernate Tool:
 
 ---
 
-Sposób tworzenia tabeli z twarzami:
-
-create table FACES (
-  id        SERIAL            NOT NULL,
-  label     INT       UNIQUE  NOT NULL,
-  image     BYTEA             NOT NULL,
-  filename  VARCHAR   UNIQUE  NOT NULL,
-  filetype  CHAR(16)          NOT NULL,
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  PRIMARY KEY (id)
-);
-
----
-
 Dane do logowania do bazy danych:
 
 login: eigenuser
@@ -39,7 +25,28 @@ Konfiguracja/dodawanie kont użytkowników bazy danych PostgreSQL:
 
 su -
 su - postgres
+createuser eigenuser
 psql -d template1
+alter user eigenuser password 'eigenfaces';
+
+
+---
+
+Sposób tworzenia tabeli z twarzami:
+
+create table FACES (
+  id        SERIAL            NOT NULL,
+  label     INT       UNIQUE  NOT NULL,
+  image     BYTEA             NOT NULL,
+  filename  VARCHAR   UNIQUE  NOT NULL,
+  filetype  CHAR(16)          NOT NULL,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  PRIMARY KEY (id)
+);
+
+---
+
+Przyznanie uprawnień:
 
 GRANT select, insert, update, delete ON faces TO eigenuser;
 GRANT ALL PRIVILEGES ON DATABASE "template1" TO eigenuser;
@@ -47,17 +54,17 @@ GRANT USAGE, SELECT ON SEQUENCE faces_id_seq TO eigenuser;
 
 ---
 
-Dumpowanie bazy danych PostgeSQL i przywracanie bazy danych:
+Przywrócenie bazy danych z pliku:
 
-https://www.postgresql.org/docs/current/static/backup-dump.html
+psql template1 < template1_db_postgresql.dump
 
 Zrzut bazy danych do pliku:
 
 pg_dump dbname > outfile
 
-Przywrócenie bazy danych z pliku:
+Więcej info:
 
-psql dbname < infile
+https://www.postgresql.org/docs/current/static/backup-dump.html
 
 ---
 

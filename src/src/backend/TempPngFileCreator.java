@@ -7,7 +7,8 @@ import javax.imageio.ImageIO;
 
 public class TempPngFileCreator {
 
-    public static File createTmpPngCopy(String canonicalPath) throws IOException {
+    public static File createTmpPngCopy(String canonicalPath)
+            throws IOException {
         final String prefix = "opencv", suffix = ".png";
         File tmpPngFile = File.createTempFile(prefix, suffix);
         File input = new File(canonicalPath);

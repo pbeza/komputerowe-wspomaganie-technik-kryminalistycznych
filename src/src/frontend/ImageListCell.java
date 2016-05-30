@@ -22,23 +22,29 @@ public class ImageListCell extends JLabel {
 
     private final static Log log = Log.getLogger();
     private final static double IMAGE_RATIO = 4.0 / 3.0;
-    private final static int ICON_WIDTH = 180, ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO), MIN_IMAGE_ID = 1;
-    private final static Dimension ICON_SIZE = new Dimension(ICON_WIDTH, ICON_HEIGHT);
+    private final static int ICON_WIDTH = 180,
+            ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO), MIN_IMAGE_ID = 1;
+    private final static Dimension ICON_SIZE = new Dimension(ICON_WIDTH,
+            ICON_HEIGHT);
     private static int latelyAssignedDisplayedId = MIN_IMAGE_ID;
     private final int displayedId;
     private final BufferedImage image;
     private final FaceEntity faceEntity;
+    private String filepath; // TODO remove it!
 
     public ImageListCell(File img) throws IOException {
         this(img, FaceEntity.UNKNOWN_LABEL_ID);
+        filepath = img.getCanonicalPath();
     }
 
     private ImageListCell(File img, int labelId) throws IOException {
-        this(ImageIO.read(img), img.getName(), Files.probeContentType(img.toPath()), labelId);
+        this(ImageIO.read(img), img.getName(),
+                Files.probeContentType(img.toPath()), labelId);
     }
 
     // TODO too much copy-paste
-    private ImageListCell(BufferedImage image, String filename, String mimetype, int labelId) {
+    private ImageListCell(BufferedImage image, String filename, String mimetype,
+            int labelId) {
         // this(new FaceEntity(labelId, image, filename, mimetype));
         super();
         this.image = image;
@@ -46,7 +52,8 @@ public class ImageListCell extends JLabel {
         faceEntity = new FaceEntity(labelId, image, filename, mimetype);
         String text = displayedId + ". " + faceEntity.getFilename();
         setText(text);
-        Image scaledImage = image.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_DEFAULT);
+        Image scaledImage = image.getScaledInstance(ICON_WIDTH, ICON_HEIGHT,
+                Image.SCALE_DEFAULT);
         Icon icon = new ImageIcon(scaledImage);
         setIcon(icon);
         setHorizontalAlignment(LEFT);
@@ -60,7 +67,8 @@ public class ImageListCell extends JLabel {
         String text = displayedId + ". " + faceEntity.getFilename();
         setText(text);
         image = faceEntity.convertToBufferedImage();
-        Image scaledImage = image.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_DEFAULT);
+        Image scaledImage = image.getScaledInstance(ICON_WIDTH, ICON_HEIGHT,
+                Image.SCALE_DEFAULT);
         Icon icon = new ImageIcon(scaledImage);
         setIcon(icon);
         setHorizontalAlignment(LEFT);
@@ -101,5 +109,9 @@ public class ImageListCell extends JLabel {
 
     public FaceEntity getFaceEntity() {
         return faceEntity;
+    }
+
+    public String getFilepath() {
+        return filepath;
     }
 }

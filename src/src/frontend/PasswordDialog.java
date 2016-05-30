@@ -213,11 +213,13 @@ public class PasswordDialog extends JDialog {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE
-                        || (e.getSource() == cancelButton && e.getKeyCode() == KeyEvent.VK_ENTER)) {
+                        || (e.getSource() == cancelButton
+                                && e.getKeyCode() == KeyEvent.VK_ENTER)) {
                     pressed_OK = false;
                     PasswordDialog.this.setVisible(false);
                 }
-                if (e.getSource() == okButton && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                if (e.getSource() == okButton
+                        && e.getKeyCode() == KeyEvent.VK_ENTER) {
                     pressed_OK = true;
                     PasswordDialog.this.setVisible(false);
                 }
