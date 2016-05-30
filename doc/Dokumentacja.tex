@@ -118,7 +118,7 @@
     \includegraphics[width=0.45\textwidth]{img/faces}
 \end{figure}
 
-Niniejszy dokument powstał w~ramach dokumentacji projektu zespołowego z~przedmiotu \emph{\href{http://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html}{Komputerowe wspomaganie technik kryminalistycznych}} w semestrze letnim roku akademickiego~2015/2016 na \emph{\href{http://www.mini.pw.edu.pl/}{Wydziale MiNI}~\href{https://www.pw.edu.pl/}{Politechniki Warszawskiej}}. Ma on za zadanie udokumentować ideę działania aplikacji identyfikującą twarze, uzasadnienie wyboru zastosowanych algorytmów, sposób jej użycia, wykorzystane narzędzia i biblioteki, wyniki testów funkcjonalnych i wydajnościowych oraz wnioski.
+Niniejszy dokument powstał w~ramach dokumentacji projektu zespołowego z~przedmiotu \emph{\href{http://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html}{Komputerowe wspomaganie technik kryminalistycznych}} w semestrze letnim roku akademickiego~2015/2016 na \emph{\href{http://www.mini.pw.edu.pl/}{Wydziale MiNI}~\href{https://www.pw.edu.pl/}{Politechniki Warszawskiej}}. Ma on za zadanie udokumentować ideę działania aplikacji identyfikującą twarze, uzasadnienie wyboru zastosowanych algorytmów, sposób jej użycia, wykorzystane narzędzia i biblioteki, wyniki testów oraz wnioski.
 
 \end{abstract}
 
@@ -145,17 +145,17 @@ W ramach niniejszego projektu powstało rozwiązanie oparte o metody klasyczne, 
 
 Istnieje wiele zastosowań identyfikacji twarzy. Część z nich dotyczy zastosowań w rozrywce, takiej jak np. gry czy identyfikacja twarzy na zdjęciach serwisów społecznościowych\footnote{W przeciwieństwie do rozpoznawania twarzy, identyfikacja twarzy nie jest jeszcze stosowana na szeroką skalę na największych serwisach społecznościowych.}. Poza zastosowaniami identyfikacji twarzy w rozrywce, istnieją zastosowania do poważniejszych celów, np. do wspomagania technik kryminalistycznych i szeroko pojętego bezpieczeństwa danych, np.: systemy kontroli dostępu, systemy bezpieczeństwa na lotniskach, policyjne bazy danych osób poszukiwanych (np. zaginionych, poszukiwanych listami gończymi i podejrzanych).
 
-Identyfikacja twarzy w komputerowym wspomaganiu technik kryminalistycznych jest ważnym zagadnieniem dla wszystkich służb dbających o bezpieczeństwo, które posiadają bazy danych ze zdjęciami twarzy tysięcy osób, wśród których może znajdować się zdjęcie osoby identyfikowanej, np. podejrzanej, poszukiwanej lub zaginionej. Niniejsza dokumentacja jest opisem szczegółów implementacyjnych aplikacji służącej do identyfikacji dwuwymiarowych zdjęć twarzy.
+Identyfikacja twarzy w komputerowym wspomaganiu technik kryminalistycznych jest ważnym zagadnieniem dla wszystkich służb dbających o bezpieczeństwo, które posiadają bazy danych ze zdjęciami twarzy tysięcy osób, wśród których może znajdować się zdjęcie osoby identyfikowanej, np. podejrzanej, winnej, poszukiwanej lub zaginionej. Niniejsza dokumentacja jest opisem szczegółów implementacyjnych aplikacji służącej do identyfikacji dwuwymiarowych zdjęć twarzy.
 
 %------------------------------------------------------------------------------
 
 \subsection{Cel aplikacji}
 
-Celem aplikacji jest zidentyfikowanie zadanej twarzy na podstawie zbioru zdjęć osób z lokalnej bazy danych. Zakładamy, że zdjęcia są znormalizowane, tzn. wszystkie zdjęcia są monochromatyczne, mają jednakowe rozmiary, twarze sfotografowana są frontalnie, tzn.~\emph{en~face} i są wycentrowane.
+Celem aplikacji tworzonej w ramach niniejszego projektu jest zidentyfikowanie zadanej twarzy na podstawie zbioru zdjęć osób z lokalnej bazy danych. Zakładamy, że zdjęcia są znormalizowane, tzn. wszystkie zdjęcia są monochromatyczne, mają jednakowe rozmiary, twarze sfotografowana są frontalnie, tzn.~\emph{en~face} i są wycentrowane.
 
-Jeśli osoba, której twarz podano na wejście programu nie znajduje się w bazie danych, program powinien zwrócić kilka zdjęć najbardziej podobnych do zadanego wraz z oszacowaniem ich podobieństwa w skali od $0\%$ do $100\%$. W obu przypadkach zdjęcia znalezionych twarzy powinny być posortowane nierosnąco względem podobieństwa do zadanej twarzy.
+Jeśli osoba, której twarz podano na wejście programu nie znajduje się w bazie danych, program powinien zwrócić kilka zdjęć najbardziej podobnych do zadanego wraz z oszacowaniem ich podobieństwa w skali od $0\%$ do $100\%$ lub w innej mierze odległości. W obu przypadkach zdjęcia znalezionych twarzy powinny być posortowane nierosnąco względem podobieństwa do zadanej twarzy.
 
-W przeciwnym razie, tzn. jeśli zdjęcia osoby, której twarz została poddana identyfikacji, znajdują się w bazie, program powinien znaleźć tę twarz i przypisać wartość jej podobieństwa bliską $100\%$ (wartość oczekiwana $=100\%$) oraz ewentualnie kilka innych, podobnych twarzy, z odpowiednio mniejszym podobieństwem wyrażonym w skali od $0\%$ do $100\%$.
+W przeciwnym razie, tzn. jeśli zdjęcia osoby, której twarz została poddana identyfikacji, znajdują się w bazie danych, program powinien znaleźć tę twarz i przypisać wartość jej podobieństwa bliską $100\%$ (wartość oczekiwana $=100\%$) oraz ewentualnie kilka innych, podobnych twarzy, z odpowiednio mniejszym podobieństwem wyrażonym w skali od $0\%$ do $100\%$ lub innej mierze odległości.
 
 Pierwszorzędnym celem aplikacji \emph{nie} jest szybkie działanie, co można uzasadnić tym, że algorytmy mające na celu zidentyfikowanie osoby, powinny przede wszystkim nie dopuścić do przeoczenia osoby, która znajduje się w bazie danych. Tak postawione wymaganie na ogół wymusza zastosowania algorytmów, które działają względnie długo.
 
@@ -166,17 +166,17 @@ Pierwszorzędnym celem aplikacji \emph{nie} jest szybkie działanie, co można u
 
 Do rozpoznawania twarzy została zastosowana \emph{metoda analizy głównych składowych}~(ang.~\emph{Principal Component Analysis} -- w~skrócie:~PCA), zaproponowana niezależnie przez angielskiego matematyka \emph{Karla Pearson'a}~(1901) oraz ekonoma i statystyka \emph{Harolda Hotelling'a}~(1933).
 
-W niniejszym dziale przedstawiono opis metody PCA oraz \emph{eigenfaces}, na podstawie publikacji autorów metody \emph{eigenfaces} -- prof.~\emph{Matthew Turk'a} i prof.~\emph{Alex'a Pentland'a}\cite{turk}.
+W niniejszym dziale przedstawiono uzasadnienie wyboru algorytmu, opis metody PCA oraz \emph{eigenfaces}, na podstawie publikacji autorów metody \emph{eigenfaces} -- prof.~\emph{Matthew Turk'a} i prof.~\emph{Alex'a Pentland'a}\cite{turk}.
 
 %------------------------------------------------------------------------------
 
 \subsection{Analiza głównych składowych}
 
-Jednym z głównych problemów z jakim mamy do czynienia w identyfikacji twarzy ze zdjęć, jest ich duży wymiar. Dwuwymiarowe, monochromatyczne zdjęcie zdjęcie o wymiarach, rozpina przestrzeń $m=p\cdot q$-wymiarową. Zdjęcie o wymiarach $100\times 100$~pikseli, rozpina przestrzeń $10000$-wymiarową. Istnieje potrzeba zmniejszenia tej przestrzeni kosztem możliwie małych różnic między oryginalnym zdjęciem, a zdjęciem reprezentowanym w ,,skompresowanej" przestrzeni liniowej. Okazuje się, że do celów identyfikacji twarzy, nie wszystkie wymiary/osie są jednakowo istotne. Będziemy chcieli zachować tylko te wymiary, dla których wariancja jest największa, tak, aby skutecznie rozróżniać zdjęcia twarzy, korzystając z możliwie najmniejszej ilości wymiarów\cite{www:opencv}.
+Jednym z głównych problemów z jakim mamy do czynienia w identyfikacji twarzy ze zdjęć, jest ich duży wymiar. Dwuwymiarowe, monochromatyczne zdjęcie zdjęcie o wymiarach $p\times q$, rozpina przestrzeń $m=p\cdot q$--wymiarową. Zdjęcie o wymiarach $100\times 100$~pikseli, rozpina przestrzeń $10000$-wymiarową. Istnieje potrzeba zmniejszenia tej przestrzeni kosztem możliwie małych różnic między oryginalnym zdjęciem, a zdjęciem reprezentowanym w ,,skompresowanej" przestrzeni liniowej. Okazuje się, że do celów identyfikacji twarzy, nie wszystkie wymiary/osie są jednakowo istotne. Będziemy chcieli zachować tylko te wymiary, dla których wariancja jest największa, tak, aby skutecznie rozróżniać zdjęcia twarzy, korzystając z możliwie najmniejszej ilości wymiarów\cite{www:opencv}.
 
 Główna idea metody \emph{eigenfaces}, to przedstawienie zdjęcia jako liniowa kombinacja obrazów bazowych~(patrz równanie~\ref{eq:eigenfaces}), zapisywanych w postaci wektorów, nazywanych również~\emph{eigenfaces}. Dzięki temu obraz możemy przestawić w zwartej postaci wektora $[\omega_1,\dotsc,\omega_M]$, o długości znacznie mniejszej od wymiaru obrazu~$N^2$.
 
-Załóżmy, że mamy zbiór zdjęć twarzy treningowych, pobranych z bazy danych, w postaci $M$ wektorów $\bm{\Gamma_1},\bm{\Gamma_2},\dotsc,\bm{\Gamma_M}$, z których każdy ma długość $N\cdot N$, gdzie $N$ to długość i wysokość zdjęcia\footnote{Dla uproszczenia oznaczeń w opisie metody zakładamy, że wysokość zdjęcia jest równa szerokości zdjęcia.}. Średnia twarz tego zbioru twarzy testowych jest zdefiniowana jako następujący wektor $\bm{\Psi}$ o długości $N\cdot N$:
+Załóżmy, że mamy zbiór zdjęć twarzy treningowych, pobranych z bazy danych, w postaci $M$ wektorów $\bm{\Gamma_1},\bm{\Gamma_2},\dotsc,\bm{\Gamma_M}$, z których każdy ma długość $N\cdot N$, gdzie $N$ to długość i wysokość zdjęcia\footnote{Dla uproszczenia oznaczeń w opisie metody, zakładamy, że wysokość zdjęcia jest równa szerokości zdjęcia.}. Średnia twarz tego zbioru twarzy testowych jest zdefiniowana jako następujący wektor $\bm{\Psi}$ o długości $N\cdot N$:
 \begin{equation}
 	\bm{\Psi}=\frac{1}{M}\cdot\sum\limits_{n=1}^M\bm{\Gamma_n}
 \end{equation}
@@ -207,7 +207,7 @@ gdzie:
 \end{equation}
 Rozmiar macierzy $C$ jest bardzo duży -- wynosi $N^2\times N^2$. Liczenie $N^2$ wartości własnych i wektorów własnych byłoby bardzo czasochłonne dla typowych wymiarów zdjęć.
 
-Jeśli ilość zdjęć w bazie danych $M$ jest mniejsza od wymiaru przestrzeni $N^2$, tzn. $M<N^2$, to otrzymamy tylko $M-1$ znaczących wektorów własnych zamiast $N^2$. Pozostałe wektory własne będą miały wartości własne równe $0$. Na szczęście możemy znaleźć $N^2$-wymiarowe wektory własne najpierw licząc wektory własne mniejszej macierzy, tzn. macierzy~$M\times M$. Dla 16 zdjęć o wymiarach $128\times 128$, oznacza to, że zamiast liczyć wektory własne macierzy o wymiarach\footnote{$128\cdot 128=16384$.} $p\times q$ $16384\times 16384$, możemy policzyć wektory własne macierzy $A^TA$, która ma wymiary $16\times 16$, a następnie zastosować odpowiednią kombinację liniową wektora~$\bm{\Phi_i}$. Rozważmy zatem wektor własny $\bm{v_i}$ macierzy $A^TA$, taki, że:
+Jeśli ilość zdjęć w bazie danych $M$ jest mniejsza od wymiaru przestrzeni $N^2$, tzn. $M<N^2$, to otrzymamy tylko $M-1$ znaczących wektorów własnych zamiast $N^2$. Pozostałe wektory własne będą miały wartości własne równe $0$. Na szczęście możemy znaleźć $N^2$-wymiarowe wektory własne najpierw licząc wektory własne mniejszej macierzy, tzn. macierzy~$M\times M$. Dla 16 zdjęć o wymiarach $128\times 128$, oznacza to, że zamiast liczyć wektory własne macierzy o wymiarach\footnote{$128\cdot 128=16384$.} $p\times q$, czyli, w rozpatrywanym wypadku $16384\times 16384$, możemy policzyć wektory własne macierzy $A^TA$, która ma wymiary $16\times 16$, a następnie zastosować odpowiednią kombinację liniową wektora~$\bm{\Phi_i}$. Rozważmy zatem wektor własny $\bm{v_i}$ macierzy $A^TA$, taki, że:
 \begin{equation}
 	A^TA\bm{v_i}=\mu_i\bm{v_i}
 \end{equation}
@@ -247,6 +247,89 @@ Tak otrzymany wektor może być użyty do porównania z wektorami dostępnymi w 
 
 %------------------------------------------------------------------------------
 
+\subsection{Uzasadnienie wyboru algorytmu}
+
+Algorytm \emph{eigenfaces} został wybrany z kilku powodów:
+\begin{enumerate}
+	\item dzięki uzyskiwanym bardzo zadowalającym wynikom, jest uznawany w środowisku za dobry algorytm identyfikacji twarzy,
+	\item nie wymaga dużej ilości pamięci i dużej mocy obliczeniowej,
+	\item po zakończeniu etapu nauki modelu, model może być wykorzystywany w rozpoznawaniu twarzy w czasie rzeczywistym,
+	\item w przeciwieństwie np. do sztucznych sieci neuronowych, algorytm korzysta z stosunkowo łatwej idei, realizowanej za pomocą prostej algebry,
+	\item proces nauki jest w pełni automatyczny,
+	\item jest zaimplementowany w repozytorium \emph{OpenCV Contrib}.
+\end{enumerate}
+Poza wyżej wymienionymi zaletami, algorytm ten ma również kilka istotnych wad, z których chyba największą jest wrażliwość na zmianę oświetlenia, zmianę skali zdjęcia i translacje.
+
+%------------------------------------------------------------------------------
+
+\section{Maszyna wirtualna}
+\label{sec:maszyna-wirtualna}
+
+W celu uniknięcia potencjalnych problemów z zależnościami aplikacji od konkretnej konfiguracji systemu operacyjnego, w szczególności od zainstalowanych bibliotek i konfiguracji bazy danych, w ramach projektu, skonfigurowano maszynę wirtualną \emph{VirtualBox}, na której dostarczono działającą aplikację. Na maszynie wirtualnej został zainstalowany 64-bitowy system operacyjny \emph{Linux Debian} w najnowszej dostępnej, stabilnej wersji, tj.~\emph{Debian~8.4~(Jessie)}, korzystający z lekkiego środowiska graficznego \texttt{Xfce}. Maszyna wirtualna zajmuje stosunkowo niewiele miejsca, bo około \texttt{11GB}, dlatego, zrezygnowano ze zbędnych w tym przypadku, wyrafinowanych schematów partycjonowania przestrzeni dyskowej i utworzono jedną partycję systemową~\texttt{ext4}.
+
+W niniejszym rozdziale krótko opisano najważniejsze zmiany jakich dokonano względem \emph{czystego}, tj. niezmodyfikowanego, systemu operacyjnego, pobranego z oficjalnej strony \emph{Debiana}.
+
+%------------------------------------------------------------------------------
+
+\subsection{Konto administratora}
+
+Na potrzeby konfiguracji systemu stworzono konto administratora, tj. \emph{root'a}.
+
+\begin{tabular}{r|l}
+Login: & \texttt{root}\\
+\hline
+Hasło: & \texttt{r00t-MiNI\&PW-2015/2016}\\
+\end{tabular}
+
+%------------------------------------------------------------------------------
+
+\subsection{Konto użytkownika systemu}
+
+Poza kontem administratora, utworzono konto użytkownika \texttt{kwtk}.
+
+\begin{tabular}{r|l}
+Login: & \texttt{kwtk}\\
+\hline
+Hasło: & \texttt{kwtk-MiNI\&PW-2015/2016}\\
+\end{tabular}
+
+%------------------------------------------------------------------------------
+
+\subsection{Konfiguracja systemu}
+
+Projekt jest napisany w \emph{Javie}, więc z natury powinien być przenośny pomiędzy systemami operacyjnymi, na których można zainstalować maszynę wirtualną \emph{Javy}. W rzeczywistości nie jest to takie proste, ponieważ w projekcie wykorzystano biblioteki \emph{OpenCV}, które wykorzystują mechanizm \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java-Native-Interface}}. Biblioteka \emph{OpenCV} została napisana w C++ w ten sposób, aby dało się je skompilować dla różnych systemów operacyjnych, w tym m.in. dla \emph{Linux'a} i \emph{Windowsa}. W ramach projektu została skompilowana ta sama wersja biblioteki dla 64-bitowych systemów \emph{Windows} i \emph{Linux} (odpowiednio biblioteka: \texttt{opencv\_java310.dll} i \texttt{libopencv\_java310.so}). W trakcie testów przetestowano z powodzeniem aplikację na obu tych systemach.
+
+Oprogramowanie wykorzystane w ramach projektu jest w całości otwartoźródłowe i \emph{wolne}\footnote{\emph{Wolne} w znaczeniu użytej licencji pozwalającej na wprowadzanie zmian i nieodpłatne wykorzystywanie: źródeł, bibliotek, baz danych itd.}. Większość zależności aplikacji jest zawarta w projekcie -- np. moduły \emph{OpenCV} i \emph{Hibernate}, służący za \href{https://en.wikipedia.org/wiki/Object-relational_mapping}{\emph{ORM}} przy dostępie do bazy danych. Jedynym modułem, który nie można zawrzeć w postaci \emph{Eclipse'owego} projektu jest baza danych \emph{PostgreSQL}\footnote{\emph{PostgreSQL} można zainstalować, instalując pakiet \texttt{postgres}, dostępny w standardowym repozytorium większości znanych dystrybucji \emph{Linux'a}. Na \emph{Debianie} i \emph{Ubuntu} do zainstalowania wystarczy: \texttt{apt-get install postgres}.}, przechowująca zdjęcia twarzy identyfikowanych osób. Wymagała ona osobnej konfiguracji, polegającej m.in. na: stworzeniu użytkownika i hasła dostępu do bazy danych, stworzeniu tabeli \texttt{faces} w bazie danych, wypełnienie jej zdjęciami twarzy identyfikowanych osób i przyznanie dostępu użytkownikowi do tabeli \texttt{faces}.
+
+W celu łatwego przenoszenia bazy danych z maszyny \emph{developerskiej} na maszynę wirtualną, wykorzystano \href{https://en.wikipedia.org/wiki/Database_dump}{\emph{dump}} bazy danych, który w przypadku eksportu bazy danych sprowadza się do wykonania komendy: \texttt{pg\_dump template1 > out.dump}, a w przypadku importu bazy danych: \texttt{psql template1 < out.dump}, gdzie \texttt{template1} to nazwa bazy danych, a \texttt{out.dump} to ścieżka pliku z zrzutem bazy danych.
+
+W przypadku chęci wygodnego edytowania i \emph{debugowania} kodu źródłowego projektu, należy zainstalować dodatkowe pakiety oprogramowania, takie jak:
+\begin{enumerate}
+	\item \texttt{git},
+	\item \texttt{eclipse}.
+\end{enumerate}
+Każdy z powyższych pakietów można pobrać ze standardowego repozytorium \emph{Debiana} i zainstalować za pomocy komendy: \texttt{apt-get install \emph{nazwa-pakietu}}.
+
+Cała opisana wyżej konfiguracja systemu \emph{Debian} -- zarówno ta obowiązkowa, jak i opcjonalna -- została wykonana w ramach oddania projektu, więc aplikacja działa \emph{out of the box}.
+
+%------------------------------------------------------------------------------
+
+\subsection{Baza danych}
+
+Aplikacja łączy się z lokalną\footnote{Tzn. z adresem IPv4: \texttt{127.0.0.1} (\texttt{localhost}).} bazą danych na, standardowym dla \emph{PostgreSQL}, porcie 5432. Nic nie stoi na przeszkodzie, aby w konfiguracji ,,produkcyjnej", przenieść bazę danych na oddzielny serwer. Zmianie uległby tylko adres IP w konfiguracji \emph{Hibernate'a} w pliku \texttt{hibernate.cfg.xml}. Dane logowania używane przez aplikację w celu połączenia się z lokalną bazą danych \emph{PostgreSQL}:
+
+\begin{tabular}{r|l}
+Login: & \texttt{eigenuser}\\
+\hline
+Hasło: & \texttt{eigenfaces}\\
+\hline
+Host: & \texttt{localhost}\\
+\hline
+Port: & \texttt{5432}\\
+\end{tabular}
+
+%------------------------------------------------------------------------------
+
 \section{Aplikacja}
 \label{sec:aplikacja}
 
@@ -254,21 +337,85 @@ Aplikację zaimplementowano w języku \emph{Java}, korzystając ze środowiska g
 
 %------------------------------------------------------------------------------
 
-\subsection{Wykorzystane biblioteki}
+\subsection{Dane wejściowe}
 
-\noindent Lista wykorzystanych w projekcie bibliotek:
-\begin{itemize}
-	\item \emph{OpenCV 3.1} rozszerzona o moduły z repozytorium \emph{OpenCV Contrib},
-	\item standardowe biblioteki Javy (np. \emph{JUnit}).
-\end{itemize}
+Za główne dane wejściowe aplikacji uważamy:
+\begin{enumerate}
+	\item znormalizowane\footnote{Przez znormalizowane zdjęcia rozumiemy zdjęcia o takich samych wymiarach z twarzą wyśrodkowaną na zdjęciu.} zdjęcie identyfikowanej osoby,
+	\item baza danych znanych twarzy\footnote{W trakcie pisania niniejszej dokumentacji, w bazie danych znajduje się 165 zdjęć 15 osób -- po 11 zdjęć twarzy każdej z osób -- każde z 11 zdjęć z inną mimiką twarzy.}.
+\end{enumerate}
 
 %------------------------------------------------------------------------------
 
-\subsection{Napotkane problemy konfiguracji}
+\subsection{Dane wyjściowe}
+
+Za dane wejściowe aplikacji uważamy \emph{niewielki} podzbiór zdjęć twarzy z bazy danych, podobnych do identyfikowanej twarzy, wraz z liczbą z zakresu $0\%$ -- $100\%$, lub inną miarą odległości, będącą odzwierciedleniem podobieństwa twarzy identyfikowanej i zwróconej jako wynik działania programu.
+
+%------------------------------------------------------------------------------
+
+\subsection{Wykorzystane biblioteki}
+
+Najważniejszą biblioteką wykorzystaną w ramach projektu jest biblioteka implementująca \emph{PCA} i \emph{eigenfaces}, tj. biblioteka \emph{OpenCV Contrib Faces}, która została pobrana z oficjalnego repozytorium:
+\begin{center}
+\url{https://github.com/Itseez/opencv_contrib}\\
+\url{git@github.com:Itseez/opencv_contrib.git}
+\end{center}
+Niepełna lista wykorzystanych w projekcie bibliotek:
+\begin{enumerate}
+	\item \emph{OpenCV 3.1} + moduły z repozytorium \emph{OpenCV Contrib} -- implementacja m.in. \emph{eigenfaces},
+	\item \emph{Hibernate} -- \href{https://en.wikipedia.org/wiki/Object-relational_mapping}{\emph{ORM}} dla \emph{PostgreSQL},
+	\item standardowe biblioteki Javy (m.in. do logowania zdarzeń -- patrz~\ref{sec:logowanie}).
+\end{enumerate}
+
+%------------------------------------------------------------------------------
+
+\subsection{Autoryzacja}
+
+Po uruchomieniu aplikacji, przed wyświetleniem się okna głównego, zostaje przeprowadzona prosta autoryzacja przez wymóg podania poprawnej nazwy użytkownika oraz hasła.
+
+\begin{tabular}{r|l}
+Login: & \texttt{root}\\
+\hline
+Hasło: & \texttt{toor}\\
+\end{tabular}
+
+%------------------------------------------------------------------------------
+
+\subsection{Logowanie zdarzeń}
+\label{sec:logowanie}
+
+Aplikacja loguje różne zdarzenia podczas działania programu, np.:
+\begin{itemize}
+	\item błędy krytyczne działania programu,
+	\item ostrzeżenia -- np. przy niepowodzeniu połączenia z bazą danych,
+	\item działania użytkownika -- np. wyszukiwanie w bazie danych,
+	\item wyniki wyszukiwań w bazie danych,
+	\item daty zalogowań i prób zalogowań do aplikacji.
+\end{itemize}
+Logowanie zostało zrealizowane z wykorzystaniem bardzo elastycznej paczki \texttt{java.util.logging}, która pozwala m.in. na filtrowanie logowanych komunikatów, konfigurowanie formatu logowanych wiadomości, zapisywanie zarówno do pliku jak i na standardowe wyjścia (nie tylko \texttt{stderr}) i wiele innych.
+
+Logi z działania aplikacji zostają zapisywane do katalogu projektu \texttt{/logs} w formacie:
+\begin{center}
+\texttt{DD-MM-YYYY\_HH-MM-SS.log}
+\end{center}
+gdzie:
+\begin{itemize}
+	\item \texttt{DD} -- dzień miesiąca,
+	\item \texttt{MM} -- miesiąc,
+	\item \texttt{YY} -- rok,
+	\item \texttt{HH} -- godzina,
+	\item \texttt{MM} -- minuty,
+	\item \texttt{SS} -- sekundy.
+\end{itemize}
+Godzina w nazwie pliku logu jest ustalana względem czasu systemowego (a nie względem \texttt{UTC+00}). Logi nie są kasowane po zakończeniu programu.
+
+%------------------------------------------------------------------------------
+
+\subsection{Napotkane trudności}
 
 Zdecydowanie największą trudnością konfiguracji projektu, która pochłonęła sporą część całego projektu, była kompilacja modułu \emph{OpenCV Faces} (i jego zależności), który jest implementacją algorytmu \emph{eigenfaces}. Szczególnie dużo czasu zajęło poprawne jej skompilowanie na systemie operacyjnym \emph{Windows~10}. Kompilacja na systemie \emph{Linux Debian} była również czasochłonna, ale nie w takim stopniu jak na \emph{Windows}.
 
-Główną przyczyną trudności konfiguracji projektu był fakt, że moduł \emph{OpenCV Faces} jest wersją rozwojową, która nie jest dołączona do standardowej istalacji \emph{OpenCV}. Ponadto \emph{OpenCV} i wszystkie jego moduły, w tym moduł \emph{Faces}, jest napisany w C++ i aby włączyć \emph{wrapper}\footnote{Przez \emph{wrapper} rozumie się wygenerowany automatycznie, na podstawie kodu źródłowego napisanego w C++, plik \emph{JAR}, który jest interfejsem implementacji \emph{OpenCV}, napisanej w C++ i skompilowanej do postaci binarnej \emph{*.DLL} i \emph{*.SO}, odpowiednio na \emph{Windowsie} i \emph{Linuksie}. Mechanizm ten nosi nazwę \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java Native Interface}}.} do \emph{Javy}, należy przeprowadzić kompilację \emph{OpenCV} i \emph{OpenCV Contrib} samodzielnie, co nie byłoby dużym problemem gdyby nie to, że po drodze należy zmodyfikować kilka nieudokumentowanych miejsc w kodzie modułu \emph{Faces}, ponieważ oficjalnie, tylko moduły z głównego wydania \emph{OpenCV} mają wsparcie \emph{wrapperem} \emph{Javy}.
+Główną przyczyną trudności konfiguracji projektu był fakt, że moduł \emph{OpenCV Faces} jest wersją rozwojową, która nie jest dołączona do standardowej istalacji \emph{OpenCV}. Ponadto \emph{OpenCV} i wszystkie jego moduły, w tym moduł \emph{Faces}, jest napisany w C++ i aby włączyć \emph{wrapper}\footnote{Przez \emph{wrapper} rozumie się wygenerowany automatycznie, na podstawie kodu źródłowego napisanego w C++, plik \emph{jar}, który jest interfejsem implementacji \emph{OpenCV}, napisanej w C++ i skompilowanej do postaci binarnej \emph{*.dll} i \emph{*.so}, odpowiednio na \emph{Windowsie} i \emph{Linuksie}. Mechanizm ten nosi nazwę \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java Native Interface}}.} do \emph{Javy}, należy przeprowadzić kompilację \emph{OpenCV} i \emph{OpenCV Contrib} samodzielnie, co nie byłoby dużym problemem gdyby nie to, że po drodze należy zmodyfikować kilka nieudokumentowanych miejsc w kodzie modułu \emph{Faces}, ponieważ oficjalnie, tylko moduły z głównego wydania \emph{OpenCV} mają wsparcie \emph{wrapperem} \emph{Javy}.
 
 Mniejszą trudnością, a bardziej uciążliwością, był fakt, że system \emph{Windows} nie jest domyślnie przystosowany dla pracy programisty, co wiązało się z koniecznością ręcznego konfigurowania co najmniej kilku zmiennych środowiskowych i instalowania wielu zależności. Niektóre z nich to: \emph{git}, \emph{CMake}, \emph{Java~8~JDK}, \emph{Python}, \emph{ant}, \emph{MinGW}/\emph{Microsoft Visual Studio}, \emph{Eclipse}.
 
@@ -276,31 +423,20 @@ Wyżej wymienione problemy były oczywiście jednorazowe, tzn. użytkownik końc
 
 %------------------------------------------------------------------------------
 
-\subsection{Dane wejściowe}
-
-Za dane wejściowe aplikacji uważamy:
-\begin{enumerate}
-	\item znormalizowane zdjęcie identyfikowanej osoby,
-	\item wczytana baza danych znanych twarzy.
-\end{enumerate}
-
-%------------------------------------------------------------------------------
-
-\subsection{Dane wyjściowe}
-
-Za dane wejściowe aplikacji uważamy niewielki podzbiór zdjęć twarzy z bazy danych, podobnych do identyfikowanej twarzy, wraz z liczbą z zakresu $0\%$ -- $100\%$, będącą procentowym odzwierciedleniem podobieństwa twarzy identyfikowanej i zwróconej jako wynik działania programu.
-
-%------------------------------------------------------------------------------
-
 \subsection{Instrukcja obsługi}
 
-\emph{TODO}
+Obsługa programu jest dość intuicyjna, wspierana \emph{tooltip'ami}, które się pojawiają po najechaniu kursorem nad przyciski menu. Interfejs graficzny programu składa się z menu i dwóch kart: \texttt{All faces} i \texttt{Found faces}. Każda z  kart jest podzielona pionowo na dwie części: lewą i prawą.
+
+Po lewej stronie karty \texttt{All faces} mamy pogląd na wszystkie zdjęcia, jakie zostały wczytane z bazy danych \emph{PostgreSQL}. Po kliknięciu na zdjęcie, po prawej stronie karty, mamy możliwość przybliżania i oddalania zdjęcia w wybranym obszarze oraz przywrócenia rozmiaru oryginalnego.
+
+Po wybraniu z menu zdjęcia poddawanego identyfikacji, zatwierdzeniu rozpoczęcia przeszukiwania bazy danych i zakończeniu obliczeń, w karcie \texttt{Found faces} pojawiają się zdjęcia, które są najbardziej zbliżone do identyfikowanej twarzy. Kolejność wyświetlania zdjęć w tej karcie jest rosnąca względem miary odległości podobieństwa twarzy \emph{eigenfaces}.
 
 %------------------------------------------------------------------------------
 
 \section{Testy}
+\label{sec:testy}
 
-Ten rozdział opisuje wyniki przeprowadzonych testów funkcjonalnych i~wydajnościowych.
+Ten rozdział opisuje wyniki przeprowadzonych testów funkcjonalnych aplikacji.
 
 %------------------------------------------------------------------------------
 
@@ -311,6 +447,12 @@ Ten rozdział opisuje wyniki przeprowadzonych testów funkcjonalnych i~wydajnoś
 %------------------------------------------------------------------------------
 
 \subsection{Wyniki testów}
+
+\emph{TODO}
+
+%------------------------------------------------------------------------------
+
+\section{Wnioski}
 
 \emph{TODO}
 
@@ -329,7 +471,7 @@ Poniższa tabela przestawia wykaz rozdziałów opracowanych przez poszczególnyc
 \center
 \begin{tabular}{p{2.5cm}|p{4cm}|p{4cm}|p{4cm}}
 & Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
-\parbox{3cm}{\ \\Opracowane \\rozdziały} & \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:aplikacja} & -- & --\\
+\parbox{3cm}{\ \\Opracowane \\rozdziały} & \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:maszyna-wirtualna}, \ref{sec:aplikacja}, \ref{sec:testy} & -- & --\\
 \end{tabular}
 \end{table}
 
@@ -341,7 +483,7 @@ Poniższa tabela przestawia podział prac implementacyjnych w ramach projektu.
 \center
 \begin{tabular}{p{2.5cm}|p{4cm}|p{4cm}|p{4cm}}
 & Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
-\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Obsługa algorytmu \emph{eigenfaces} w \emph{Javie} & -- & --\\
+\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Obsługa algorytmu \emph{eigenfaces} w \emph{Javie} & -- & $\bullet$ Dodanie \emph{progress bar'a}\\
 & $\bullet$ Konfiguracja środowiska i kompilacja \emph{OpenCV} z modułem \emph{Faces} na system \emph{Windows} i \emph{Linux} & &\\
 & $\bullet$ Implementacja interfejsu graficznego w \emph{Javie} & &\\
 & $\bullet$ Implementacja testów jednostkowych w \emph{Javie} & &\\
