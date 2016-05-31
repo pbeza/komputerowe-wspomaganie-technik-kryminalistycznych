@@ -25,15 +25,14 @@ def save_images_to_csv(path):
 			assert res is not None
 			this_group = int(res.group(1))
 			if last_group != this_group:
-				current_inx_in_group = 0
-			current_inx = this_group * 100 + current_inx_in_group
-			f.write("{0}{1}{2}\n".format(rel_path, SEPARATOR, current_inx))
+				current_inx_in_group = 1
+			f.write("{0}{1}{2}{3}{4}\n".format(rel_path, SEPARATOR, this_group, SEPARATOR, current_inx_in_group))
 			last_group = this_group
 			current_inx_in_group += 1
 
 if __name__ == "__main__":
 	if len(sys.argv) != 2:
-		print "usage: %s <base_path>", __file__
+		print "usage:", __file__, "<base_path>"
 		sys.exit(1)
 
 	BASE_PATH=sys.argv[1]

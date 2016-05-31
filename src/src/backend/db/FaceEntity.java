@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -28,7 +27,8 @@ import backend.TempPngFileCreator;
 @Table(name = "faces")
 public class FaceEntity {
 
-    public final static int UNKNOWN_ID = -1, UNKNOWN_LABEL_ID = -1;
+    public final static int UNKNOWN_ID = -1, UNKNOWN_PERSON_ID = -1,
+            UNKNOWN_IMAGE_ID = -1;
     private final static Timestamp UNKNOWN_TIMESTAMP = null;
 
     @Id
@@ -36,8 +36,11 @@ public class FaceEntity {
     @Column(name = "id", nullable = false)
     private int id;
 
-    @Column(name = "label", nullable = false, unique = true)
-    private int label;
+    @Column(name = "person_id", nullable = false)
+    private int personId;
+
+    @Column(name = "image_id", nullable = false)
+    private int imageId;
 
     @Column(name = "image", nullable = false)
     private byte[] image;
@@ -54,35 +57,27 @@ public class FaceEntity {
     public FaceEntity() {
     }
 
-    private FaceEntity(BufferedImage bufferedImage, String filename,
+    public FaceEntity(BufferedImage bufferedImage, String filename,
             String filetype) {
-        this(UNKNOWN_LABEL_ID, bufferedImage, filename, filetype);
+        this((DataBufferByte) bufferedImage.getData().getDataBuffer(), filename,
+                filetype);
     }
 
-    public FaceEntity(int label, BufferedImage bufferedImage, String filename,
+    private FaceEntity(DataBufferByte imageDataBufferByte, String filename,
             String filetype) {
-        this(label, (DataBufferByte) bufferedImage.getData().getDataBuffer(),
-                filename, filetype);
-    }
-
-    private FaceEntity(int label, DataBufferByte imageDataBufferByte,
-            String filename, String filetype) {
-        this(label, imageDataBufferByte.getData(), filename, filetype);
+        this(imageDataBufferByte.getData(), filename, filetype);
     }
 
     private FaceEntity(byte[] image, String filename, String filetype) {
-        this(UNKNOWN_LABEL_ID, image, filename, filetype);
+        this(UNKNOWN_ID, UNKNOWN_PERSON_ID, UNKNOWN_IMAGE_ID, image, filename,
+                filetype, UNKNOWN_TIMESTAMP);
     }
 
-    private FaceEntity(int label, byte[] image, String filename,
-            String filetype) {
-        this(UNKNOWN_ID, label, image, filename, filetype, UNKNOWN_TIMESTAMP);
-    }
-
-    private FaceEntity(int id, int label, byte[] image, String filename,
-            String filetype, Timestamp timestamp) {
+    private FaceEntity(int id, int personId, int imageId, byte[] image,
+            String filename, String filetype, Timestamp timestamp) {
         this.id = id;
-        this.label = label;
+        this.personId = personId;
+        this.imageId = imageId;
         this.image = image;
         this.filename = filename;
         this.filetype = filetype;
@@ -97,12 +92,20 @@ public class FaceEntity {
         this.id = id;
     }
 
-    public int getLabel() {
-        return label;
+    public int getPersonId() {
+        return personId;
     }
 
-    public void setLabel(int label) {
-        this.label = label;
+    public void setPersonId(int personId) {
+        this.personId = personId;
+    }
+
+    public int getImageId() {
+        return imageId;
+    }
+
+    public void setImageId(int imageId) {
+        this.imageId = imageId;
     }
 
     public byte[] getImage() {
@@ -129,7 +132,7 @@ public class FaceEntity {
         this.filetype = filetype;
     }
 
-    public Timestamp setTimestamp() {
+    public Timestamp getTimestamp() {
         return timestamp;
     }
 
@@ -142,16 +145,13 @@ public class FaceEntity {
         FileOutputStream fos;
         try {
             fos = new FileOutputStream(outputPath);
-        } catch (FileNotFoundException e) {
-            System.err.println(e.getMessage() + e.getCause());
-            return;
-        }
-        try {
             fos.write(imageArray);
             fos.close();
         } catch (IOException e) {
-            System.err.println("Failed to write " + outputPath);
-            return;
+            Log log = Log.getLogger();
+            log.severe("Error during converting image from byte array to file "
+                    + outputPath + ". Details: " + e.getMessage()
+                    + e.getCause());
         }
     }
 
@@ -178,15 +178,12 @@ public class FaceEntity {
 
     public static Mat convertGifToMat(String faceGifImagePath)
             throws IOException {
+        final Log log = Log.getLogger();
         final int IMREAD_FLAGS = Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE;
         File tmpPngFile = TempPngFileCreator.createTmpPngCopy(faceGifImagePath);
         String tmpFaceCanonicalPath = tmpPngFile.getCanonicalPath();
         Mat imgMat = Imgcodecs.imread(tmpFaceCanonicalPath, IMREAD_FLAGS); // 243x320,
                                                                            // CV_8UC1
-
-        // Remove temporary PNG.
-
-        Log log = Log.getLogger();
         if (!tmpPngFile.delete()) {
             log.warning("Warning! Temporary file " + tmpFaceCanonicalPath
                     + " was't deleted!");

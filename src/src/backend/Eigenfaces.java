@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -13,15 +14,14 @@ import java.util.logging.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.face.BasicFaceRecognizer;
 import org.opencv.face.Face;
-import org.opencv.face.FaceRecognizer;
 
 import backend.db.FaceEntity;
 
 public class Eigenfaces {
     private final static Logger log = Log.getLogger();
-    private final static int UNKNOWN_LABEL = -1;
-    private final FaceRecognizer eigenfacesRecognizer;
+    private final BasicFaceRecognizer eigenfacesRecognizer;
     private int predictedLabel;
     private double predictedConfidence;
     private boolean isModelTrained = false;
@@ -30,80 +30,75 @@ public class Eigenfaces {
         log.info("Loading OpenCV libraries...");
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         log.info("Loading OpenCV libraries successfully loaded");
-        // TODO use more flexible constructors for FaceRecognizer
+        // TODO use more flexible constructor:
+        // Face.createEigenFaceRecognizer(int num_components, double threshold)
         eigenfacesRecognizer = Face.createEigenFaceRecognizer();
     }
 
-    public void train(List<FaceEntity> learningSetFaceEntities) {
+    public void setModelTrained(boolean isModelTrained) {
+        this.isModelTrained = isModelTrained;
+    }
+
+    public void train(List<FaceEntity> learningSetFaceEntities)
+            throws IOException {
         int n = learningSetFaceEntities.size();
         List<Integer> labels = new ArrayList<>(n);
         List<byte[]> images = new ArrayList<>(n);
         for (FaceEntity f : learningSetFaceEntities) {
-            int label = f.getLabel() / 100; // FIXME TODO add label column to
-                                            // database!!!
+            int label = f.getPersonId();
             byte[] faceImageArray = f.getImage();
             labels.add(label);
             images.add(faceImageArray);
         }
+        n = images.size();
+        if (n != labels.size() || n < 2) {
+            throw new AssertionError(
+                    "Number of faces images must be equal to number of images' labels (at least 2)");
+        } else if (n <= 5) {
+            log.warning(n
+                    + " images in learning set is not enough. Add more images to your learning data set!");
+        }
         train(images, labels);
     }
 
-    // FIXME TODO it doesn't work!!!
-    private void train(List<byte[]> learningSetFaceEntities,
-            List<Integer> learningSetFacesLabels) {
-        int n = learningSetFaceEntities.size();
-        if (n != learningSetFacesLabels.size() || n < 2) {
-            throw new AssertionError(
-                    "Number of faces images must be equal to number of images' labels (at least 2)");
-        }
-        if (n <= 5) {
-            log.warning(n
-                    + " images in learning set is not enough. Add more images to your data set!");
-        }
+    private void train(List<byte[]> learningSetImages,
+            List<Integer> learningSetFacesLabels) throws IOException {
+        int n = learningSetImages.size();
+        assert n == learningSetFacesLabels.size();
         List<Mat> learningSetFaces = new ArrayList<>(n);
-        for (byte[] b : learningSetFaceEntities) {
-            // Mat m = new Mat(320, 243, CvType.CV_8S); // FIXME TODO read
-            // // image's size from
-            // // image
-            // // FIXME TODO rozmiar się nie zgadza z długością tablicy bajtów
-            // 'b'
-            // m.put(0, 0, b);
-            String tmpGifFaceFilepath = "tmp_eigenfaces.gif"; // TODO remove it
-            FaceEntity.saveFaceImageToFile(b, tmpGifFaceFilepath);
-            Mat m = null;
-            try {
-                m = FaceEntity.convertGifToMat(tmpGifFaceFilepath);
-            } catch (IOException e) {
-                log.severe("Converting GIF to matrix has failed!");
-            }
+        // TODO this can be probably done without temporary file
+        File tmpGif = File.createTempFile("tmp_eigenface", ".gif");
+        String tmpGifFilepath = tmpGif.getCanonicalPath();
+        for (byte[] b : learningSetImages) {
+            FaceEntity.saveFaceImageToFile(b, tmpGifFilepath);
+            Mat m = FaceEntity.convertGifToMat(tmpGifFilepath);
             learningSetFaces.add(m);
+        }
+        if (!tmpGif.delete()) {
+            log.warning(
+                    "Failed to delete " + tmpGifFilepath + " temporary file");
         }
         Mat matLearningSetFacesLabels = labelsToMat(learningSetFacesLabels);
         eigenfacesRecognizer.train(learningSetFaces, matLearningSetFacesLabels);
         isModelTrained = true;
+        // TODO add to DB default learned model
+        // eigenfacesRecognizer.save("learned_model.xml");
     }
 
-    public int predictFaces(BufferedImage faceToIdentify) {
+    public int predictFaces(BufferedImage faceToIdentify)
+            throws IOException, URISyntaxException {
         byte[] face = convertBufferedImageToByteArray(faceToIdentify);
         return predictFaces(face);
     }
 
-    public int predictFaces(byte[] faceToIdentify) {
-        return predictFaces(faceToIdentify, UNKNOWN_LABEL);
-    }
-
-    public int predictFaces(byte[] faceToIdentify, int faceToIdentifyLabel) {
+    public int predictFaces(byte[] faceToIdentify)
+            throws IOException, URISyntaxException {
         Mat face = new Mat();
         face.put(0, 0, faceToIdentify);
-        return predictFaces(face, faceToIdentifyLabel);
+        return predictFaces(face);
     }
 
-    public int predictFaces(Mat faceToIdentify)
-            throws IOException, URISyntaxException {
-        return predictFaces(faceToIdentify, UNKNOWN_LABEL);
-    }
-
-    public int predictFaces(Mat faceToIdentify, int faceToIdentifyLabel) {
+    public int predictFaces(Mat faceToIdentify) {
         if (!isModelTrained) {
             throw new AssertionError(
                     "You must train model before starting identifying face");
@@ -115,8 +110,6 @@ public class Eigenfaces {
         predictedConfidence = confidence_out[0];
         log.info(String.format("Predicted class = %d with confidence %f",
                 predictedLabel, predictedConfidence));
-        log.info("Actual class = " + (faceToIdentifyLabel == UNKNOWN_LABEL
-                ? "unknown" : faceToIdentifyLabel));
         return predictedLabel;
     }
 

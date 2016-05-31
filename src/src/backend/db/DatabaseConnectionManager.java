@@ -24,10 +24,14 @@ public class DatabaseConnectionManager {
 
     private final static DatabaseConnectionManager singleton = new DatabaseConnectionManager();
     private final static Log log = Log.getLogger();
-    private final static String HIBERNATE_CFG_XML = "hibernate.cfg.xml";
+    private final static String HIBERNATE_XML_CFG = "hibernate.cfg.xml";
     private final SessionFactory sessionFactory;
     private final Configuration configuration;
 
+    /**
+     * Add predefined images from predefined location defined in CSV
+     * configuration file. Run this to feed database with images.
+     */
     public static void main(String[] args) {
         addAllFacesFromPredefinedCsv();
         // Simple usage:
@@ -57,9 +61,10 @@ public class DatabaseConnectionManager {
     }
 
     private DatabaseConnectionManager() {
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         configuration = new Configuration();
         configuration.addAnnotatedClass(FaceEntity.class);
-        configuration.configure(HIBERNATE_CFG_XML);
+        configuration.configure(HIBERNATE_XML_CFG);
         sessionFactory = configuration.buildSessionFactory();
     }
 
@@ -68,7 +73,6 @@ public class DatabaseConnectionManager {
     }
 
     public static void addAllFacesFromPredefinedCsv() {
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         DatabaseConnectionManager m = new DatabaseConnectionManager();
         boolean isSuccess = m.addFacesToDatabaseFromCsv(
                 CsvParser.FACES_LEARNING_SET_CSV_PATH);
@@ -99,10 +103,11 @@ public class DatabaseConnectionManager {
     public boolean addFacesToDatabaseFromCsv(String facesCsvPath) {
         CsvParser parser = new CsvParser(facesCsvPath);
         List<Mat> mats = new ArrayList<>();
-        List<Integer> labels = new ArrayList<>();
+        List<Integer> labels = new ArrayList<>(),
+                imagesLabels = new ArrayList<>();
         List<String> canonicalPaths = new ArrayList<>();
         try {
-            parser.readCsv(mats, labels, canonicalPaths);
+            parser.readCsv(mats, labels, imagesLabels, canonicalPaths);
         } catch (IOException | URISyntaxException e) {
             log.severe("Adding images to database has failed. Details: "
                     + e.getMessage());
@@ -114,7 +119,7 @@ public class DatabaseConnectionManager {
             return false;
         }
         for (int i = 0; i < labels.size(); i++) {
-            int label = labels.get(i);
+            int label = labels.get(i), imageLabel = imagesLabels.get(i);
             Path path = Paths.get(canonicalPaths.get(i));
             byte[] img;
             try {
@@ -129,22 +134,23 @@ public class DatabaseConnectionManager {
                 filetype = Files.probeContentType(path);
             } catch (IOException e) {
             }
-            int faceId = addFaceToDatabase(label, img,
+            int faceId = addFaceToDatabase(label, imageLabel, img,
                     path.getFileName().toString(), filetype);
             log.info("Face with label ID = " + faceId + " added successfully");
         }
         return true;
     }
 
-    public Integer addFaceToDatabase(int label, byte[] faceImage,
-            String filename, String filetype) {
+    public Integer addFaceToDatabase(int label, int imageLabel,
+            byte[] faceImage, String filename, String filetype) {
         Session session = sessionFactory.openSession();
         Transaction tx = null;
         Integer faceID = null;
         try {
             tx = session.beginTransaction();
             FaceEntity face = new FaceEntity();
-            face.setLabel(label);
+            face.setPersonId(label);
+            face.setImageId(imageLabel);
             face.setImage(faceImage);
             face.setFilename(filename);
             face.setFiletype(filetype);
@@ -195,7 +201,8 @@ public class DatabaseConnectionManager {
             l = session.createQuery(query).list();
             for (FaceEntity face : l) {
                 log.fine("Loaded image: face ID: " + face.getId()
-                        + ", label ID: " + face.getLabel());
+                        + ", person ID: " + face.getPersonId() + ", image ID "
+                        + face.getImageId());
             }
             tx.commit();
         } catch (HibernateException e) {

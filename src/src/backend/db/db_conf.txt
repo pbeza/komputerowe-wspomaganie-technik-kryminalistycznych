@@ -34,15 +34,24 @@ alter user eigenuser password 'eigenfaces';
 
 Sposób tworzenia tabeli z twarzami:
 
-create table FACES (
+CREATE TABLE faces (
   id        SERIAL            NOT NULL,
-  label     INT       UNIQUE  NOT NULL,
+  person_id INT               NOT NULL,
+  image_id  INT               NOT NULL,
   image     BYTEA             NOT NULL,
   filename  VARCHAR   UNIQUE  NOT NULL,
   filetype  CHAR(16)          NOT NULL,
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   PRIMARY KEY (id)
 );
+
+COMMENT ON TABLE faces is 'Stores images of the people that PCA identification algorithm works with during its training';
+COMMENT ON COLUMN faces.person_id IS 'Unique person ID';
+COMMENT ON COLUMN faces.image_id IS 'Unique photo ID within photos of single person';
+COMMENT ON COLUMN faces.image IS 'Photo of the person (every photo MUST HAVE the same size)';
+COMMENT ON COLUMN faces.filename IS 'Filename of the photo';
+COMMENT ON COLUMN faces.filetype IS 'Filetype of the photo';
+COMMENT ON COLUMN faces.timestamp IS 'Automatically filled time and date when new record is added';
 
 ---
 

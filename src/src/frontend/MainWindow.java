@@ -11,7 +11,6 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -59,6 +58,7 @@ public class MainWindow {
             IMG_RELOAD_PNG = "/img/reload.png",
             IMG_REMOVE_PNG = "/img/remove.png", IMG_SAVE_PNG = "/img/save.png",
             IMG_OPEN_PNG = "/img/open.png", IMG_SEARCH_PNG = "/img/search.png",
+            IMG_SETTINGS_PNG = "/img/settings.png",
             TITLE = "Eigenfaces - Face identification program";
     private static final int WIDTH = 1024, HEIGHT = 512, MIN_WINDOW_WIDTH = 300,
             MIN_WINDOW_HEIGHT = 100;
@@ -73,7 +73,7 @@ public class MainWindow {
     private final Eigenfaces eigenfaces = new Eigenfaces();
     private boolean duringSearchingInDatabase = false;
     private ImageListCell faceToFindInDatabase;
-    private JFrame frame;
+    private JFrame mainWindowFrame;
     private final static DatabaseConnectionManager dbConnectionManager = DatabaseConnectionManager
             .getInstance();
 
@@ -89,7 +89,7 @@ public class MainWindow {
                 if (p.showDialog()
                         && Login.authenticate(p.getName(), p.getPass())) {
                     final MainWindow window = new MainWindow();
-                    window.frame.setVisible(true);
+                    window.mainWindowFrame.setVisible(true);
                 } else {
                     final String msg = "Sorry, wrong login or password. Exiting!";
                     JOptionPane.showMessageDialog(null, msg);
@@ -118,32 +118,33 @@ public class MainWindow {
 
         // Main window
 
-        frame = new JFrame();
-        frame.setSize(WIDTH, HEIGHT);
-        frame.setTitle(TITLE);
-        frame.setLocationRelativeTo(null); // center window on screen
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setMinimumSize(
+        mainWindowFrame = new JFrame();
+        mainWindowFrame.setSize(WIDTH, HEIGHT);
+        mainWindowFrame.setTitle(TITLE);
+        mainWindowFrame.setLocationRelativeTo(null); // center window on screen
+        mainWindowFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainWindowFrame.setMinimumSize(
                 new Dimension(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT));
-        frame.setExtendedState(frame.getExtendedState() | Frame.MAXIMIZED_BOTH);
+        mainWindowFrame.setExtendedState(
+                mainWindowFrame.getExtendedState() | Frame.MAXIMIZED_BOTH);
         WindowListener exitListener = new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 onAppClosingCleaning();
             }
         };
-        frame.addWindowListener(exitListener);
+        mainWindowFrame.addWindowListener(exitListener);
 
         // Menu bar
 
         final JMenuBar menuBar = new JMenuBar();
-        frame.setJMenuBar(menuBar);
+        mainWindowFrame.setJMenuBar(menuBar);
 
         // File menu item
 
-        final JMenu mnfile = new JMenu("File");
-        mnfile.setMnemonic('F');
-        menuBar.add(mnfile);
+        final JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic('F');
+        menuBar.add(fileMenu);
 
         // Open menu item
 
@@ -157,12 +158,12 @@ public class MainWindow {
                 c.addChoosableFileFilter(new FileNameExtensionFilter(
                         "Image files", ImageIO.getReaderFileSuffixes()));
                 c.setAcceptAllFileFilterUsed(false);
-                final int result = c.showOpenDialog(frame);
+                final int result = c.showOpenDialog(mainWindowFrame);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     // TODO adding faces to existing database
                     // addFaces(Arrays.asList(c.getSelectedFiles()));
-                    log.info(
-                            "[TODO] Adding images to database is not implemented yet");
+                    eigenfaces.setModelTrained(false);
+                    log.info("Adding images to database is not implemented");
                 }
             }
         });
@@ -172,7 +173,7 @@ public class MainWindow {
                 KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
         mntmOpen.setToolTipText(
                 "Open image files and add them to faces database");
-        mnfile.add(mntmOpen);
+        fileMenu.add(mntmOpen);
 
         // Save menu item
 
@@ -181,7 +182,7 @@ public class MainWindow {
             @Override
             public void actionPerformed(ActionEvent e) {
                 final JFileChooser c = new JFileChooser();
-                final int result = c.showSaveDialog(frame);
+                final int result = c.showSaveDialog(mainWindowFrame);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     // TODO add saving file code
                     // log.info("Saved file path: " + c.getSelectedFile());
@@ -194,7 +195,7 @@ public class MainWindow {
         mntmSave.setAccelerator(
                 KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
         mntmSave.setToolTipText("Save result in text file");
-        mnfile.add(mntmSave);
+        fileMenu.add(mntmSave);
 
         // Clear all faces menu item
 
@@ -215,7 +216,7 @@ public class MainWindow {
                 new ImageIcon(MainWindow.class.getResource(IMG_REMOVE_PNG)));
         mntmClearAllFaces
                 .setToolTipText("Remove all images from faces database");
-        mnfile.add(mntmClearAllFaces);
+        fileMenu.add(mntmClearAllFaces);
 
         // mainSplit pane up and down
 
@@ -224,7 +225,7 @@ public class MainWindow {
         splitPaneMain.setDividerLocation(0.95);
         splitPaneMain.setResizeWeight(0.95);
         splitPaneMain.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        frame.getContentPane().add(splitPaneMain);
+        mainWindowFrame.getContentPane().add(splitPaneMain);
 
         // Progress bar
 
@@ -249,7 +250,7 @@ public class MainWindow {
         mntmLoadPredefined.setIcon(
                 new ImageIcon(MainWindow.class.getResource(IMG_RELOAD_PNG)));
         mntmLoadPredefined.setToolTipText("Reload images from database");
-        mnfile.add(mntmLoadPredefined);
+        fileMenu.add(mntmLoadPredefined);
 
         // Exit menu item
 
@@ -257,8 +258,8 @@ public class MainWindow {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                frame.dispatchEvent(
-                        new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+                mainWindowFrame.dispatchEvent(new WindowEvent(mainWindowFrame,
+                        WindowEvent.WINDOW_CLOSING));
             }
         });
         mntmExit.setAccelerator(
@@ -266,13 +267,13 @@ public class MainWindow {
         mntmExit.setIcon(
                 new ImageIcon(MainWindow.class.getResource(IMG_EXIT_PNG)));
         mntmExit.setToolTipText("Close the application");
-        mnfile.add(mntmExit);
+        fileMenu.add(mntmExit);
 
         // File menu item
 
-        final JMenu mnImageToFind = new JMenu("Identify");
-        mnImageToFind.setMnemonic('I');
-        menuBar.add(mnImageToFind);
+        final JMenu identificationMenu = new JMenu("Identification");
+        identificationMenu.setMnemonic('I');
+        menuBar.add(identificationMenu);
 
         // Open menu item for image of face to find in database
 
@@ -282,6 +283,7 @@ public class MainWindow {
 
         final JMenuItem mntmSearchForFaceInDatabase = new JMenuItem(
                 new AbstractAction("Search face") {
+
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         if (faceToFindInDatabase == null) {
@@ -301,6 +303,8 @@ public class MainWindow {
                             extends SwingWorker<Void, Integer> {
 
                         private int predictedLabel;
+                        private boolean trainingFailed = false;
+                        private String failureDetails;
 
                         @Override
                         public Void doInBackground() {
@@ -311,20 +315,22 @@ public class MainWindow {
                         private void searchInDatabase() {
                             publish(10);
                             log.info("Starting training...");
-                            train();
-                            log.info(
-                                    "Training database done, starting processing identified image");
-                            publish(50);
-                            predictedLabel = predictLabel();
-                            publish(100);
+                            if (!train()) {
+                                String errMsg = "Training model has failed. See log file to see details";
+                                log.severe(errMsg + failureDetails);
+                                JOptionPane.showMessageDialog(null, errMsg);
+                            } else {
+                                log.info(
+                                        "Training database done, starting processing identified image");
+                                publish(50);
+                                predictedLabel = predictLabel();
+                                publish(100);
+                            }
                         }
 
                         private int predictLabel() {
-                            // TODO remove filepath - use BufferedImage
-                            // BufferedImage face =
-                            // faceToFindInDatabase.getImage();
-                            // int predictedLabel =
-                            // eigenfaces.predictFaces(face);
+                            // TODO remove filepath - use BufferedImage from
+                            // faceToFindInDatabase instead mangling with paths
                             String facePath = faceToFindInDatabase
                                     .getFilepath();
                             Mat m = null;
@@ -334,16 +340,10 @@ public class MainWindow {
                                 log.severe(
                                         "Converting from GIF to matrix has failed");
                             }
-                            int predictedLabel = -1;
-                            try {
-                                predictedLabel = eigenfaces.predictFaces(m);
-                            } catch (IOException | URISyntaxException e) {
-                                log.severe("Predicting face has failed");
-                            }
-                            return predictedLabel;
+                            return eigenfaces.predictFaces(m);
                         }
 
-                        private void train() {
+                        private boolean train() {
                             List<FaceEntity> l = new ArrayList<>(
                                     imagesInAllFacesTab.size());
                             Enumeration<ImageListCell> e = imagesInAllFacesTab
@@ -353,7 +353,14 @@ public class MainWindow {
                                 FaceEntity f = c.getFaceEntity();
                                 l.add(f);
                             }
-                            eigenfaces.train(l);
+                            try {
+                                eigenfaces.train(l);
+                            } catch (IOException e1) {
+                                trainingFailed = true;
+                                failureDetails = e1.getMessage()
+                                        + e1.getCause();
+                            }
+                            return !trainingFailed;
                         }
 
                         @Override
@@ -382,7 +389,7 @@ public class MainWindow {
         mntmSearchForFaceInDatabase
                 .setToolTipText("Search for face in database");
         mntmSearchForFaceInDatabase.setEnabled(false);
-        mnImageToFind.add(mntmSearchForFaceInDatabase);
+        identificationMenu.add(mntmSearchForFaceInDatabase);
 
         // Open menu item for image of face to find in database
 
@@ -402,7 +409,7 @@ public class MainWindow {
                             "Image files", ImageIO.getReaderFileSuffixes()));
                     c.setAcceptAllFileFilterUsed(false);
                     if (c.showOpenDialog(
-                            frame) == JFileChooser.APPROVE_OPTION) {
+                            mainWindowFrame) == JFileChooser.APPROVE_OPTION) {
                         String fname = "uknown";
                         try {
                             File f = c.getSelectedFile();
@@ -425,7 +432,33 @@ public class MainWindow {
                 KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.ALT_MASK));
         mntmOpenImageToFind
                 .setToolTipText("Open image of face to find in the database");
-        mnImageToFind.add(mntmOpenImageToFind);
+        identificationMenu.add(mntmOpenImageToFind);
+
+        // Algorithm settings
+
+        JMenuItem mntmAlgorithmSettingsMenuItem = new JMenuItem(
+                new AbstractAction("Settings") {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        final SettingsDialog p = new SettingsDialog(
+                                mainWindowFrame);
+                        p.setLocationRelativeTo(null);
+                        p.setDefaultCloseOperation(
+                                WindowConstants.DISPOSE_ON_CLOSE);
+                        if (p.showDialog()) {
+                            // TODO update settings
+                            log.info("TODO: update settings");
+                        }
+                    }
+                });
+        mntmAlgorithmSettingsMenuItem.setIcon(
+                new ImageIcon(MainWindow.class.getResource(IMG_SETTINGS_PNG)));
+        mntmAlgorithmSettingsMenuItem.setAccelerator(
+                KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_MASK));
+        mntmAlgorithmSettingsMenuItem
+                .setToolTipText("Open eigenfaces algorithm settings");
+        identificationMenu.add(mntmAlgorithmSettingsMenuItem);
 
         // Tabs pane
 
@@ -485,7 +518,7 @@ public class MainWindow {
 
         final JSplitPane splitPaneFindFaces = new JSplitPane();
         splitPaneFindFaces.setResizeWeight(0.75);
-        tabbedPane.addTab("Find face",
+        tabbedPane.addTab("Found faces",
                 new ImageIcon(MainWindow.class.getResource(IMG_FIND_PNG)),
                 splitPaneFindFaces, "Find face in database");
 
@@ -573,18 +606,6 @@ public class MainWindow {
         }
         detailsPanelAllFaces.setTotalImagesNumber(imagesInAllFacesTab.size());
     }
-
-    // protected void addFacesFromFiles(List<File> images) {
-    // log.info("Loaded files' names:");
-    // for (File img : images) {
-    // ImageListCell cell = createImageCell(img);
-    // if (cell != null) {
-    // imagesInAllFacesTab.addElement(cell);
-    // log.finer(cell.getFilename());
-    // }
-    // }
-    // detailsPanelAllFaces.setTotalImagesNumber(imagesInAllFacesTab.size());
-    // }
 
     private void setImageToFind(File img) throws IOException {
         log.finer("Loaded image " + img.getAbsolutePath()

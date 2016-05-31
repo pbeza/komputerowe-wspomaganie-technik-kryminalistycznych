@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.Timestamp;
 
 import javax.imageio.ImageIO;
 import javax.swing.Icon;
@@ -16,12 +17,12 @@ import backend.Log;
 import backend.db.FaceEntity;
 
 /**
- * Represents full image and icon.
+ * Represents full image and icon in GUI.
  */
 public class ImageListCell extends JLabel {
 
     private final static Log log = Log.getLogger();
-    private final static double IMAGE_RATIO = 4.0 / 3.0;
+    private final static double IMAGE_RATIO = 243.0 / 320.0;
     private final static int ICON_WIDTH = 180,
             ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO), MIN_IMAGE_ID = 1;
     private final static Dimension ICON_SIZE = new Dimension(ICON_WIDTH,
@@ -30,43 +31,35 @@ public class ImageListCell extends JLabel {
     private final int displayedId;
     private final BufferedImage image;
     private final FaceEntity faceEntity;
-    private String filepath; // TODO remove it!
+    private String filepath; // TODO remove it! Use BufferedImage instead
 
     public ImageListCell(File img) throws IOException {
-        this(img, FaceEntity.UNKNOWN_LABEL_ID);
-        filepath = img.getCanonicalPath();
-    }
-
-    private ImageListCell(File img, int labelId) throws IOException {
         this(ImageIO.read(img), img.getName(),
-                Files.probeContentType(img.toPath()), labelId);
-    }
-
-    // TODO too much copy-paste
-    private ImageListCell(BufferedImage image, String filename, String mimetype,
-            int labelId) {
-        // this(new FaceEntity(labelId, image, filename, mimetype));
-        super();
-        this.image = image;
-        displayedId = ImageListCell.latelyAssignedDisplayedId++;
-        faceEntity = new FaceEntity(labelId, image, filename, mimetype);
-        String text = displayedId + ". " + faceEntity.getFilename();
-        setText(text);
-        Image scaledImage = image.getScaledInstance(ICON_WIDTH, ICON_HEIGHT,
-                Image.SCALE_DEFAULT);
-        Icon icon = new ImageIcon(scaledImage);
-        setIcon(icon);
-        setHorizontalAlignment(LEFT);
-        setPreferredSize(ICON_SIZE);
+                Files.probeContentType(img.toPath()));
+        filepath = img.getCanonicalPath();
     }
 
     public ImageListCell(FaceEntity faceEntity) {
         super();
         displayedId = ImageListCell.latelyAssignedDisplayedId++;
         this.faceEntity = faceEntity;
+        image = faceEntity.convertToBufferedImage();
+        setGUI();
+    }
+
+    private ImageListCell(BufferedImage image, String filename,
+            String mimetype) {
+        // TODO this(new FaceEntity(labelId, image, filename, mimetype));
+        super();
+        this.image = image;
+        displayedId = ImageListCell.latelyAssignedDisplayedId++;
+        faceEntity = new FaceEntity(image, filename, mimetype);
+        setGUI();
+    }
+
+    private void setGUI() {
         String text = displayedId + ". " + faceEntity.getFilename();
         setText(text);
-        image = faceEntity.convertToBufferedImage();
         Image scaledImage = image.getScaledInstance(ICON_WIDTH, ICON_HEIGHT,
                 Image.SCALE_DEFAULT);
         Icon icon = new ImageIcon(scaledImage);
@@ -103,8 +96,8 @@ public class ImageListCell extends JLabel {
         return image;
     }
 
-    public int getLabelId() {
-        return faceEntity.getLabel();
+    public int getCellId() {
+        return faceEntity.getId();
     }
 
     public FaceEntity getFaceEntity() {
@@ -113,5 +106,17 @@ public class ImageListCell extends JLabel {
 
     public String getFilepath() {
         return filepath;
+    }
+
+    public int getPersonId() {
+        return faceEntity.getPersonId();
+    }
+
+    public int getImageId() {
+        return faceEntity.getImageId();
+    }
+
+    public Timestamp getTimestamp() {
+        return faceEntity.getTimestamp();
     }
 }

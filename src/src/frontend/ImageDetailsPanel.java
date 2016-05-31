@@ -19,19 +19,22 @@ public class ImageDetailsPanel extends JPanel {
             MIN_TEXT_FIELD_HEIGHT = 5;
     final JFormattedTextField idField = new JFormattedTextField(),
             filenameField = new JFormattedTextField(),
-            fullPathField = new JFormattedTextField(),
+            personIdField = new JFormattedTextField(),
+            imageIdField = new JFormattedTextField(),
             mimeTypeField = new JFormattedTextField(),
             imageWidthField = new JFormattedTextField(),
             imageHeightField = new JFormattedTextField(),
             zoomField = new JFormattedTextField(),
-            totalImagesNumberField = new JFormattedTextField();
-    final JLabel lblId = new JLabel("Image ID"),
-            lblFilename = new JLabel("Filename"),
-            lblFullPath = new JLabel("Full path"),
+            totalImagesNumberField = new JFormattedTextField(),
+            timestampField = new JFormattedTextField();
+    final JLabel lblId = new JLabel("ID"), lblFilename = new JLabel("Filename"),
+            lblPersonId = new JLabel("Person ID"),
+            lblImageId = new JLabel("Image ID"),
             lblMimeType = new JLabel("MIME type"),
             lblImageWidth = new JLabel("Width"),
             lblImageHeight = new JLabel("Height"), lblZoom = new JLabel("Zoom"),
-            lblTotalImagesNumber = new JLabel("Total images");
+            lblTotalImagesNumber = new JLabel("Total images"),
+            lblTimestamp = new JLabel("Timestamp");
     protected int totalImagesNumber;
 
     public ImageDetailsPanel() {
@@ -47,13 +50,14 @@ public class ImageDetailsPanel extends JPanel {
         add(rightTopDetails, BorderLayout.CENTER);
         rightTopDetails.setLayout(new GridLayout(0, 1));
 
-        final JFormattedTextField[] fieldsToAdd = { idField, filenameField,
-                fullPathField, mimeTypeField, imageWidthField, imageHeightField,
-                zoomField, totalImagesNumberField };
+        final JFormattedTextField[] fieldsToAdd = { idField, personIdField,
+                imageIdField, filenameField, mimeTypeField, imageWidthField,
+                imageHeightField, zoomField, totalImagesNumberField,
+                timestampField };
 
-        final JLabel[] labelsToAdd = { lblId, lblFilename, lblFullPath,
-                lblMimeType, lblImageWidth, lblImageHeight, lblZoom,
-                lblTotalImagesNumber };
+        final JLabel[] labelsToAdd = { lblId, lblPersonId, lblImageId,
+                lblFilename, lblMimeType, lblImageWidth, lblImageHeight,
+                lblZoom, lblTotalImagesNumber, lblTimestamp };
 
         assert labelsToAdd.length == fieldsToAdd.length;
 
@@ -70,26 +74,26 @@ public class ImageDetailsPanel extends JPanel {
     }
 
     public void setDetails(ImageListCell cell) {
-        idField.setText(String.format("%03d", cell.getDisplayedId()));
+        idField.setText(Integer.toString(cell.getDisplayedId()));
         filenameField.setText(cell.getFilename());
-        fullPathField.setText(""); // TODO
-        fullPathField.setToolTipText(""); // TODO
+        personIdField.setText(Integer.toString(cell.getPersonId()));
+        imageIdField.setText(Integer.toString(cell.getImageId()));
         mimeTypeField.setText(cell.getMimeType());
         imageWidthField.setText(Integer.toString(cell.getImageWidth()) + " px");
         imageHeightField
                 .setText(Integer.toString(cell.getImageHeight()) + " px");
         zoomField.setText("100%");
         totalImagesNumberField.setText(Integer.toString(totalImagesNumber));
+        timestampField.setText(cell.getTimestamp().toString());
     }
 
     public void clearDetails(int totalImagesNumber) {
         final JFormattedTextField[] fieldsToClear = { idField, filenameField,
-                fullPathField, imageWidthField, imageHeightField, zoomField };
+                personIdField, imageWidthField, imageHeightField, zoomField };
         for (JFormattedTextField f : fieldsToClear) {
             f.setText("");
         }
         setTotalImagesNumber(totalImagesNumber);
-        fullPathField.setToolTipText("");
     }
 
     public void setTotalImagesNumber(int totalImagesNumber) {

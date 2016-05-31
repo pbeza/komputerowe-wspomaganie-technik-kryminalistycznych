@@ -15,7 +15,7 @@ import java.util.logging.SimpleFormatter;
 public class Log extends Logger {
 
     private final static String LOG_DIR = "logs/", LOG_PATH = LOG_DIR
-            + new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss").format(new Date())
+            + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date())
             + ".log";
     private final static Level LOGGER_LOG_LEVEL = Level.FINEST,
             FILE_LOG_LEVEL = Level.FINEST, CONSOLE_LOG_LEVEL = Level.FINEST;
