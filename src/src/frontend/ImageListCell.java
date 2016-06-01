@@ -13,20 +13,16 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
-import backend.Log;
 import backend.db.FaceEntity;
 
 /**
  * Represents full image and icon in GUI.
  */
-public class ImageListCell extends JLabel {
+class ImageListCell extends JLabel {
 
-    private final static Log log = Log.getLogger();
     private final static double IMAGE_RATIO = 243.0 / 320.0;
-    private final static int ICON_WIDTH = 180,
-            ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO), MIN_IMAGE_ID = 1;
-    private final static Dimension ICON_SIZE = new Dimension(ICON_WIDTH,
-            ICON_HEIGHT);
+    private final static int ICON_WIDTH = 180, ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO), MIN_IMAGE_ID = 1;
+    private final static Dimension ICON_SIZE = new Dimension(ICON_WIDTH, ICON_HEIGHT);
     private static int latelyAssignedDisplayedId = MIN_IMAGE_ID;
     private final int displayedId;
     private final BufferedImage image;
@@ -34,8 +30,7 @@ public class ImageListCell extends JLabel {
     private String filepath; // TODO remove it! Use BufferedImage instead
 
     public ImageListCell(File img) throws IOException {
-        this(ImageIO.read(img), img.getName(),
-                Files.probeContentType(img.toPath()));
+        this(ImageIO.read(img), img.getName(), Files.probeContentType(img.toPath()));
         filepath = img.getCanonicalPath();
     }
 
@@ -47,8 +42,7 @@ public class ImageListCell extends JLabel {
         setGUI();
     }
 
-    private ImageListCell(BufferedImage image, String filename,
-            String mimetype) {
+    private ImageListCell(BufferedImage image, String filename, String mimetype) {
         // TODO this(new FaceEntity(labelId, image, filename, mimetype));
         super();
         this.image = image;
@@ -60,8 +54,7 @@ public class ImageListCell extends JLabel {
     private void setGUI() {
         String text = displayedId + ". " + faceEntity.getFilename();
         setText(text);
-        Image scaledImage = image.getScaledInstance(ICON_WIDTH, ICON_HEIGHT,
-                Image.SCALE_DEFAULT);
+        Image scaledImage = image.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_DEFAULT);
         Icon icon = new ImageIcon(scaledImage);
         setIcon(icon);
         setHorizontalAlignment(LEFT);

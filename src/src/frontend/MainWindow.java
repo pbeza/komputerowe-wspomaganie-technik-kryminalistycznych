@@ -35,8 +35,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.opencv.core.Mat;
@@ -50,62 +48,58 @@ import backend.db.FaceEntity;
 /**
  * Main window of the application. This window contains a few JPanels.
  */
-public class MainWindow {
+class MainWindow {
 
     private final static Log log = Log.getLogger();
-    private static final String IMG_FIND_PNG = "/img/find.png",
-            IMG_PEOPLE_PNG = "/img/people.png", IMG_EXIT_PNG = "/img/exit.png",
-            IMG_RELOAD_PNG = "/img/reload.png",
-            IMG_REMOVE_PNG = "/img/remove.png", IMG_SAVE_PNG = "/img/save.png",
-            IMG_OPEN_PNG = "/img/open.png", IMG_SEARCH_PNG = "/img/search.png",
-            IMG_SETTINGS_PNG = "/img/settings.png",
-            TITLE = "Eigenfaces - Face identification program";
-    private static final int WIDTH = 1024, HEIGHT = 512, MIN_WINDOW_WIDTH = 300,
-            MIN_WINDOW_HEIGHT = 100;
+    private static final String IMG_FIND_PNG = "/img/find.png", IMG_PEOPLE_PNG = "/img/people.png",
+            IMG_EXIT_PNG = "/img/exit.png", IMG_RELOAD_PNG = "/img/reload.png", IMG_REMOVE_PNG = "/img/remove.png",
+            IMG_SAVE_PNG = "/img/save.png", IMG_OPEN_PNG = "/img/open.png", IMG_SEARCH_PNG = "/img/search.png",
+            IMG_SETTINGS_PNG = "/img/settings.png", TITLE = "Eigenfaces - Face identification program";
+    private static final int WIDTH = 1024, HEIGHT = 512, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100;
     private final DefaultListModel<ImageListCell> imagesInAllFacesTab = new DefaultListModel<ImageListCell>();
-    private final JList<ImageListCell> imagesInAllFacesTabJList;
     private final DefaultListModel<ImageListCell> imagesInFindFacesTab = new DefaultListModel<ImageListCell>();
-    private final ZoomableImagePanelWrapper previewPaneAllFaces;
-    private final ZoomableImagePanelWrapper previewPaneFindFaces;
-    private final ImageDetailsPanel detailsPanelAllFaces;
-    private final ImageDetailsPanel detailsPanelFindFaces;
-    private final JTabbedPane tabbedPane;
+    private ZoomableImagePanelWrapper previewPaneAllFaces;
+    private ZoomableImagePanelWrapper previewPaneFindFaces;
+    private ImageDetailsPanel detailsPanelAllFaces;
+    private ImageDetailsPanel detailsPanelFindFaces;
+    private JTabbedPane tabbedPane;
     private final Eigenfaces eigenfaces = new Eigenfaces();
     private boolean duringSearchingInDatabase = false;
     private ImageListCell faceToFindInDatabase;
     private JFrame mainWindowFrame;
-    private final static DatabaseConnectionManager dbConnectionManager = DatabaseConnectionManager
-            .getInstance();
+    private final static DatabaseConnectionManager dbConnectionManager = DatabaseConnectionManager.getInstance();
 
     public static void main(String[] args) {
         log.fine("Starting main thread.");
         EventQueue.invokeLater(() -> {
             log.fine("Starting frotend thread.");
             try {
-                final PasswordDialog p = new PasswordDialog(null,
-                        "Authentication");
-                p.setLocationRelativeTo(null);
-                p.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                if (p.showDialog()
-                        && Login.authenticate(p.getName(), p.getPass())) {
-                    final MainWindow window = new MainWindow();
-                    window.mainWindowFrame.setVisible(true);
-                } else {
-                    final String msg = "Sorry, wrong login or password. Exiting!";
-                    JOptionPane.showMessageDialog(null, msg);
-                    log.info(msg);
-                    MainWindow.onAppClosingCleaning();
-                    System.exit(0);
-                }
-            } catch (Exception e) {
-                log.severe("Critical error. Details: " + e.getMessage());
+                startApp();
+            } catch (Throwable e) {
+                log.severe("Critical error. Details: " + e.getMessage() + e.getCause());
             }
             log.fine("Exiting frotend thread.");
         });
         log.fine("Exiting main thread.");
     }
 
-    public static void onAppClosingCleaning() {
+    private static void startApp() throws Throwable {
+        final PasswordDialog p = new PasswordDialog(null, "Authentication");
+        p.setLocationRelativeTo(null);
+        p.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        if (p.showDialog() && Login.authenticate(p.getName(), p.getPass())) {
+            final MainWindow window = new MainWindow();
+            window.mainWindowFrame.setVisible(true);
+        } else {
+            final String msg = "Sorry, wrong login or password. Exiting!";
+            JOptionPane.showMessageDialog(null, msg);
+            log.info(msg);
+            MainWindow.onAppClosingCleaning();
+            System.exit(0);
+        }
+    }
+
+    private static void onAppClosingCleaning() {
         dbConnectionManager.closeConnection();
         log.info("Exiting from application. Bye!");
         log.closeHandlers();
@@ -115,18 +109,25 @@ public class MainWindow {
      * @wbp.parser.entryPoint
      */
     public MainWindow() {
+        initMainWindow();
+        final JSplitPane splitPaneMain = initVerticalSplitPane();
+        final JProgressBar progressBar = initProgressBar(splitPaneMain);
+        initMenu(progressBar);
+        initTabbedPane(splitPaneMain);
+        final JSplitPane splitPaneAllFaces = initAllFacesSplitPane();
+        initAllFacesTab(splitPaneAllFaces);
+        initFoundFacesTab();
+        loadPredefinedImagesToAllFacesTab(); // TODO it should be asynchronous
+    }
 
-        // Main window
-
+    private void initMainWindow() {
         mainWindowFrame = new JFrame();
         mainWindowFrame.setSize(WIDTH, HEIGHT);
         mainWindowFrame.setTitle(TITLE);
         mainWindowFrame.setLocationRelativeTo(null); // center window on screen
         mainWindowFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainWindowFrame.setMinimumSize(
-                new Dimension(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT));
-        mainWindowFrame.setExtendedState(
-                mainWindowFrame.getExtendedState() | Frame.MAXIMIZED_BOTH);
+        mainWindowFrame.setMinimumSize(new Dimension(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT));
+        mainWindowFrame.setExtendedState(mainWindowFrame.getExtendedState() | Frame.MAXIMIZED_BOTH);
         WindowListener exitListener = new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -134,49 +135,376 @@ public class MainWindow {
             }
         };
         mainWindowFrame.addWindowListener(exitListener);
+    }
 
-        // Menu bar
+    private JSplitPane initVerticalSplitPane() {
+        final JSplitPane verticalSplitPane = new JSplitPane();
+        // TODO lower part of the split panel should have constant height
+        verticalSplitPane.setDividerLocation(0.95);
+        verticalSplitPane.setResizeWeight(0.98);
+        verticalSplitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        mainWindowFrame.getContentPane().add(verticalSplitPane);
+        return verticalSplitPane;
+    }
 
-        final JMenuBar menuBar = new JMenuBar();
-        mainWindowFrame.setJMenuBar(menuBar);
+    private JProgressBar initProgressBar(final JSplitPane splitPaneMain) {
+        final JProgressBar progressBar = new JProgressBar(0, 100);
+        progressBar.setValue(0);
+        progressBar.setStringPainted(true);
+        splitPaneMain.setBottomComponent(progressBar);
+        return progressBar;
+    }
 
-        // File menu item
+    private void initMenu(final JProgressBar progressBar) {
+        final JMenuBar menuBar = initMenuBar();
+        final JMenu fileMenu = initFileMenu(menuBar);
+        initOpenMenuItem(fileMenu);
+        initSaveMenuItem(fileMenu);
+        initClearAllFacesMenuItem(fileMenu);
+        initLoadPredefinedMenuItem(fileMenu);
+        initExitMenuItem(fileMenu);
+        final JMenu identificationMenu = initIdentificationMenu(menuBar);
+        final JMenuItem mntmOpenImageToFind = new JMenuItem();
+        final JMenuItem mntmSearchFaceInDatabase = initSearchFaceInDatabaseMenuItem(progressBar, identificationMenu,
+                mntmOpenImageToFind);
+        initOpenImageToFindMenuItem(identificationMenu, mntmOpenImageToFind, mntmSearchFaceInDatabase);
+        initSettingsMenuItem(identificationMenu);
+    }
 
-        final JMenu fileMenu = new JMenu("File");
-        fileMenu.setMnemonic('F');
-        menuBar.add(fileMenu);
+    private void initTabbedPane(final JSplitPane splitPaneMain) {
+        tabbedPane = new JTabbedPane(SwingConstants.TOP);
+        splitPaneMain.setTopComponent(tabbedPane);
+    }
 
-        // Open menu item
+    private JSplitPane initAllFacesSplitPane() {
+        final JSplitPane splitPaneAllFaces = new JSplitPane();
+        splitPaneAllFaces.setResizeWeight(0.75);
+        tabbedPane.addTab("All faces", new ImageIcon(MainWindow.class.getResource(IMG_PEOPLE_PNG)), splitPaneAllFaces,
+                "List of all faces stored in database");
+        return splitPaneAllFaces;
+    }
 
-        final JMenuItem mntmOpen = new JMenuItem(new AbstractAction("Open") {
+    private void initAllFacesTab(final JSplitPane splitPaneAllFaces) {
+        JList<ImageListCell> imagesInAllFacesTabJList = initListWithAllFaces();
+        initScrollPaneInAllFacesTab(splitPaneAllFaces, imagesInAllFacesTabJList);
+        final JSplitPane splitPaneDetailsAllFaces = initSplitPaneInAllFacesTab(splitPaneAllFaces);
+        initDetailsPaneInAllFacesTab(splitPaneDetailsAllFaces);
+        initPreviewPaneInAllFacesTab(splitPaneDetailsAllFaces);
+    }
+
+    private JList<ImageListCell> initListWithAllFaces() {
+        JList<ImageListCell> imagesInAllFacesTabJList = new JList<ImageListCell>(imagesInAllFacesTab);
+        imagesInAllFacesTabJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        imagesInAllFacesTabJList.setCellRenderer(new ImageListCellRenderer());
+        imagesInAllFacesTabJList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        imagesInAllFacesTabJList.setVisibleRowCount(0);
+        imagesInAllFacesTabJList.addListSelectionListener(e -> {
+            log.fine("Selected face has changed: ");
+            if (!imagesInAllFacesTabJList.isSelectionEmpty()) {
+                ImageListCell c = imagesInAllFacesTabJList.getSelectedValue();
+                log.fine(c.getText());
+                detailsPanelAllFaces.setDetails(c);
+                previewPaneAllFaces.setImage(c.getImage());
+            }
+        });
+        return imagesInAllFacesTabJList;
+    }
+
+    private void initFoundFacesTab() {
+        final JSplitPane splitPaneFindFaces = new JSplitPane();
+        splitPaneFindFaces.setResizeWeight(0.75);
+        tabbedPane.addTab("Found faces", new ImageIcon(MainWindow.class.getResource(IMG_FIND_PNG)), splitPaneFindFaces,
+                "Find face in database");
+
+        // Create JList with all faces stored in database for 'Find faces' tab
+
+        final JList<ImageListCell> imagesInFindFacesTabJList = new JList<ImageListCell>(imagesInFindFacesTab);
+        imagesInFindFacesTabJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        imagesInFindFacesTabJList.setCellRenderer(new ImageListCellRenderer());
+        imagesInFindFacesTabJList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        imagesInFindFacesTabJList.setVisibleRowCount(0);
+        // listFindFaces.addListSelectionListener(new
+        // AllFacesListSelectionListener()); // TODO na pewno inny listener
+
+        // Scroll pane in left subtab in 'Find faces' tab
+
+        initScrollPaneInAllFacesTab(splitPaneFindFaces, imagesInFindFacesTabJList);
+
+        final JSplitPane splitPaneDetailsFindFaces = initSplitPaneInAllFacesTab(splitPaneFindFaces);
+
+        // Add details pane to bottom (right) panel TODO what if not details
+        // panel in find face
+
+        detailsPanelFindFaces = new ImageDetailsPanel();
+        splitPaneDetailsFindFaces.setRightComponent(detailsPanelFindFaces);
+        detailsPanelFindFaces.setTotalImagesNumber(imagesInFindFacesTab.size());
+
+        // Add preview pane to upper (left) panel of Find face
+
+        previewPaneFindFaces = new ZoomableImagePanelWrapper(detailsPanelFindFaces);
+        splitPaneDetailsFindFaces.setLeftComponent(previewPaneFindFaces);
+    }
+
+    private void loadPredefinedImagesToAllFacesTab() {
+        log.info("Opening connection with database and fetching all faces from database");
+        List<FaceEntity> allFaces = dbConnectionManager.getAllFaces();
+        log.info("Connection with database closed - " + allFaces.size() + " images fetched");
+        addFacesToAllFacesTab(allFaces);
+    }
+
+    private void initScrollPaneInAllFacesTab(final JSplitPane splitPaneAllFaces,
+            JList<ImageListCell> imagesInAllFacesTabJList) {
+        final JScrollPane scrollPaneAllFaces = new JScrollPane(imagesInAllFacesTabJList);
+        splitPaneAllFaces.setLeftComponent(scrollPaneAllFaces);
+    }
+
+    private JSplitPane initSplitPaneInAllFacesTab(final JSplitPane splitPaneAllFaces) {
+        final JSplitPane splitPaneDetailsAllFaces = new JSplitPane();
+        splitPaneDetailsAllFaces.setResizeWeight(0.75);
+        splitPaneDetailsAllFaces.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        splitPaneAllFaces.setRightComponent(splitPaneDetailsAllFaces);
+        return splitPaneDetailsAllFaces;
+    }
+
+    private void initDetailsPaneInAllFacesTab(final JSplitPane splitPaneDetailsAllFaces) {
+        detailsPanelAllFaces = new ImageDetailsPanel();
+        splitPaneDetailsAllFaces.setRightComponent(detailsPanelAllFaces);
+        detailsPanelAllFaces.setTotalImagesNumber(imagesInAllFacesTab.size());
+    }
+
+    private void initPreviewPaneInAllFacesTab(final JSplitPane splitPaneDetailsAllFaces) {
+        previewPaneAllFaces = new ZoomableImagePanelWrapper(detailsPanelAllFaces);
+        splitPaneDetailsAllFaces.setLeftComponent(previewPaneAllFaces);
+    }
+
+    private void initSettingsMenuItem(final JMenu identificationMenu) {
+        JMenuItem mntmAlgorithmSettingsMenuItem = new JMenuItem(new AbstractAction("Settings") {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                final JFileChooser c = new JFileChooser(
-                        System.getProperty("user.dir"));
-                c.setMultiSelectionEnabled(true);
-                c.addChoosableFileFilter(new FileNameExtensionFilter(
-                        "Image files", ImageIO.getReaderFileSuffixes()));
-                c.setAcceptAllFileFilterUsed(false);
-                final int result = c.showOpenDialog(mainWindowFrame);
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    // TODO adding faces to existing database
-                    // addFaces(Arrays.asList(c.getSelectedFiles()));
-                    eigenfaces.setModelTrained(false);
-                    log.info("Adding images to database is not implemented");
+                final SettingsDialog p = new SettingsDialog(mainWindowFrame);
+                p.setLocationRelativeTo(null);
+                p.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                if (p.showDialog()) {
+                    // TODO update settings
+                    log.info("TODO: update settings");
                 }
             }
         });
-        mntmOpen.setIcon(
-                new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
-        mntmOpen.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
-        mntmOpen.setToolTipText(
-                "Open image files and add them to faces database");
-        fileMenu.add(mntmOpen);
+        mntmAlgorithmSettingsMenuItem.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SETTINGS_PNG)));
+        mntmAlgorithmSettingsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_MASK));
+        mntmAlgorithmSettingsMenuItem.setToolTipText("Open eigenfaces algorithm settings");
+        identificationMenu.add(mntmAlgorithmSettingsMenuItem);
+    }
 
-        // Save menu item
+    private void initOpenImageToFindMenuItem(final JMenu identificationMenu, final JMenuItem mntmOpenImageToFind,
+            final JMenuItem mntmSearchFaceInDatabase) {
+        mntmOpenImageToFind.setAction(new AbstractAction("Open image") {
 
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (duringSearchingInDatabase) {
+                    String msg = "Currently we're searching in database, change face after processing";
+                    log.fine(msg);
+                    JOptionPane.showMessageDialog(null, msg);
+                } else {
+                    JFileChooser c = new JFileChooser(System.getProperty("user.dir"));
+                    c.setMultiSelectionEnabled(false);
+                    c.addChoosableFileFilter(
+                            new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes()));
+                    c.setAcceptAllFileFilterUsed(false);
+                    if (c.showOpenDialog(mainWindowFrame) == JFileChooser.APPROVE_OPTION) {
+                        String fname = "uknown";
+                        try {
+                            File f = c.getSelectedFile();
+                            fname = f.getName();
+                            setImageToFind(f);
+                        } catch (IOException e1) {
+                            log.warning("Error during reading " + fname + " image! Details: " + e1.getMessage()
+                                    + e1.getCause() + ".");
+                        }
+                        mntmSearchFaceInDatabase.setEnabled(true);
+                    }
+                }
+            }
+        });
+        mntmOpenImageToFind.setText("Open");
+        mntmOpenImageToFind.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
+        mntmOpenImageToFind.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.ALT_MASK));
+        mntmOpenImageToFind.setToolTipText("Open image of face to find in the database");
+        identificationMenu.add(mntmOpenImageToFind);
+    }
+
+    private JMenuItem initSearchFaceInDatabaseMenuItem(final JProgressBar progressBar, final JMenu identificationMenu,
+            final JMenuItem mntmOpenImageToFind) {
+        final JMenuItem mntmSearchForFaceInDatabase = new JMenuItem(new AbstractAction("Search face") {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (faceToFindInDatabase == null) {
+                    String msg = "No image set to find";
+                    log.info(msg);
+                    JOptionPane.showMessageDialog(null, msg);
+                } else {
+                    setEnabled(false);
+                    mntmOpenImageToFind.setEnabled(false);
+                    duringSearchingInDatabase = true;
+                    imagesInFindFacesTab.clear();
+                    progressBar.setValue(0);
+                    new DatabaseFaceSearcherSwingWorker().execute();
+                }
+            }
+
+            class DatabaseFaceSearcherSwingWorker extends SwingWorker<Void, Integer> {
+
+                private int predictedLabel;
+                private boolean trainingFailed = false;
+                private String failureDetails;
+
+                @Override
+                public Void doInBackground() {
+                    searchInDatabase();
+                    return null;
+                }
+
+                private void searchInDatabase() {
+                    publish(10);
+                    log.info("Starting training...");
+                    if (!train()) {
+                        String errMsg = "Training model has failed. See log file to see details";
+                        log.severe(errMsg + failureDetails);
+                        publish(0);
+                        JOptionPane.showMessageDialog(null, errMsg);
+                    } else {
+                        log.info("Training database done, starting processing identified image");
+                        publish(50);
+                        predictedLabel = predictLabel();
+                        publish(75);
+                        addFacesOfFoundLabel();
+                        // TODO add images of found person
+                        publish(100);
+                    }
+                }
+
+                private void addFacesOfFoundLabel() {
+                    for (int i = 0; i < imagesInAllFacesTab.size(); i++) {
+                        ImageListCell c = imagesInAllFacesTab.get(i);
+                        FaceEntity f = c.getFaceEntity();
+                        if (f.getPersonId() == predictedLabel) {
+                            imagesInFindFacesTab.addElement(c);
+                        }
+                    }
+                }
+
+                private int predictLabel() {
+                    // TODO remove filepath - use BufferedImage from
+                    // faceToFindInDatabase instead mangling with paths
+                    String facePath = faceToFindInDatabase.getFilepath();
+                    Mat m = null;
+                    try {
+                        m = FaceEntity.convertGifToMat(facePath);
+                    } catch (IOException e) {
+                        log.severe("Converting from GIF to matrix has failed");
+                    }
+                    return eigenfaces.predictFaces(m);
+                }
+
+                private boolean train() {
+                    List<FaceEntity> l = new ArrayList<>(imagesInAllFacesTab.size());
+                    Enumeration<ImageListCell> e = imagesInAllFacesTab.elements();
+                    while (e.hasMoreElements()) {
+                        ImageListCell c = e.nextElement();
+                        FaceEntity f = c.getFaceEntity();
+                        l.add(f);
+                    }
+                    try {
+                        eigenfaces.train(l);
+                    } catch (IOException e1) {
+                        trainingFailed = true;
+                        failureDetails = e1.getMessage() + e1.getCause();
+                    }
+                    return !trainingFailed;
+                }
+
+                @Override
+                protected void done() {
+                    duringSearchingInDatabase = false;
+                    mntmOpenImageToFind.setEnabled(true);
+                    setEnabled(true);
+                    final String msg = "Face is most similar to face number: " + predictedLabel;
+                    JOptionPane.showMessageDialog(null, msg);
+                }
+
+                @Override
+                protected void process(List<Integer> progressValues) {
+                    for (Integer i : progressValues) {
+                        progressBar.setValue(i);
+                    }
+                }
+            }
+        });
+        mntmSearchForFaceInDatabase.setText("Find");
+        mntmSearchForFaceInDatabase.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SEARCH_PNG)));
+        mntmSearchForFaceInDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.ALT_MASK));
+        mntmSearchForFaceInDatabase.setToolTipText("Search for face in database");
+        mntmSearchForFaceInDatabase.setEnabled(false);
+        identificationMenu.add(mntmSearchForFaceInDatabase);
+        return mntmSearchForFaceInDatabase;
+    }
+
+    private JMenu initIdentificationMenu(final JMenuBar menuBar) {
+        final JMenu identificationMenu = new JMenu("Identification");
+        identificationMenu.setMnemonic('I');
+        menuBar.add(identificationMenu);
+        return identificationMenu;
+    }
+
+    private void initExitMenuItem(final JMenu fileMenu) {
+        final JMenuItem mntmExit = new JMenuItem(new AbstractAction("Exit") {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainWindowFrame.dispatchEvent(new WindowEvent(mainWindowFrame, WindowEvent.WINDOW_CLOSING));
+            }
+        });
+        mntmExit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
+        mntmExit.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_EXIT_PNG)));
+        mntmExit.setToolTipText("Close the application");
+        fileMenu.add(mntmExit);
+    }
+
+    private void initLoadPredefinedMenuItem(final JMenu fileMenu) {
+        final JMenuItem mntmLoadPredefined = new JMenuItem(new AbstractAction("Load predefined") {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                clearAllImagesInAllFacesTab();
+                loadPredefinedImagesToAllFacesTab();
+            }
+        });
+        mntmLoadPredefined.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_J, InputEvent.CTRL_MASK));
+        mntmLoadPredefined.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_RELOAD_PNG)));
+        mntmLoadPredefined.setToolTipText("Reload images from database");
+        fileMenu.add(mntmLoadPredefined);
+    }
+
+    private void initClearAllFacesMenuItem(final JMenu fileMenu) {
+        final JMenuItem mntmClearAllFaces = new JMenuItem(new AbstractAction("Clear all") {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO implement removing from database
+                log.info("[TODO] Removing all faces from database is not implemented yet");
+                clearAllImagesInAllFacesTab();
+            }
+        });
+        mntmClearAllFaces.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_MASK));
+        mntmClearAllFaces.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_REMOVE_PNG)));
+        mntmClearAllFaces.setToolTipText("Remove all images from faces database");
+        fileMenu.add(mntmClearAllFaces);
+    }
+
+    private void initSaveMenuItem(final JMenu fileMenu) {
         final JMenuItem mntmSave = new JMenuItem(new AbstractAction("Save") {
 
             @Override
@@ -190,414 +518,58 @@ public class MainWindow {
                 }
             }
         });
-        mntmSave.setIcon(
-                new ImageIcon(MainWindow.class.getResource(IMG_SAVE_PNG)));
-        mntmSave.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
+        mntmSave.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SAVE_PNG)));
+        mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
         mntmSave.setToolTipText("Save result in text file");
         fileMenu.add(mntmSave);
+    }
 
-        // Clear all faces menu item
-
-        final JMenuItem mntmClearAllFaces = new JMenuItem(
-                new AbstractAction("Clear all") {
-
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        // TODO implement removing from database
-                        log.info(
-                                "[TODO] Removing all faces from database is not implemented yet");
-                        clearAllImages();
-                    }
-                });
-        mntmClearAllFaces.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_MASK));
-        mntmClearAllFaces.setIcon(
-                new ImageIcon(MainWindow.class.getResource(IMG_REMOVE_PNG)));
-        mntmClearAllFaces
-                .setToolTipText("Remove all images from faces database");
-        fileMenu.add(mntmClearAllFaces);
-
-        // mainSplit pane up and down
-
-        final JSplitPane splitPaneMain = new JSplitPane();
-        // TODO lower part of the split panel should have constant height
-        splitPaneMain.setDividerLocation(0.95);
-        splitPaneMain.setResizeWeight(0.95);
-        splitPaneMain.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        mainWindowFrame.getContentPane().add(splitPaneMain);
-
-        // Progress bar
-
-        final JProgressBar progressBar = new JProgressBar(0, 100);
-        progressBar.setValue(0);
-        progressBar.setStringPainted(true);
-        splitPaneMain.setBottomComponent(progressBar);
-
-        // Load predefined menu item
-
-        final JMenuItem mntmLoadPredefined = new JMenuItem(
-                new AbstractAction("Load predefined") {
-
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        clearAllImages();
-                        loadPredefinedImages();
-                    }
-                });
-        mntmLoadPredefined.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_J, InputEvent.CTRL_MASK));
-        mntmLoadPredefined.setIcon(
-                new ImageIcon(MainWindow.class.getResource(IMG_RELOAD_PNG)));
-        mntmLoadPredefined.setToolTipText("Reload images from database");
-        fileMenu.add(mntmLoadPredefined);
-
-        // Exit menu item
-
-        final JMenuItem mntmExit = new JMenuItem(new AbstractAction("Exit") {
+    private void initOpenMenuItem(final JMenu fileMenu) {
+        final JMenuItem mntmOpen = new JMenuItem(new AbstractAction("Open") {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                mainWindowFrame.dispatchEvent(new WindowEvent(mainWindowFrame,
-                        WindowEvent.WINDOW_CLOSING));
-            }
-        });
-        mntmExit.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
-        mntmExit.setIcon(
-                new ImageIcon(MainWindow.class.getResource(IMG_EXIT_PNG)));
-        mntmExit.setToolTipText("Close the application");
-        fileMenu.add(mntmExit);
-
-        // File menu item
-
-        final JMenu identificationMenu = new JMenu("Identification");
-        identificationMenu.setMnemonic('I');
-        menuBar.add(identificationMenu);
-
-        // Open menu item for image of face to find in database
-
-        final JMenuItem mntmOpenImageToFind = new JMenuItem();
-
-        // Search for face in database
-
-        final JMenuItem mntmSearchForFaceInDatabase = new JMenuItem(
-                new AbstractAction("Search face") {
-
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        if (faceToFindInDatabase == null) {
-                            String msg = "No image set to find";
-                            log.info(msg);
-                            JOptionPane.showMessageDialog(null, msg);
-                        } else {
-                            setEnabled(false);
-                            mntmOpenImageToFind.setEnabled(false);
-                            duringSearchingInDatabase = true;
-                            progressBar.setValue(0);
-                            new DatabaseFaceSearcherSwingWorker().execute();
-                        }
-                    }
-
-                    class DatabaseFaceSearcherSwingWorker
-                            extends SwingWorker<Void, Integer> {
-
-                        private int predictedLabel;
-                        private boolean trainingFailed = false;
-                        private String failureDetails;
-
-                        @Override
-                        public Void doInBackground() {
-                            searchInDatabase();
-                            return null;
-                        }
-
-                        private void searchInDatabase() {
-                            publish(10);
-                            log.info("Starting training...");
-                            if (!train()) {
-                                String errMsg = "Training model has failed. See log file to see details";
-                                log.severe(errMsg + failureDetails);
-                                JOptionPane.showMessageDialog(null, errMsg);
-                            } else {
-                                log.info(
-                                        "Training database done, starting processing identified image");
-                                publish(50);
-                                predictedLabel = predictLabel();
-                                publish(100);
-                            }
-                        }
-
-                        private int predictLabel() {
-                            // TODO remove filepath - use BufferedImage from
-                            // faceToFindInDatabase instead mangling with paths
-                            String facePath = faceToFindInDatabase
-                                    .getFilepath();
-                            Mat m = null;
-                            try {
-                                m = FaceEntity.convertGifToMat(facePath);
-                            } catch (IOException e) {
-                                log.severe(
-                                        "Converting from GIF to matrix has failed");
-                            }
-                            return eigenfaces.predictFaces(m);
-                        }
-
-                        private boolean train() {
-                            List<FaceEntity> l = new ArrayList<>(
-                                    imagesInAllFacesTab.size());
-                            Enumeration<ImageListCell> e = imagesInAllFacesTab
-                                    .elements();
-                            while (e.hasMoreElements()) {
-                                ImageListCell c = e.nextElement();
-                                FaceEntity f = c.getFaceEntity();
-                                l.add(f);
-                            }
-                            try {
-                                eigenfaces.train(l);
-                            } catch (IOException e1) {
-                                trainingFailed = true;
-                                failureDetails = e1.getMessage()
-                                        + e1.getCause();
-                            }
-                            return !trainingFailed;
-                        }
-
-                        @Override
-                        protected void done() {
-                            duringSearchingInDatabase = false;
-                            mntmOpenImageToFind.setEnabled(true);
-                            setEnabled(true);
-                            final String msg = "Face is most similar to face number: "
-                                    + predictedLabel;
-                            JOptionPane.showMessageDialog(null, msg);
-                        }
-
-                        @Override
-                        protected void process(List<Integer> progressValues) {
-                            for (Integer i : progressValues) {
-                                progressBar.setValue(i);
-                            }
-                        }
-                    }
-                });
-        mntmSearchForFaceInDatabase.setText("Find");
-        mntmSearchForFaceInDatabase.setIcon(
-                new ImageIcon(MainWindow.class.getResource(IMG_SEARCH_PNG)));
-        mntmSearchForFaceInDatabase.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.ALT_MASK));
-        mntmSearchForFaceInDatabase
-                .setToolTipText("Search for face in database");
-        mntmSearchForFaceInDatabase.setEnabled(false);
-        identificationMenu.add(mntmSearchForFaceInDatabase);
-
-        // Open menu item for image of face to find in database
-
-        mntmOpenImageToFind.setAction(new AbstractAction("Open image") {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (duringSearchingInDatabase) {
-                    String msg = "Currently we're searching in database, change face after processing";
-                    log.fine(msg);
-                    JOptionPane.showMessageDialog(null, msg);
-                } else {
-                    JFileChooser c = new JFileChooser(
-                            System.getProperty("user.dir"));
-                    c.setMultiSelectionEnabled(false);
-                    c.addChoosableFileFilter(new FileNameExtensionFilter(
-                            "Image files", ImageIO.getReaderFileSuffixes()));
-                    c.setAcceptAllFileFilterUsed(false);
-                    if (c.showOpenDialog(
-                            mainWindowFrame) == JFileChooser.APPROVE_OPTION) {
-                        String fname = "uknown";
-                        try {
-                            File f = c.getSelectedFile();
-                            fname = f.getName();
-                            setImageToFind(f);
-                        } catch (IOException e1) {
-                            log.warning("Error during reading " + fname
-                                    + " image! Details: " + e1.getMessage()
-                                    + e1.getCause() + ".");
-                        }
-                        mntmSearchForFaceInDatabase.setEnabled(true);
-                    }
+                final JFileChooser c = new JFileChooser(System.getProperty("user.dir"));
+                c.setMultiSelectionEnabled(true);
+                c.addChoosableFileFilter(new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes()));
+                c.setAcceptAllFileFilterUsed(false);
+                final int result = c.showOpenDialog(mainWindowFrame);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    // TODO adding faces to existing database
+                    // addFaces(Arrays.asList(c.getSelectedFiles()));
+                    eigenfaces.setModelTrained(false);
+                    log.info("Adding images to database is not implemented");
                 }
             }
         });
-        mntmOpenImageToFind.setText("Open");
-        mntmOpenImageToFind.setIcon(
-                new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
-        mntmOpenImageToFind.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.ALT_MASK));
-        mntmOpenImageToFind
-                .setToolTipText("Open image of face to find in the database");
-        identificationMenu.add(mntmOpenImageToFind);
-
-        // Algorithm settings
-
-        JMenuItem mntmAlgorithmSettingsMenuItem = new JMenuItem(
-                new AbstractAction("Settings") {
-
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        final SettingsDialog p = new SettingsDialog(
-                                mainWindowFrame);
-                        p.setLocationRelativeTo(null);
-                        p.setDefaultCloseOperation(
-                                WindowConstants.DISPOSE_ON_CLOSE);
-                        if (p.showDialog()) {
-                            // TODO update settings
-                            log.info("TODO: update settings");
-                        }
-                    }
-                });
-        mntmAlgorithmSettingsMenuItem.setIcon(
-                new ImageIcon(MainWindow.class.getResource(IMG_SETTINGS_PNG)));
-        mntmAlgorithmSettingsMenuItem.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_MASK));
-        mntmAlgorithmSettingsMenuItem
-                .setToolTipText("Open eigenfaces algorithm settings");
-        identificationMenu.add(mntmAlgorithmSettingsMenuItem);
-
-        // Tabs pane
-
-        tabbedPane = new JTabbedPane(SwingConstants.TOP);
-        splitPaneMain.setTopComponent(tabbedPane);
-
-        // All faces tab
-
-        final JSplitPane splitPaneAllFaces = new JSplitPane();
-        splitPaneAllFaces.setResizeWeight(0.75);
-        tabbedPane.addTab("All faces",
-                new ImageIcon(MainWindow.class.getResource(IMG_PEOPLE_PNG)),
-                splitPaneAllFaces, "List of all faces stored in database");
-
-        /*
-         * Initialize all faces tab
-         */
-
-        // Create JList with all faces stored in database for 'All faces' tab
-
-        imagesInAllFacesTabJList = new JList<ImageListCell>(
-                imagesInAllFacesTab);
-        imagesInAllFacesTabJList
-                .setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        imagesInAllFacesTabJList.setCellRenderer(new ImageListCellRenderer());
-        imagesInAllFacesTabJList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-        imagesInAllFacesTabJList.setVisibleRowCount(0);
-        imagesInAllFacesTabJList
-                .addListSelectionListener(new AllFacesListSelectionListener());
-
-        // Scroll pane in left subtab in 'All faces' tab
-
-        final JScrollPane scrollPaneAllFaces = new JScrollPane(
-                imagesInAllFacesTabJList);
-        splitPaneAllFaces.setLeftComponent(scrollPaneAllFaces);
-
-        // Details in right subtab in 'All faces' tab
-
-        final JSplitPane splitPaneDetailsAllFaces = new JSplitPane();
-        splitPaneDetailsAllFaces.setResizeWeight(0.75);
-        splitPaneDetailsAllFaces.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        splitPaneAllFaces.setRightComponent(splitPaneDetailsAllFaces);
-
-        // Add details pane to bottom (right) panel
-
-        detailsPanelAllFaces = new ImageDetailsPanel();
-        splitPaneDetailsAllFaces.setRightComponent(detailsPanelAllFaces);
-        detailsPanelAllFaces.setTotalImagesNumber(imagesInAllFacesTab.size());
-
-        // Add preview pane to upper (left) panel
-
-        previewPaneAllFaces = new ZoomableImagePanelWrapper(
-                detailsPanelAllFaces);
-        splitPaneDetailsAllFaces.setLeftComponent(previewPaneAllFaces);
-
-        // Create 'Find face' tab
-
-        final JSplitPane splitPaneFindFaces = new JSplitPane();
-        splitPaneFindFaces.setResizeWeight(0.75);
-        tabbedPane.addTab("Found faces",
-                new ImageIcon(MainWindow.class.getResource(IMG_FIND_PNG)),
-                splitPaneFindFaces, "Find face in database");
-
-        // Create JList with all faces stored in database for 'All faces' tab
-
-        final JList<ImageListCell> imagesInFindFacesTabJList = new JList<ImageListCell>(
-                imagesInFindFacesTab);
-        imagesInFindFacesTabJList
-                .setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        imagesInFindFacesTabJList.setCellRenderer(new ImageListCellRenderer());
-        imagesInFindFacesTabJList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-        imagesInFindFacesTabJList.setVisibleRowCount(0);
-        // listFindFaces.addListSelectionListener(new
-        // AllFacesListSelectionListener()); // TODO na pewno inny listener
-
-        // Scroll pane in left subtab in 'Find faces' tab
-
-        final JScrollPane scrollPaneFindFaces = new JScrollPane(
-                imagesInFindFacesTabJList);
-        splitPaneFindFaces.setLeftComponent(scrollPaneFindFaces);
-
-        // Details in right subtab in 'All faces' tab
-
-        final JSplitPane splitPaneDetailsFindFaces = new JSplitPane();
-        splitPaneDetailsFindFaces.setResizeWeight(0.75);
-        splitPaneDetailsFindFaces.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        splitPaneFindFaces.setRightComponent(splitPaneDetailsFindFaces);
-
-        // Add details pane to bottom (right) panel TODO what if not details
-        // panel in find face
-
-        detailsPanelFindFaces = new ImageDetailsPanel();
-        splitPaneDetailsFindFaces.setRightComponent(detailsPanelFindFaces);
-        detailsPanelFindFaces.setTotalImagesNumber(imagesInFindFacesTab.size());
-
-        // Add preview pane to upper (left) panel of Find face
-
-        previewPaneFindFaces = new ZoomableImagePanelWrapper(
-                detailsPanelFindFaces);
-        splitPaneDetailsFindFaces.setLeftComponent(previewPaneFindFaces);
-
-        // Load predefined faces database
-
-        loadPredefinedImages();
-
-        // Set size of progress bar
-
-        // restoreDefaults();
+        mntmOpen.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
+        mntmOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
+        mntmOpen.setToolTipText("Open image files and add them to faces database");
+        fileMenu.add(mntmOpen);
     }
 
-    // private void restoreDefaults() {
-    // SwingUtilities.invokeLater(() ->
-    // splitPaneMain.setDividerLocation(SPLIT_PANE_MAIN_DEVIDER));
-    // }
+    private JMenu initFileMenu(final JMenuBar menuBar) {
+        final JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic('F');
+        menuBar.add(fileMenu);
+        return fileMenu;
+    }
 
-    private void clearAllImages() {
+    private JMenuBar initMenuBar() {
+        final JMenuBar menuBar = new JMenuBar();
+        mainWindowFrame.setJMenuBar(menuBar);
+        return menuBar;
+    }
+
+    private void clearAllImagesInAllFacesTab() {
         imagesInAllFacesTab.clear();
         detailsPanelAllFaces.clearDetails(0);
         previewPaneAllFaces.clearImage();
         ImageListCell.resetImagesNumbering();
-        log.info("All faces removed from database");
+        log.info("All faces removed from all faces tab");
     }
 
-    /**
-     * Load images from database
-     */
-    private void loadPredefinedImages() {
-        log.info(
-                "Opening connection with database and fetching all faces from database");
-        List<FaceEntity> allFaces = dbConnectionManager.getAllFaces();
-        log.info("Connection with database closed - " + allFaces.size()
-                + " images fetched");
-        addFaces(allFaces);
-    }
-
-    /**
-     * Add images of faces from list of files to {@code facesListModel}
-     */
-    protected void addFaces(List<FaceEntity> allFaces) {
+    private void addFacesToAllFacesTab(List<FaceEntity> allFaces) {
         log.info("Loaded from database face entities names:");
         for (FaceEntity f : allFaces) {
             ImageListCell cell = new ImageListCell(f);
@@ -608,29 +580,10 @@ public class MainWindow {
     }
 
     private void setImageToFind(File img) throws IOException {
-        log.finer("Loaded image " + img.getAbsolutePath()
-                + " to find in database");
-        faceToFindInDatabase = new ImageListCell(img); // TODO add label ID to
-                                                       // constructor's call
+        log.finer("Loaded image " + img.getAbsolutePath() + " to find in database");
+        faceToFindInDatabase = new ImageListCell(img);
         detailsPanelFindFaces.setDetails(faceToFindInDatabase);
         previewPaneFindFaces.setImage(faceToFindInDatabase.getImage());
         tabbedPane.setSelectedIndex(1);
-    }
-
-    /**
-     * When we select image, then set details and preview
-     */
-    protected class AllFacesListSelectionListener
-            implements ListSelectionListener {
-        @Override
-        public void valueChanged(ListSelectionEvent e) {
-            log.fine("Selected face has changed: ");
-            if (!imagesInAllFacesTabJList.isSelectionEmpty()) {
-                ImageListCell c = imagesInAllFacesTabJList.getSelectedValue();
-                log.fine(c.getText());
-                detailsPanelAllFaces.setDetails(c);
-                previewPaneAllFaces.setImage(c.getImage());
-            }
-        }
     }
 }

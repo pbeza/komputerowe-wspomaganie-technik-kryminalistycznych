@@ -1,13 +1,6 @@
 Notatki z konfiguracji PostgreSQL
 ---------------------------------
 
-Przydatne mogą okazać się dodatki Eclipse Hibernate Tool:
-
-  http://download.jboss.org/jbosstools/updates/stable/mars/
-  http://download.jboss.org/jbosstools/updates/stable/
-
----
-
 Dane do logowania do bazy danych:
 
 login: eigenuser
@@ -51,7 +44,7 @@ COMMENT ON COLUMN faces.image_id IS 'Unique photo ID within photos of single per
 COMMENT ON COLUMN faces.image IS 'Photo of the person (every photo MUST HAVE the same size)';
 COMMENT ON COLUMN faces.filename IS 'Filename of the photo';
 COMMENT ON COLUMN faces.filetype IS 'Filetype of the photo';
-COMMENT ON COLUMN faces.timestamp IS 'Automatically filled time and date when new record is added';
+COMMENT ON COLUMN faces.timestamp IS 'Automatically filled time and date when new record was added';
 
 ---
 

@@ -4,8 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.text.NumberFormat;
 
 import javax.swing.JButton;
@@ -18,20 +16,16 @@ import javax.swing.text.NumberFormatter;
 
 import net.miginfocom.swing.MigLayout;
 
-public class SettingsDialog extends JDialog {
+class SettingsDialog extends JDialog {
 
     private static final String DIALOG_TITLE = "Algorithm settings";
-    private static final int WIDTH = 500, HEIGHT = 200, COLUMNS = 20,
-            MIN_ALLOWED_EIGENFACES_NUMBER = 0,
-            MAX_ALLOWED_EIGENFACES_NUMBER = Integer.MAX_VALUE,
-            DEFAULT_EIGENFACES_NUMBER = 0;
-    private static final double MIN_ALLOWED_THRESHOLD_NUMBER = 0.0,
-            MAX_ALLOWED_THRESHOLD_NUMBER = Double.MAX_VALUE,
+    private static final int WIDTH = 500, HEIGHT = 200, COLUMNS = 20, MIN_ALLOWED_EIGENFACES_NUMBER = 0,
+            MAX_ALLOWED_EIGENFACES_NUMBER = Integer.MAX_VALUE, DEFAULT_EIGENFACES_NUMBER = 0;
+    private static final double MIN_ALLOWED_THRESHOLD_NUMBER = 0.0, MAX_ALLOWED_THRESHOLD_NUMBER = Double.MAX_VALUE,
             DEFAULT_THRESHOLD = Double.MAX_VALUE;
     private final JPanel contentPanel = new JPanel();
     private boolean pressedOk = false;
-    private JFormattedTextField eigenfacesNumberFormattedTextField,
-            thresholdFormattedTextField;
+    private final JFormattedTextField eigenfacesNumberFormattedTextField, thresholdFormattedTextField;
 
     /**
      * Create the dialog.
@@ -48,8 +42,7 @@ public class SettingsDialog extends JDialog {
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new MigLayout("fill", "center"));
 
-        final String leftColumnConstraints = "alignx trailing",
-                rightColumnConstraints = "wrap";
+        final String leftColumnConstraints = "alignx trailing", rightColumnConstraints = "wrap";
 
         // Eigenfaces number label
 
@@ -67,13 +60,10 @@ public class SettingsDialog extends JDialog {
         // Eigenfaces number formatted text field
 
         eigenfacesNumberFormattedTextField = new JFormattedTextField(formatter);
-        eigenfacesNumberFormattedTextField
-                .setToolTipText("Number of eigenfaces / components.");
-        eigenfacesNumberFormattedTextField
-                .setText(Integer.toString(DEFAULT_EIGENFACES_NUMBER));
+        eigenfacesNumberFormattedTextField.setToolTipText("Number of eigenfaces / components.");
+        eigenfacesNumberFormattedTextField.setText(Integer.toString(DEFAULT_EIGENFACES_NUMBER));
         eigenfacesNumberFormattedTextField.setColumns(COLUMNS);
-        contentPanel.add(eigenfacesNumberFormattedTextField,
-                rightColumnConstraints);
+        contentPanel.add(eigenfacesNumberFormattedTextField, rightColumnConstraints);
 
         // Threshold label
 
@@ -107,12 +97,9 @@ public class SettingsDialog extends JDialog {
 
         JButton okButton = new JButton("OK");
         okButton.setActionCommand("OK");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                pressedOk = false;
-                SettingsDialog.this.setVisible(false);
-            }
+        okButton.addActionListener(e -> {
+            pressedOk = false;
+            SettingsDialog.this.setVisible(false);
         });
         buttonPane.add(okButton);
         getRootPane().setDefaultButton(okButton);
@@ -121,21 +108,18 @@ public class SettingsDialog extends JDialog {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setActionCommand("Cancel");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                pressedOk = true;
-                SettingsDialog.this.setVisible(false);
-            }
+        cancelButton.addActionListener(e -> {
+            pressedOk = true;
+            SettingsDialog.this.setVisible(false);
         });
         buttonPane.add(cancelButton);
     }
 
-    public boolean okPressed() {
+    private boolean okPressed() {
         return pressedOk;
     }
 
-    public boolean showDialog() {
+    boolean showDialog() {
         setVisible(true);
         return okPressed();
     }

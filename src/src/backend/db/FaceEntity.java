@@ -27,8 +27,7 @@ import backend.TempPngFileCreator;
 @Table(name = "faces")
 public class FaceEntity {
 
-    public final static int UNKNOWN_ID = -1, UNKNOWN_PERSON_ID = -1,
-            UNKNOWN_IMAGE_ID = -1;
+    public final static int UNKNOWN_ID = -1, UNKNOWN_PERSON_ID = -1, UNKNOWN_IMAGE_ID = -1;
     private final static Timestamp UNKNOWN_TIMESTAMP = null;
 
     @Id
@@ -57,24 +56,20 @@ public class FaceEntity {
     public FaceEntity() {
     }
 
-    public FaceEntity(BufferedImage bufferedImage, String filename,
-            String filetype) {
-        this((DataBufferByte) bufferedImage.getData().getDataBuffer(), filename,
-                filetype);
+    public FaceEntity(BufferedImage bufferedImage, String filename, String filetype) {
+        this((DataBufferByte) bufferedImage.getData().getDataBuffer(), filename, filetype);
     }
 
-    private FaceEntity(DataBufferByte imageDataBufferByte, String filename,
-            String filetype) {
+    private FaceEntity(DataBufferByte imageDataBufferByte, String filename, String filetype) {
         this(imageDataBufferByte.getData(), filename, filetype);
     }
 
     private FaceEntity(byte[] image, String filename, String filetype) {
-        this(UNKNOWN_ID, UNKNOWN_PERSON_ID, UNKNOWN_IMAGE_ID, image, filename,
-                filetype, UNKNOWN_TIMESTAMP);
+        this(UNKNOWN_ID, UNKNOWN_PERSON_ID, UNKNOWN_IMAGE_ID, image, filename, filetype, UNKNOWN_TIMESTAMP);
     }
 
-    private FaceEntity(int id, int personId, int imageId, byte[] image,
-            String filename, String filetype, Timestamp timestamp) {
+    private FaceEntity(int id, int personId, int imageId, byte[] image, String filename, String filetype,
+            Timestamp timestamp) {
         this.id = id;
         this.personId = personId;
         this.imageId = imageId;
@@ -140,8 +135,7 @@ public class FaceEntity {
         this.timestamp = timestamp;
     }
 
-    public static void saveFaceImageToFile(byte[] imageArray,
-            String outputPath) {
+    public static void saveFaceImageToFile(byte[] imageArray, String outputPath) {
         FileOutputStream fos;
         try {
             fos = new FileOutputStream(outputPath);
@@ -149,13 +143,12 @@ public class FaceEntity {
             fos.close();
         } catch (IOException e) {
             Log log = Log.getLogger();
-            log.severe("Error during converting image from byte array to file "
-                    + outputPath + ". Details: " + e.getMessage()
-                    + e.getCause());
+            log.severe("Error during converting image from byte array to file " + outputPath + ". Details: "
+                    + e.getMessage() + e.getCause());
         }
     }
 
-    public void saveFaceImageToFile(String outputPath) {
+    void saveFaceImageToFile(String outputPath) {
         FaceEntity.saveFaceImageToFile(image, outputPath);
     }
 
@@ -163,7 +156,7 @@ public class FaceEntity {
         return FaceEntity.convertToBufferedImage(image);
     }
 
-    public static BufferedImage convertToBufferedImage(byte[] imageArray) {
+    private static BufferedImage convertToBufferedImage(byte[] imageArray) {
         ByteArrayInputStream bais = new ByteArrayInputStream(imageArray);
         BufferedImage bufferedImage;
         try {
@@ -176,8 +169,7 @@ public class FaceEntity {
         return bufferedImage;
     }
 
-    public static Mat convertGifToMat(String faceGifImagePath)
-            throws IOException {
+    public static Mat convertGifToMat(String faceGifImagePath) throws IOException {
         final Log log = Log.getLogger();
         final int IMREAD_FLAGS = Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE;
         File tmpPngFile = TempPngFileCreator.createTmpPngCopy(faceGifImagePath);
@@ -185,8 +177,7 @@ public class FaceEntity {
         Mat imgMat = Imgcodecs.imread(tmpFaceCanonicalPath, IMREAD_FLAGS); // 243x320,
                                                                            // CV_8UC1
         if (!tmpPngFile.delete()) {
-            log.warning("Warning! Temporary file " + tmpFaceCanonicalPath
-                    + " was't deleted!");
+            log.warning("Warning! Temporary file " + tmpFaceCanonicalPath + " was't deleted!");
         }
         if (imgMat.empty()) {
             log.warning("Matrix m is empty!");

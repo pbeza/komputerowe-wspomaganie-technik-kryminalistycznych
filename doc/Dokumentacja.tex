@@ -30,6 +30,8 @@
 \usepackage{bm}
 \usepackage{mathtools}
 \usepackage{afterpage}
+\usepackage{listings}
+%\documentclass{scrartcl}
 
 \newcommand\blankpage{%
 	\null
@@ -135,7 +137,7 @@ W tym rozdziale przedstawiono założenia wstępne projektu pt.~,,Identyfikacja 
 
 \subsection{Identyfikacja twarzy}
 
-Identyfikacja twarzy to przypisanie tożsamości do dwu- lub trzywymiarowego zdjęcia twarzy. Przez ostatnie kilkadziesiąt lat opracowano wiele algorytmów, które służą do rozpoznawania i identyfikacji twarzy. Część z nich jest oparta na sieciach neuronowych, a pozostała część korzysta z klasycznych metod aparatu matematycznego, np. algebry i analizy statystycznej.
+Identyfikacja twarzy to przypisanie tożsamości do dwu- lub trójwymiarowego zdjęcia twarzy. Przez ostatnie kilkadziesiąt lat opracowano wiele algorytmów, które służą do rozpoznawania i identyfikacji twarzy. Część z nich jest oparta na sieciach neuronowych, a pozostała część korzysta z klasycznych metod aparatu matematycznego, np. algebry i analizy statystycznej.
 
 W ramach niniejszego projektu powstało rozwiązanie oparte o metody klasyczne, oparte na algebrze, a w szczególności na wyliczaniu wartości własnych i wektorów własnych macierzy, powstałej z analizowanych zdjęć twarzy, celem zamodelowania analizowanych zdjęć w przestrzeni liniowej, rozpiętej przez wyliczone wektory własne. Wykorzystana metoda identyfikacji twarzy to metoda~\emph{eigenfaces}, która opiera się na metodzie analizy głównych składowych~(ang.~\emph{Principal Component Analysis} -- w~skrócie:~PCA).
 
@@ -231,7 +233,7 @@ Skonstruujmy macierz $L=A^TA$ o wymiarach $M\times M$, gdzie $L_{mn}=\bm{\Phi_m^
 \label{eq:eigenfaces}
 	\bm{u_l}=\sum\limits_{k=1}^M\bm{v_{lk}}\bm{\Phi_k}\quad\text{gdzie:}\quad l=1,\dotsc,M
 \end{equation}
-Dzięki powyższej analizie złożoność obliczeń istotnie zmalała -- z rzędu liczby pikseli w zdjęciu~$N^2$, do rzędu zdjęć w zbiorze treningowym~$M$. W praktyce zbiór treningowy jest relatywnie mały (tzn.~$M\ll N^2$) i obliczenia są względnie szybkie. W praktyce można wybrać $M'$, takie, że $M'<M$, ponieważ wystarczy nam kombinacja liniowa, tworząca przybliżoną twarz, a nie idealnie odzwzorowaną. W takim przypadku wektory \emph{eigenfaces} rozpinają podprzestrzeń $M'$-wymiarową pierwotnej $N^2$-wymiarowej przestrzeni zdjęć. Wybór $M'$ wektorów własnych spośród wszystkich wektorów własnych macierzy $L$, odbywa się na zasadzie wzięcia tych z nich, które mają największe odpowiadające wartości własne. W publikacji \emph{M.Turka} i \emph{A.Pentland'a} zostały z powodzeniem testowane przykłady, dla których $M=16$, a $M'=7$\cite{turk}.
+Dzięki powyższej analizie złożoność obliczeń istotnie zmalała -- z rzędu liczby pikseli w zdjęciu~$N^2$, do rzędu zdjęć w zbiorze treningowym~$M$. W praktyce zbiór treningowy jest relatywnie mały (tzn.~$M\ll N^2$) i obliczenia są względnie szybkie. W praktyce można wybrać $M'$, takie, że $M'<M$, ponieważ wystarczy nam kombinacja liniowa, tworząca przybliżoną twarz, a nie idealnie odwzorowaną. W takim przypadku wektory \emph{eigenfaces} rozpinają podprzestrzeń $M'$-wymiarową pierwotnej $N^2$-wymiarowej przestrzeni zdjęć. Wybór $M'$ wektorów własnych spośród wszystkich wektorów własnych macierzy $L$, odbywa się na zasadzie wzięcia tych z nich, które mają największe odpowiadające wartości własne. W publikacji \emph{M.Turka} i \emph{A.Pentland'a} zostały z powodzeniem testowane przykłady, dla których $M=16$, a $M'=7$\cite{turk}.
 
 Chcąc zidentyfikować osobę widoczną na zadanym zdjęciu twarzy, reprezentowanym przez wektor $\bm\Gamma$ o długości $N^2$, należy przetransformować ten wektor na ,,przestrzeń twarzy" (ang.~\emph{face space}), rozpiętą przez wektory~$\bm{u_1},\bm{u_2},\dotsc,\bm{u_{M'}}$ licząc współczynniki~(wagi) $\omega_k$ kombinacji liniowej:
 \begin{equation}
@@ -328,6 +330,23 @@ Host: & \texttt{localhost}\\
 Port: & \texttt{5432}\\
 \end{tabular}
 
+Tabela \texttt{faces} powstała za pomocą następującej formuły SQL:
+\begin{lstlisting}[language=SQL,frame=single]
+CREATE TABLE faces (
+  id SERIAL NOT NULL,
+  person_id INT NOT NULL,
+  image_id INT NOT NULL,
+  image BYTEA NOT NULL,
+  filename VARCHAR UNIQUE NOT NULL,
+  filetype CHAR(16) NOT NULL,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  PRIMARY KEY (id)
+);
+\end{lstlisting}
+\begin{sloppypar}
+Wypełnienie tabeli zostało wykonane automatycznie w \emph{Javie}, po wywołaniu funkcji \texttt{addAllFacesFromPredefinedCsv()} z pliku \texttt{DatabaseConnectionManager.java}.
+\end{sloppypar}
+
 %------------------------------------------------------------------------------
 
 \section{Aplikacja}
@@ -355,11 +374,25 @@ Za dane wejściowe aplikacji uważamy \emph{niewielki} podzbiór zdjęć twarzy 
 
 \subsection{Wykorzystane biblioteki}
 
-Najważniejszą biblioteką wykorzystaną w ramach projektu jest biblioteka implementująca \emph{PCA} i \emph{eigenfaces}, tj. biblioteka \emph{OpenCV Contrib Faces}, która została pobrana z oficjalnego repozytorium:
+Najważniejszą biblioteką wykorzystaną w ramach projektu jest biblioteka \emph{OpenCV} i implementująca \emph{PCA} i \emph{eigenfaces}, biblioteka \emph{OpenCV Contrib Faces}. Obie biblioteki zostały skompilowane z oficjalnych źródeł, tzn. źródła \emph{OpenCV} zostały pobrane z:
+\begin{center}
+\url{https://github.com/Itseez/opencv}\\
+\url{git@github.com:Itseez/opencv.git}
+\end{center}
+a \emph{OpenCV~Contrib} z:
 \begin{center}
 \url{https://github.com/Itseez/opencv_contrib}\\
 \url{git@github.com:Itseez/opencv_contrib.git}
 \end{center}
+Kompilacje biblioteki \emph{OpenCV} i modułów \emph{OpenCV~Contrib} zostały przeprowadzone na najnowszych dostępnych wersjach tych bibliotek, dostępnych w dniu kompilacji, tj.~1~VI~2016, pobranych z oficjalnych repozytoriów \emph{GitHub}, tzn. \emph{OpenCV} został skompilowany z \emph{commit'a} nr
+\begin{center}
+\texttt{e1ba4399e8b4a9c3eb844992ab9e64aeae2388a2}
+\end{center}
+z modułami \emph{OpenCV~Contrib} z \emph{commitu} nr:
+\begin{center}
+\texttt{ba1d3ef99cf5e67241c5a31dbd9c344d12a2f7c5}
+\end{center}
+
 Niepełna lista wykorzystanych w projekcie bibliotek:
 \begin{enumerate}
 	\item \emph{OpenCV 3.1} + moduły z repozytorium \emph{OpenCV Contrib} -- implementacja m.in. \emph{eigenfaces},
@@ -396,16 +429,16 @@ Logowanie zostało zrealizowane z wykorzystaniem bardzo elastycznej paczki \text
 
 Logi z działania aplikacji zostają zapisywane do katalogu projektu \texttt{/logs} w formacie:
 \begin{center}
-\texttt{DD-MM-YYYY\_HH-MM-SS.log}
+\texttt{yyyy-MM-dd\_HH-mm-ss.log}
 \end{center}
 gdzie:
 \begin{itemize}
-	\item \texttt{DD} -- dzień miesiąca,
+	\item \texttt{yyyy} -- rok,
 	\item \texttt{MM} -- miesiąc,
-	\item \texttt{YY} -- rok,
+	\item \texttt{dd} -- dzień miesiąca,
 	\item \texttt{HH} -- godzina,
-	\item \texttt{MM} -- minuty,
-	\item \texttt{SS} -- sekundy.
+	\item \texttt{mm} -- minuty,
+	\item \texttt{ss} -- sekundy.
 \end{itemize}
 Godzina w nazwie pliku logu jest ustalana względem czasu systemowego (a nie względem \texttt{UTC+00}). Logi nie są kasowane po zakończeniu programu.
 
@@ -415,11 +448,11 @@ Godzina w nazwie pliku logu jest ustalana względem czasu systemowego (a nie wzg
 
 Zdecydowanie największą trudnością konfiguracji projektu, która pochłonęła sporą część całego projektu, była kompilacja modułu \emph{OpenCV Faces} (i jego zależności), który jest implementacją algorytmu \emph{eigenfaces}. Szczególnie dużo czasu zajęło poprawne jej skompilowanie na systemie operacyjnym \emph{Windows~10}. Kompilacja na systemie \emph{Linux Debian} była również czasochłonna, ale nie w takim stopniu jak na \emph{Windows}.
 
-Główną przyczyną trudności konfiguracji projektu był fakt, że moduł \emph{OpenCV Faces} jest wersją rozwojową, która nie jest dołączona do standardowej istalacji \emph{OpenCV}. Ponadto \emph{OpenCV} i wszystkie jego moduły, w tym moduł \emph{Faces}, jest napisany w C++ i aby włączyć \emph{wrapper}\footnote{Przez \emph{wrapper} rozumie się wygenerowany automatycznie, na podstawie kodu źródłowego napisanego w C++, plik \emph{jar}, który jest interfejsem implementacji \emph{OpenCV}, napisanej w C++ i skompilowanej do postaci binarnej \emph{*.dll} i \emph{*.so}, odpowiednio na \emph{Windowsie} i \emph{Linuksie}. Mechanizm ten nosi nazwę \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java Native Interface}}.} do \emph{Javy}, należy przeprowadzić kompilację \emph{OpenCV} i \emph{OpenCV Contrib} samodzielnie, co nie byłoby dużym problemem gdyby nie to, że po drodze należy zmodyfikować kilka nieudokumentowanych miejsc w kodzie modułu \emph{Faces}, ponieważ oficjalnie, tylko moduły z głównego wydania \emph{OpenCV} mają wsparcie \emph{wrapperem} \emph{Javy}.
+Główną przyczyną trudności konfiguracji projektu był fakt, że moduł \emph{OpenCV Faces} jest wersją rozwojową, która nie jest dołączona do standardowej instalacji \emph{OpenCV}. Ponadto \emph{OpenCV} i wszystkie jego moduły, w tym moduł \emph{Faces}, jest napisany w C++ i aby włączyć \emph{wrapper}\footnote{Przez \emph{wrapper} rozumie się wygenerowany automatycznie, na podstawie kodu źródłowego napisanego w C++, plik \emph{jar}, który jest interfejsem implementacji \emph{OpenCV}, napisanej w C++ i skompilowanej do postaci binarnej \emph{*.dll} i \emph{*.so}, odpowiednio na \emph{Windowsie} i \emph{Linuksie}. Mechanizm ten nosi nazwę \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java Native Interface}}.} do \emph{Javy}, należy przeprowadzić kompilację \emph{OpenCV} i \emph{OpenCV Contrib} samodzielnie, co nie byłoby dużym problemem gdyby nie to, że po drodze należy zmodyfikować kilka nieudokumentowanych miejsc w kodzie modułu \emph{Faces}, ponieważ oficjalnie, tylko moduły z głównego wydania \emph{OpenCV} mają wsparcie \emph{wrapperem} \emph{Javy}.
 
 Mniejszą trudnością, a bardziej uciążliwością, był fakt, że system \emph{Windows} nie jest domyślnie przystosowany dla pracy programisty, co wiązało się z koniecznością ręcznego konfigurowania co najmniej kilku zmiennych środowiskowych i instalowania wielu zależności. Niektóre z nich to: \emph{git}, \emph{CMake}, \emph{Java~8~JDK}, \emph{Python}, \emph{ant}, \emph{MinGW}/\emph{Microsoft Visual Studio}, \emph{Eclipse}.
 
-Wyżej wymienione problemy były oczywiście jednorazowe, tzn. użytkownik końcowy nie musi się nimi przejować, ponieważ wszystkie biblioteki zostały dostarczone w ramach skompilowanej wersji projektu.
+Wyżej wymienione problemy były oczywiście jednorazowe, tzn. użytkownik końcowy nie musi się nimi przejmować, ponieważ wszystkie biblioteki zostały dostarczone w ramach skompilowanej wersji projektu.
 
 %------------------------------------------------------------------------------
 

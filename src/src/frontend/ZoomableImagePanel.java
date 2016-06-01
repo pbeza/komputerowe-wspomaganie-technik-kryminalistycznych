@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
-public class ZoomableImagePanel extends JPanel {
+class ZoomableImagePanel extends JPanel {
 
     private BufferedImage origImage, scaledImage;
 
@@ -16,7 +16,7 @@ public class ZoomableImagePanel extends JPanel {
         origImage = bufImg;
     }
 
-    public void clearImage() {
+    void clearImage() {
         origImage = null;
         scaledImage = null;
     }
@@ -30,8 +30,7 @@ public class ZoomableImagePanel extends JPanel {
         final int h = (int) (origImage.getHeight() * zoomFactor);
         scaledImage = new BufferedImage(w, h, origImage.getType());
         final Graphics2D g2 = scaledImage.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g2.drawImage(origImage, 0, 0, w, h, null);
         g2.dispose();
         setPreferredSize(new Dimension(w, h));

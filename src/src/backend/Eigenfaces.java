@@ -39,8 +39,7 @@ public class Eigenfaces {
         this.isModelTrained = isModelTrained;
     }
 
-    public void train(List<FaceEntity> learningSetFaceEntities)
-            throws IOException {
+    public void train(List<FaceEntity> learningSetFaceEntities) throws IOException {
         int n = learningSetFaceEntities.size();
         List<Integer> labels = new ArrayList<>(n);
         List<byte[]> images = new ArrayList<>(n);
@@ -52,17 +51,14 @@ public class Eigenfaces {
         }
         n = images.size();
         if (n != labels.size() || n < 2) {
-            throw new AssertionError(
-                    "Number of faces images must be equal to number of images' labels (at least 2)");
+            throw new AssertionError("Number of faces images must be equal to number of images' labels (at least 2)");
         } else if (n <= 5) {
-            log.warning(n
-                    + " images in learning set is not enough. Add more images to your learning data set!");
+            log.warning(n + " images in learning set is not enough. Add more images to your learning data set!");
         }
         train(images, labels);
     }
 
-    private void train(List<byte[]> learningSetImages,
-            List<Integer> learningSetFacesLabels) throws IOException {
+    private void train(List<byte[]> learningSetImages, List<Integer> learningSetFacesLabels) throws IOException {
         int n = learningSetImages.size();
         assert n == learningSetFacesLabels.size();
         List<Mat> learningSetFaces = new ArrayList<>(n);
@@ -75,8 +71,7 @@ public class Eigenfaces {
             learningSetFaces.add(m);
         }
         if (!tmpGif.delete()) {
-            log.warning(
-                    "Failed to delete " + tmpGifFilepath + " temporary file");
+            log.warning("Failed to delete " + tmpGifFilepath + " temporary file");
         }
         Mat matLearningSetFacesLabels = labelsToMat(learningSetFacesLabels);
         eigenfacesRecognizer.train(learningSetFaces, matLearningSetFacesLabels);
@@ -85,14 +80,12 @@ public class Eigenfaces {
         // eigenfacesRecognizer.save("learned_model.xml");
     }
 
-    public int predictFaces(BufferedImage faceToIdentify)
-            throws IOException, URISyntaxException {
+    public int predictFaces(BufferedImage faceToIdentify) throws IOException, URISyntaxException {
         byte[] face = convertBufferedImageToByteArray(faceToIdentify);
         return predictFaces(face);
     }
 
-    public int predictFaces(byte[] faceToIdentify)
-            throws IOException, URISyntaxException {
+    private int predictFaces(byte[] faceToIdentify) throws IOException, URISyntaxException {
         Mat face = new Mat();
         face.put(0, 0, faceToIdentify);
         return predictFaces(face);
@@ -100,16 +93,14 @@ public class Eigenfaces {
 
     public int predictFaces(Mat faceToIdentify) {
         if (!isModelTrained) {
-            throw new AssertionError(
-                    "You must train model before starting identifying face");
+            throw new AssertionError("You must train model before starting identifying face");
         }
         int[] label_out = new int[1];
         double[] confidence_out = new double[1];
         eigenfacesRecognizer.predict(faceToIdentify, label_out, confidence_out);
         predictedLabel = label_out[0];
         predictedConfidence = confidence_out[0];
-        log.info(String.format("Predicted class = %d with confidence %f",
-                predictedLabel, predictedConfidence));
+        log.info(String.format("Predicted class = %d with confidence %f", predictedLabel, predictedConfidence));
         return predictedLabel;
     }
 
@@ -132,8 +123,7 @@ public class Eigenfaces {
         return resLabels;
     }
 
-    private byte[] convertBufferedImageToByteArray(
-            BufferedImage faceToIdentify) {
+    private byte[] convertBufferedImageToByteArray(BufferedImage faceToIdentify) {
         WritableRaster faceRaster = faceToIdentify.getRaster();
         DataBuffer faceDataBuffer = faceRaster.getDataBuffer();
         DataBufferByte faceDataBufferByte = (DataBufferByte) faceDataBuffer;

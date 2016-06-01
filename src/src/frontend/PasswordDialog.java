@@ -3,7 +3,6 @@ package frontend;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -40,14 +39,14 @@ import javax.swing.JTextField;
  *         http://ostermiller.org/contact.pl?regarding=Java+Utilities
  * @since ostermillerutils 1.00.00
  */
-public class PasswordDialog extends JDialog {
+class PasswordDialog extends JDialog {
 
-    protected JTextField name;
-    protected JPasswordField pass;
-    protected JButton okButton;
-    protected JButton cancelButton;
-    protected JLabel nameLabel;
-    protected JLabel passLabel;
+    private JTextField name;
+    private JPasswordField pass;
+    private JButton okButton;
+    private JButton cancelButton;
+    private JLabel nameLabel;
+    private JLabel passLabel;
 
     /**
      * Set the name that appears as the default An empty string will be used if
@@ -79,7 +78,7 @@ public class PasswordDialog extends JDialog {
      *            label for the ok button.
      */
     public void setOKText(String ok) {
-        this.okButton.setText(ok);
+        okButton.setText(ok);
         pack();
     }
 
@@ -90,7 +89,7 @@ public class PasswordDialog extends JDialog {
      *            label for the cancel button.
      */
     public void setCancelText(String cancel) {
-        this.cancelButton.setText(cancel);
+        cancelButton.setText(cancel);
         pack();
     }
 
@@ -102,7 +101,7 @@ public class PasswordDialog extends JDialog {
      *            label for the name field.
      */
     public void setNameLabel(String name) {
-        this.nameLabel.setText(name);
+        nameLabel.setText(name);
         pack();
     }
 
@@ -114,7 +113,7 @@ public class PasswordDialog extends JDialog {
      *            label for the password field.
      */
     public void setPassLabel(String pass) {
-        this.passLabel.setText(pass);
+        passLabel.setText(pass);
         pack();
     }
 
@@ -209,35 +208,31 @@ public class PasswordDialog extends JDialog {
 
         super.dialogInit();
 
-        KeyListener keyListener = (new KeyAdapter() {
+        KeyListener keyListener = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE
-                        || (e.getSource() == cancelButton
-                                && e.getKeyCode() == KeyEvent.VK_ENTER)) {
+                        || e.getSource() == cancelButton && e.getKeyCode() == KeyEvent.VK_ENTER) {
                     pressed_OK = false;
                     PasswordDialog.this.setVisible(false);
                 }
-                if (e.getSource() == okButton
-                        && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                if (e.getSource() == okButton && e.getKeyCode() == KeyEvent.VK_ENTER) {
                     pressed_OK = true;
                     PasswordDialog.this.setVisible(false);
                 }
             }
-        });
+        };
         addKeyListener(keyListener);
 
-        ActionListener actionListener = new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Object source = e.getSource();
-                if (source == name) {
-                    // the user pressed enter in the name field.
-                    name.transferFocus();
-                } else {
-                    // other actions close the dialog.
-                    pressed_OK = (source == pass || source == okButton);
-                    PasswordDialog.this.setVisible(false);
-                }
+        ActionListener actionListener = e -> {
+            Object source = e.getSource();
+            if (source == name) {
+                // the user pressed enter in the name field.
+                name.transferFocus();
+            } else {
+                // other actions close the dialog.
+                pressed_OK = source == pass || source == okButton;
+                PasswordDialog.this.setVisible(false);
             }
         };
 
