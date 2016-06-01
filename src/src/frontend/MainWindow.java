@@ -34,6 +34,7 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
+import javax.swing.Timer;
 import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -357,18 +358,29 @@ class MainWindow {
 
             class DatabaseFaceSearcherSwingWorker extends SwingWorker<Void, Integer> {
 
-                private int predictedLabel;
+                private Eigenfaces.PredictedResult predictedResult;
                 private boolean trainingFailed = false;
                 private String failureDetails;
+                private final static int TIMER_DELAY = 100;
+                private final Timer timer = new Timer(TIMER_DELAY, e -> {
+                    int progress = getProgress() + 1;
+                    if (progress < 100 && !isDone()) {
+                        setProgress(progress);
+                        publish(progress);
+                    } else {
+                        ((Timer) e.getSource()).stop();
+                    }
+                });
 
                 @Override
                 public Void doInBackground() {
+                    timer.start();
                     searchInDatabase();
+                    timer.stop();
                     return null;
                 }
 
                 private void searchInDatabase() {
-                    publish(10);
                     log.info("Starting training...");
                     if (!train()) {
                         String errMsg = "Training model has failed. See log file to see details";
@@ -377,11 +389,8 @@ class MainWindow {
                         JOptionPane.showMessageDialog(null, errMsg);
                     } else {
                         log.info("Training database done, starting processing identified image");
-                        publish(50);
-                        predictedLabel = predictLabel();
-                        publish(75);
+                        predictedResult = predictLabel();
                         addFacesOfFoundLabel();
-                        // TODO add images of found person
                         publish(100);
                     }
                 }
@@ -390,13 +399,13 @@ class MainWindow {
                     for (int i = 0; i < imagesInAllFacesTab.size(); i++) {
                         ImageListCell c = imagesInAllFacesTab.get(i);
                         FaceEntity f = c.getFaceEntity();
-                        if (f.getPersonId() == predictedLabel) {
+                        if (f.getPersonId() == predictedResult.predictedLabel) {
                             imagesInFindFacesTab.addElement(c);
                         }
                     }
                 }
 
-                private int predictLabel() {
+                private Eigenfaces.PredictedResult predictLabel() {
                     // TODO remove filepath - use BufferedImage from
                     // faceToFindInDatabase instead mangling with paths
                     String facePath = faceToFindInDatabase.getFilepath();
@@ -431,15 +440,17 @@ class MainWindow {
                     duringSearchingInDatabase = false;
                     mntmOpenImageToFind.setEnabled(true);
                     setEnabled(true);
-                    final String msg = "Face is most similar to face number: " + predictedLabel;
+                    final String msg = predictedResult == null
+                            ? "Prediction has failed (probably low level JNI OpenCV Face module error)."
+                            : "Face is most similar to face number " + predictedResult.predictedLabel
+                                    + ". Images distance equals " + predictedResult.predictedConfidence + ".";
                     JOptionPane.showMessageDialog(null, msg);
                 }
 
                 @Override
                 protected void process(List<Integer> progressValues) {
-                    for (Integer i : progressValues) {
-                        progressBar.setValue(i);
-                    }
+                    int lastProgressValue = progressValues.get(progressValues.size() - 1);
+                    progressBar.setValue(lastProgressValue);
                 }
             }
         });

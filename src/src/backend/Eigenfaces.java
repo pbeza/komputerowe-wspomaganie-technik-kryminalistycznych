@@ -22,9 +22,13 @@ import backend.db.FaceEntity;
 public class Eigenfaces {
     private final static Logger log = Log.getLogger();
     private final BasicFaceRecognizer eigenfacesRecognizer;
-    private int predictedLabel;
-    private double predictedConfidence;
     private boolean isModelTrained = false;
+    private final PredictedResult predictedResult = new PredictedResult();
+
+    public class PredictedResult {
+        public int predictedLabel;
+        public double predictedConfidence;
+    }
 
     public Eigenfaces() {
         log.info("Loading OpenCV libraries...");
@@ -80,28 +84,29 @@ public class Eigenfaces {
         // eigenfacesRecognizer.save("learned_model.xml");
     }
 
-    public int predictFaces(BufferedImage faceToIdentify) throws IOException, URISyntaxException {
+    public PredictedResult predictFaces(BufferedImage faceToIdentify) throws IOException, URISyntaxException {
         byte[] face = convertBufferedImageToByteArray(faceToIdentify);
         return predictFaces(face);
     }
 
-    private int predictFaces(byte[] faceToIdentify) throws IOException, URISyntaxException {
+    private PredictedResult predictFaces(byte[] faceToIdentify) throws IOException, URISyntaxException {
         Mat face = new Mat();
         face.put(0, 0, faceToIdentify);
         return predictFaces(face);
     }
 
-    public int predictFaces(Mat faceToIdentify) {
+    public PredictedResult predictFaces(Mat faceToIdentify) {
         if (!isModelTrained) {
             throw new AssertionError("You must train model before starting identifying face");
         }
         int[] label_out = new int[1];
         double[] confidence_out = new double[1];
         eigenfacesRecognizer.predict(faceToIdentify, label_out, confidence_out);
-        predictedLabel = label_out[0];
-        predictedConfidence = confidence_out[0];
-        log.info(String.format("Predicted class = %d with confidence %f", predictedLabel, predictedConfidence));
-        return predictedLabel;
+        predictedResult.predictedLabel = label_out[0];
+        predictedResult.predictedConfidence = confidence_out[0];
+        log.info(String.format("Predicted class = %d with confidence %f", predictedResult.predictedLabel,
+                predictedResult.predictedConfidence));
+        return predictedResult;
     }
 
     /**
