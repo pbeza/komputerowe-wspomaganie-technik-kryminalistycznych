@@ -22,6 +22,14 @@ createuser eigenuser
 psql -d template1
 alter user eigenuser password 'eigenfaces';
 
+$ su - postgres
+$ psql template1
+template1=# CREATE USER tester WITH PASSWORD 'test_password';
+template1=# GRANT ALL PRIVILEGES ON DATABASE "test_database" to tester;
+template1=# \q
+
+\du - wyświetla role
+\d+ - wyświetla tabele
 
 ---
 

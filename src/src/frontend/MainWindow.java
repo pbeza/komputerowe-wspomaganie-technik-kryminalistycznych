@@ -394,18 +394,22 @@ class MainWindow {
                 }
 
                 private void searchInDatabase() {
-                    log.info("Starting training...");
-                    if (!train()) {
-                        String errMsg = "Training model has failed. See log file to see details";
-                        log.severe(errMsg + failureDetails);
-                        publish(0);
-                        JOptionPane.showMessageDialog(null, errMsg);
+                    if (!eigenfaces.getIsModelTrained()) {
+                        log.info("Starting training...");
+                        if (!train()) {
+                            String errMsg = "Training model has failed. See log file to see details";
+                            log.severe(errMsg + failureDetails);
+                            publish(0);
+                            JOptionPane.showMessageDialog(null, errMsg);
+                        }
+                        log.info("Training database done");
                     } else {
-                        log.info("Training database done, starting processing identified image");
-                        predictedResult = predictLabel();
-                        addFacesOfFoundLabel();
-                        publish(100);
+                        log.info("Model was already trained - skipping training");
                     }
+                    log.info("Starting identifying given image");
+                    predictedResult = predictLabel();
+                    addFacesOfFoundLabel();
+                    publish(100);
                 }
 
                 private void addFacesOfFoundLabel() {

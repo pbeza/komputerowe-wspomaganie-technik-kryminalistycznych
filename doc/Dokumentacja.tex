@@ -31,7 +31,7 @@
 \usepackage{mathtools}
 \usepackage{afterpage}
 \usepackage{listings}
-%\documentclass{scrartcl}
+\usepackage{csquotes}
 
 \newcommand\blankpage{%
 	\null
@@ -267,7 +267,7 @@ Poza wyżej wymienionymi zaletami, algorytm ten ma również kilka istotnych wad
 \section{Maszyna wirtualna}
 \label{sec:maszyna-wirtualna}
 
-W celu uniknięcia potencjalnych problemów z zależnościami aplikacji od konkretnej konfiguracji systemu operacyjnego, w szczególności od zainstalowanych bibliotek i konfiguracji bazy danych, w ramach projektu, skonfigurowano maszynę wirtualną \emph{VirtualBox}, na której dostarczono działającą aplikację. Na maszynie wirtualnej został zainstalowany 64-bitowy system operacyjny \emph{Linux Debian} w najnowszej dostępnej, stabilnej wersji, tj.~\emph{Debian~8.4~(Jessie)}, korzystający z lekkiego środowiska graficznego \texttt{Xfce}. Maszyna wirtualna zajmuje stosunkowo niewiele miejsca, bo około \texttt{11GB}, dlatego, zrezygnowano ze zbędnych w tym przypadku, wyrafinowanych schematów partycjonowania przestrzeni dyskowej i utworzono jedną partycję systemową~\texttt{ext4}.
+W celu uniknięcia potencjalnych problemów z zależnościami aplikacji od konkretnej konfiguracji systemu operacyjnego, w szczególności od zainstalowanych bibliotek i konfiguracji bazy danych, w ramach projektu, skonfigurowano maszynę wirtualną \emph{VirtualBox}, na której dostarczono działającą aplikację. Na maszynie wirtualnej został zainstalowany 64-bitowy system operacyjny \emph{Linux Debian} w najnowszej dostępnej, tj.~\emph{Debian~(Stretch)}, korzystający z lekkiego środowiska graficznego \texttt{Xfce}. Maszyna wirtualna zajmuje stosunkowo niewiele miejsca, bo około \texttt{11GB}, dlatego, zrezygnowano ze zbędnych w tym przypadku, wyrafinowanych schematów partycjonowania przestrzeni dyskowej i utworzono jedną partycję systemową~\texttt{ext4}.
 
 W niniejszym rozdziale krótko opisano najważniejsze zmiany jakich dokonano względem \emph{czystego}, tj. niezmodyfikowanego, systemu operacyjnego, pobranego z oficjalnej strony \emph{Debiana}.
 
@@ -299,20 +299,22 @@ Hasło: & \texttt{kwtk-MiNI\&PW-2015/2016}\\
 
 \subsection{Konfiguracja systemu}
 
-Projekt jest napisany w \emph{Javie}, więc z natury powinien być przenośny pomiędzy systemami operacyjnymi, na których można zainstalować maszynę wirtualną \emph{Javy}. W rzeczywistości nie jest to takie proste, ponieważ w projekcie wykorzystano biblioteki \emph{OpenCV}, które wykorzystują mechanizm \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java-Native-Interface}}. Biblioteka \emph{OpenCV} została napisana w C++ w ten sposób, aby dało się je skompilować dla różnych systemów operacyjnych, w tym m.in. dla \emph{Linux'a} i \emph{Windowsa}. W ramach projektu została skompilowana ta sama wersja biblioteki dla 64-bitowych systemów \emph{Windows} i \emph{Linux} (odpowiednio biblioteka: \texttt{opencv\_java310.dll} i \texttt{libopencv\_java310.so}). W trakcie testów przetestowano z powodzeniem aplikację na obu tych systemach.
+Projekt jest napisany w \emph{Javie} w wersji \emph{8}\footnote{Wykorzystano m.in. bibliotekę \texttt{java.time} i wyrażenia \emph{lambda}, które nie są dostępne w poprzednich wersjach \emph{Javy}. Domyślnie na \emph{Debianie} jest jeszcze stara wersja \emph{Java~7}, dlatego \emph{Javę~8} należało \href{http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html}{doinstalować} samodzielnie.}, więc z natury powinien być przenośny pomiędzy wszystkimi systemami operacyjnymi, na których można zainstalować maszynę wirtualną \emph{Javy}. W rzeczywistości nie jest to takie proste, ponieważ w projekcie wykorzystano biblioteki \emph{OpenCV}, które wykorzystują mechanizm \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java-Native-Interface}}. Biblioteka \emph{OpenCV} została napisana w C++ w ten sposób, aby dało się ją skompilować dla różnych systemów operacyjnych, w tym m.in. dla \emph{Linux'a} i \emph{Windowsa}. W ramach projektu została skompilowana ta sama wersja biblioteki dla 64-bitowych systemów \emph{Windows} i \emph{Linux} (odpowiednio biblioteka: \texttt{opencv\_java310.dll} i \texttt{libopencv\_java310.so}) z drobną modyfikacją w kodzie C++ (patrz:~\ref{sec:trudnosci}). W trakcie testów przetestowano z powodzeniem aplikację na obu tych systemach.
 
-Oprogramowanie wykorzystane w ramach projektu jest w całości otwartoźródłowe i \emph{wolne}\footnote{\emph{Wolne} w znaczeniu użytej licencji pozwalającej na wprowadzanie zmian i nieodpłatne wykorzystywanie: źródeł, bibliotek, baz danych itd.}. Większość zależności aplikacji jest zawarta w projekcie -- np. moduły \emph{OpenCV} i \emph{Hibernate}, służący za \href{https://en.wikipedia.org/wiki/Object-relational_mapping}{\emph{ORM}} przy dostępie do bazy danych. Jedynym modułem, który nie można zawrzeć w postaci \emph{Eclipse'owego} projektu jest baza danych \emph{PostgreSQL}\footnote{\emph{PostgreSQL} można zainstalować, instalując pakiet \texttt{postgres}, dostępny w standardowym repozytorium większości znanych dystrybucji \emph{Linux'a}. Na \emph{Debianie} i \emph{Ubuntu} do zainstalowania wystarczy: \texttt{apt-get install postgres}.}, przechowująca zdjęcia twarzy identyfikowanych osób. Wymagała ona osobnej konfiguracji, polegającej m.in. na: stworzeniu użytkownika i hasła dostępu do bazy danych, stworzeniu tabeli \texttt{faces} w bazie danych, wypełnienie jej zdjęciami twarzy identyfikowanych osób i przyznanie dostępu użytkownikowi do tabeli \texttt{faces}.
+Oprogramowanie wykorzystane w ramach projektu jest w całości otwartoźródłowe i \emph{wolne}\footnote{\emph{Wolne} w znaczeniu użytej licencji, pozwalającej na wprowadzanie zmian i nieodpłatne wykorzystywanie: źródeł, bibliotek, baz danych itd.}. Większość zależności aplikacji jest zawarta w projekcie -- np. moduł \emph{OpenCV} i biblioteka \emph{Hibernate}, służąca za \href{https://en.wikipedia.org/wiki/Object-relational_mapping}{\emph{ORM}} przy dostępie do bazy danych. Jedynym modułem, który nie można zawrzeć w postaci \emph{Eclipse'owego} projektu jest baza danych \emph{PostgreSQL}\footnote{\emph{PostgreSQL} można zainstalować, instalując pakiet \texttt{postgres}, dostępny w standardowym repozytorium większości znanych dystrybucji \emph{Linux'a}. Na \emph{Debianie} i \emph{Ubuntu} do zainstalowania wystarczy: \texttt{apt-get install postgres}.}, przechowująca zdjęcia twarzy identyfikowanych osób. Wymagała ona osobnej konfiguracji, polegającej m.in. na: \href{http://stackoverflow.com/questions/10861260/how-to-create-user-for-a-db-in-postgresql}{stworzeniu użytkownika} i hasła dostępu do bazy danych, stworzeniu tabeli \texttt{faces} w bazie danych, wypełnienie jej zdjęciami twarzy identyfikowanych osób i przyznanie dostępu użytkownikowi do tabeli \texttt{faces}.
 
 W celu łatwego przenoszenia bazy danych z maszyny \emph{developerskiej} na maszynę wirtualną, wykorzystano \href{https://en.wikipedia.org/wiki/Database_dump}{\emph{dump}} bazy danych, który w przypadku eksportu bazy danych sprowadza się do wykonania komendy: \texttt{pg\_dump template1 > out.dump}, a w przypadku importu bazy danych: \texttt{psql template1 < out.dump}, gdzie \texttt{template1} to nazwa bazy danych, a \texttt{out.dump} to ścieżka pliku z zrzutem bazy danych.
 
-W przypadku chęci wygodnego edytowania i \emph{debugowania} kodu źródłowego projektu, należy zainstalować dodatkowe pakiety oprogramowania, takie jak:
+W przypadku chęci wygodnego konfigurowania, edytowania i \emph{debugowania} kodu źródłowego projektu, należy zainstalować dodatkowe pakiety oprogramowania, takie jak:
 \begin{enumerate}
 	\item \texttt{git},
-	\item \texttt{eclipse}.
+	\item \texttt{eclipse},
+	\item \texttt{mc},
+	\item \texttt{vim}.
 \end{enumerate}
 Każdy z powyższych pakietów można pobrać ze standardowego repozytorium \emph{Debiana} i zainstalować za pomocy komendy: \texttt{apt-get install \emph{nazwa-pakietu}}.
 
-Cała opisana wyżej konfiguracja systemu \emph{Debian} -- zarówno ta obowiązkowa, jak i opcjonalna -- została wykonana w ramach oddania projektu, więc aplikacja działa \emph{out of the box}.
+Cała opisana wyżej konfiguracja systemu \emph{Debian} -- zarówno ta obowiązkowa, jak i opcjonalna -- została wykonana w ramach przygotowania maszyny wirtualnej na finalne oddanie projektu, więc aplikacja działa \emph{out of the box} i nie wymaga dodatkowej konfiguracji.
 
 %------------------------------------------------------------------------------
 
@@ -344,7 +346,23 @@ CREATE TABLE faces (
 );
 \end{lstlisting}
 \begin{sloppypar}
-Wypełnienie tabeli zostało wykonane automatycznie w \emph{Javie}, po wywołaniu funkcji \texttt{addAllFacesFromPredefinedCsv()} z pliku \texttt{DatabaseConnectionManager.java}.
+Wypełnienie tabeli zostało wykonane automatycznie w \emph{Javie}, po wywołaniu funkcji \texttt{addAllFacesFromPredefinedCsv()} z pliku \texttt{DatabaseConnectionManager.java}. Funkcja ta czyta plik CSV, który został wygenerowany prostym skryptem, napisanym w \emph{Pythonie}, na podstawie folderu \texttt{YaleFacedatabaseA}, który zawiera zdjęcia twarzy. Zdjęcia te można pobrać ze strony internetowej \emph{Computer Vision Laboratory in the Computer Science and Engineering Department} Uniwersytetu Kalifornijskiego w San~Diego:
+\begin{center}
+\url{http://vision.ucsd.edu/datasets/yale_face_dataset_original/yalefaces.zip}
+\end{center}
+Notka licencyjna z pliku \texttt{Readme.txt}, rozpakowanego z ww. archiwum \texttt{yalefaces.zip}:
+\begin{displayquote}
+You are free to use the Yale Face Database for research purposes.
+If experimental results are obtained that use images from within the
+database, all publications of these results should acknowledge the use
+of the "Yale Face Database" and cite
+
+\textbf{P. Belhumeur, J. Hespanha, D. Kriegman, Eigenfaces vs. Fisherfaces: Recognition Using Class Specific Linear Projection, IEEE Transactions on Pattern Analysis and Machine Intelligence, July 1997, pp. 711-720.}
+
+Without permission from Yale, images
+from within the database cannot be incorporated into a larger database
+which is then publicly distributed.
+\end{displayquote}
 \end{sloppypar}
 
 %------------------------------------------------------------------------------
@@ -352,7 +370,7 @@ Wypełnienie tabeli zostało wykonane automatycznie w \emph{Javie}, po wywołani
 \section{Aplikacja}
 \label{sec:aplikacja}
 
-Aplikację zaimplementowano w języku \emph{Java}, korzystając ze środowiska graficznego \emph{Swing}.
+Aplikację zaimplementowano w języku \emph{Java} w wersji \emph{8}, korzystając ze środowiska graficznego \emph{Swing}.
 
 %------------------------------------------------------------------------------
 
@@ -402,6 +420,12 @@ Niepełna lista wykorzystanych w projekcie bibliotek:
 
 %------------------------------------------------------------------------------
 
+\subsection{Uruchomienie aplikacji}
+
+Aby uruchomić aplikację w trybie \texttt{debug}, należy włączyć \emph{VirtualBox}, uruchomić maszynę wirtualną z \emph{Debianem}, zalogować się, wybrać z menu: \texttt{Programy > Programowanie > Eclipse > Run > Debug}. W przypadku gdyby \emph{Eclipse} pytał, który plik źródłowy uruchomić, należy wskazać \texttt{MainWindow.java}.
+
+%------------------------------------------------------------------------------
+
 \subsection{Autoryzacja}
 
 Po uruchomieniu aplikacji, przed wyświetleniem się okna głównego, zostaje przeprowadzona prosta autoryzacja przez wymóg podania poprawnej nazwy użytkownika oraz hasła.
@@ -445,12 +469,18 @@ Godzina w nazwie pliku logu jest ustalana względem czasu systemowego (a nie wzg
 %------------------------------------------------------------------------------
 
 \subsection{Napotkane trudności}
+\label{sec:trudnosci}
 
 Zdecydowanie największą trudnością konfiguracji projektu, która pochłonęła sporą część całego projektu, była kompilacja modułu \emph{OpenCV Faces} (i jego zależności), który jest implementacją algorytmu \emph{eigenfaces}. Szczególnie dużo czasu zajęło poprawne jej skompilowanie na systemie operacyjnym \emph{Windows~10}. Kompilacja na systemie \emph{Linux Debian} była również czasochłonna, ale nie w takim stopniu jak na \emph{Windows}.
 
 Główną przyczyną trudności konfiguracji projektu był fakt, że moduł \emph{OpenCV Faces} jest wersją rozwojową, która nie jest dołączona do standardowej instalacji \emph{OpenCV}. Ponadto \emph{OpenCV} i wszystkie jego moduły, w tym moduł \emph{Faces}, jest napisany w C++ i aby włączyć \emph{wrapper}\footnote{Przez \emph{wrapper} rozumie się wygenerowany automatycznie, na podstawie kodu źródłowego napisanego w C++, plik \emph{jar}, który jest interfejsem implementacji \emph{OpenCV}, napisanej w C++ i skompilowanej do postaci binarnej \emph{*.dll} i \emph{*.so}, odpowiednio na \emph{Windowsie} i \emph{Linuksie}. Mechanizm ten nosi nazwę \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java Native Interface}}.} do \emph{Javy}, należy przeprowadzić kompilację \emph{OpenCV} i \emph{OpenCV Contrib} samodzielnie, co nie byłoby dużym problemem gdyby nie to, że po drodze należy zmodyfikować kilka nieudokumentowanych miejsc w kodzie modułu \emph{Faces}, ponieważ oficjalnie, tylko moduły z głównego wydania \emph{OpenCV} mają wsparcie \emph{wrapperem} \emph{Javy}.
 
-Mniejszą trudnością, a bardziej uciążliwością, był fakt, że system \emph{Windows} nie jest domyślnie przystosowany dla pracy programisty, co wiązało się z koniecznością ręcznego konfigurowania co najmniej kilku zmiennych środowiskowych i instalowania wielu zależności. Niektóre z nich to: \emph{git}, \emph{CMake}, \emph{Java~8~JDK}, \emph{Python}, \emph{ant}, \emph{MinGW}/\emph{Microsoft Visual Studio}, \emph{Eclipse}.
+Inną trudnością związaną również z \emph{wrapperem} od \emph{Javy}, jest to, że nie wszystkie funkcje dostępne w interfejsie C++ \emph{OpenCV} są dostępne w \emph{wraperze} w \emph{Javie}. Jedną z istotnych funkcji niedostępnych w \emph{Javie} jest przeciążona\footnote{\emph{Przeciążona funkcja} w sensie jednej nazwy funkcji z różnymi zestawami argumentów.} funkcja \texttt{predict}, która w \emph{Javie} jest dostępna tylko w jednej wersji, w której zwracany jest jeden identyfikator osoby rozpoznanej na zadanym zdjęciu twarzy wraz z miarą odległości zdjęcia rozpoznawanego i tego, który wygenerował algorytm \emph{eigenfaces}. Problem ten został rozwiązany dzięki uprzejmości jednego z \emph{developerów} modułu \emph{OpenCV~Faces}, tj. dzięki \href{https://github.com/mshabunin}{\emph{Maksimowi Shabuninowi}}, który po mailowym kontakcie opisał rozwiązanie w komentarzu do pytania zamieszczonego na forum \href{http://answers.opencv.org}{\texttt{answers.opencv.org}}:
+\begin{center}
+\url{http://answers.opencv.org/question/95181/opencv-contrib-face-module-with-java-wrapper-returning-multiple-prediction/}
+\end{center}
+
+Mniejszą trudnością, a bardziej uciążliwością, był fakt, że system \emph{Windows} nie jest domyślnie przystosowany dla pracy programisty, co wiązało się z koniecznością ręcznego konfigurowania co najmniej kilku zmiennych środowiskowych i instalowania wielu zależności\footnote{Nie dość, że na system \emph{Windows} należało zainstalować większą ilość brakujących zależności niż na \emph{Debianie}, to w \emph{Windows} nie ma centralnego repozytorium pakietów, dlatego wszystkie zależności były pobierane ręcznie, tj. wchodząc na strony \texttt{www} twórców poszczególnych zależności.}. Niektóre z nich to: \emph{git}, \emph{CMake}, \emph{Java~8~JDK}, \emph{Python}, \emph{ant}, \emph{MinGW}/\emph{Microsoft Visual Studio}, \emph{Eclipse}.
 
 Wyżej wymienione problemy były oczywiście jednorazowe, tzn. użytkownik końcowy nie musi się nimi przejmować, ponieważ wszystkie biblioteki zostały dostarczone w ramach skompilowanej wersji projektu.
 
@@ -516,7 +546,7 @@ Poniższa tabela przestawia podział prac implementacyjnych w ramach projektu.
 \center
 \begin{tabular}{p{2.5cm}|p{4cm}|p{4cm}|p{4cm}}
 & Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
-\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Obsługa algorytmu \emph{eigenfaces} w \emph{Javie} & -- & $\bullet$ Dodanie pierwszej wersji \emph{progress bar'a}\\
+\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Obsługa algorytmu \emph{eigenfaces} w \emph{Javie} & -- & $\bullet$ Dodanie pierwszej wersji \emph{progress bar'a} i przeniesienie funkcjonalności z karty \emph{All faces} do \emph{Found faces}\\
 & $\bullet$ Konfiguracja środowiska i kompilacja \emph{OpenCV} z modułem \emph{Faces} na system \emph{Windows} i \emph{Linux} & &\\
 & $\bullet$ Implementacja interfejsu graficznego w \emph{Javie} & &\\
 & $\bullet$ Implementacja testów jednostkowych w \emph{Javie} & &\\
