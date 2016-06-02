@@ -99,4 +99,8 @@ class ImageDetailsPanel extends JPanel {
     public void setZoom(double zoomPercent) {
         zoomField.setText(String.format("%.2f", zoomPercent));
     }
+
+    public void setPersonId(String personId) {
+        personIdField.setText(personId);
+    }
 }

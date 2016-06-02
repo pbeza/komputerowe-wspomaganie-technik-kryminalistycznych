@@ -39,6 +39,10 @@ public class Eigenfaces {
         eigenfacesRecognizer = Face.createEigenFaceRecognizer();
     }
 
+    public boolean getIsModelTrained() {
+        return isModelTrained;
+    }
+
     public void setModelTrained(boolean isModelTrained) {
         this.isModelTrained = isModelTrained;
     }
@@ -82,6 +86,10 @@ public class Eigenfaces {
         isModelTrained = true;
         // TODO add to DB default learned model
         // eigenfacesRecognizer.save("learned_model.xml");
+    }
+
+    public void saveLearnedModelInXML(String filename) {
+        eigenfacesRecognizer.save(filename);
     }
 
     public PredictedResult predictFaces(BufferedImage faceToIdentify) throws IOException, URISyntaxException {

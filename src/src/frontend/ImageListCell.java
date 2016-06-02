@@ -6,7 +6,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 import javax.imageio.ImageIO;
 import javax.swing.Icon;
@@ -111,5 +114,17 @@ class ImageListCell extends JLabel {
 
     public Timestamp getTimestamp() {
         return faceEntity.getTimestamp();
+    }
+
+    public void setTimestamp(File f) {
+        try {
+            BasicFileAttributes attr = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
+            FileTime fileTime = attr.creationTime();
+            Instant instant = fileTime.toInstant();
+            Timestamp timestamp = Timestamp.from(instant);
+            faceEntity.setTimestamp(timestamp);
+        } catch (IOException e) {
+            // Just don't change timestamp
+        }
     }
 }

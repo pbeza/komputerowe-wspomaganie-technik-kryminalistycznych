@@ -9,9 +9,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -35,6 +37,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
+import javax.swing.ToolTipManager;
 import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -56,13 +59,14 @@ class MainWindow {
             IMG_EXIT_PNG = "/img/exit.png", IMG_RELOAD_PNG = "/img/reload.png", IMG_REMOVE_PNG = "/img/remove.png",
             IMG_SAVE_PNG = "/img/save.png", IMG_OPEN_PNG = "/img/open.png", IMG_SEARCH_PNG = "/img/search.png",
             IMG_SETTINGS_PNG = "/img/settings.png", TITLE = "Eigenfaces - Face identification program";
-    private static final int WIDTH = 1024, HEIGHT = 512, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100;
+    private static final int WIDTH = 1024, HEIGHT = 512, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100,
+            TOOLTIP_DISPLAY_TIME_IN_MILLISECONDS = 60000;
     private final DefaultListModel<ImageListCell> imagesInAllFacesTab = new DefaultListModel<ImageListCell>();
-    private final DefaultListModel<ImageListCell> imagesInFindFacesTab = new DefaultListModel<ImageListCell>();
+    private final DefaultListModel<ImageListCell> imagesInFoundFacesTab = new DefaultListModel<ImageListCell>();
     private ZoomableImagePanelWrapper previewPaneAllFaces;
-    private ZoomableImagePanelWrapper previewPaneFindFaces;
+    private ZoomableImagePanelWrapper previewPaneFoundFaces;
     private ImageDetailsPanel detailsPanelAllFaces;
-    private ImageDetailsPanel detailsPanelFindFaces;
+    private ImageDetailsPanel detailsPanelFoundFaces;
     private JTabbedPane tabbedPane;
     private final Eigenfaces eigenfaces = new Eigenfaces();
     private boolean duringSearchingInDatabase = false;
@@ -111,6 +115,7 @@ class MainWindow {
      */
     public MainWindow() {
         initMainWindow();
+        ToolTipManager.sharedInstance().setDismissDelay(TOOLTIP_DISPLAY_TIME_IN_MILLISECONDS);
         final JSplitPane splitPaneMain = initVerticalSplitPane();
         final JProgressBar progressBar = initProgressBar(splitPaneMain);
         initMenu(progressBar);
@@ -200,7 +205,7 @@ class MainWindow {
         imagesInAllFacesTabJList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
         imagesInAllFacesTabJList.setVisibleRowCount(0);
         imagesInAllFacesTabJList.addListSelectionListener(e -> {
-            log.fine("Selected face has changed: ");
+            log.fine("Selected face in all faces tab has changed: ");
             if (!imagesInAllFacesTabJList.isSelectionEmpty()) {
                 ImageListCell c = imagesInAllFacesTabJList.getSelectedValue();
                 log.fine(c.getText());
@@ -219,38 +224,47 @@ class MainWindow {
 
         // Create JList with all faces stored in database for 'Find faces' tab
 
-        final JList<ImageListCell> imagesInFindFacesTabJList = new JList<ImageListCell>(imagesInFindFacesTab);
-        imagesInFindFacesTabJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        imagesInFindFacesTabJList.setCellRenderer(new ImageListCellRenderer());
-        imagesInFindFacesTabJList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-        imagesInFindFacesTabJList.setVisibleRowCount(0);
-        // listFindFaces.addListSelectionListener(new
-        // AllFacesListSelectionListener()); // TODO na pewno inny listener
+        final JList<ImageListCell> imagesInFoundFacesTabJList = new JList<ImageListCell>(imagesInFoundFacesTab);
+        imagesInFoundFacesTabJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        imagesInFoundFacesTabJList.setCellRenderer(new ImageListCellRenderer());
+        imagesInFoundFacesTabJList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        imagesInFoundFacesTabJList.setVisibleRowCount(0);
+        imagesInFoundFacesTabJList.addListSelectionListener(e -> {
+            log.fine("Selected face in found faces tab has changed: ");
+            if (!imagesInFoundFacesTabJList.isSelectionEmpty()) {
+                ImageListCell c = imagesInFoundFacesTabJList.getSelectedValue();
+                log.fine(c.getText());
+                detailsPanelFoundFaces.setDetails(c);
+                previewPaneFoundFaces.setImage(c.getImage());
+            }
+        });
 
         // Scroll pane in left subtab in 'Find faces' tab
 
-        initScrollPaneInAllFacesTab(splitPaneFindFaces, imagesInFindFacesTabJList);
+        initScrollPaneInAllFacesTab(splitPaneFindFaces, imagesInFoundFacesTabJList);
 
         final JSplitPane splitPaneDetailsFindFaces = initSplitPaneInAllFacesTab(splitPaneFindFaces);
 
         // Add details pane to bottom (right) panel TODO what if not details
         // panel in find face
 
-        detailsPanelFindFaces = new ImageDetailsPanel();
-        splitPaneDetailsFindFaces.setRightComponent(detailsPanelFindFaces);
-        detailsPanelFindFaces.setTotalImagesNumber(imagesInFindFacesTab.size());
+        detailsPanelFoundFaces = new ImageDetailsPanel();
+        splitPaneDetailsFindFaces.setRightComponent(detailsPanelFoundFaces);
+        detailsPanelFoundFaces.setTotalImagesNumber(imagesInFoundFacesTab.size());
 
         // Add preview pane to upper (left) panel of Find face
 
-        previewPaneFindFaces = new ZoomableImagePanelWrapper(detailsPanelFindFaces);
-        splitPaneDetailsFindFaces.setLeftComponent(previewPaneFindFaces);
+        previewPaneFoundFaces = new ZoomableImagePanelWrapper(detailsPanelFoundFaces);
+        splitPaneDetailsFindFaces.setLeftComponent(previewPaneFoundFaces);
     }
 
     private void loadPredefinedImagesToAllFacesTab() {
         log.info("Opening connection with database and fetching all faces from database");
+        // TODO this should be asynchronous
         List<FaceEntity> allFaces = dbConnectionManager.getAllFaces();
         log.info("Connection with database closed - " + allFaces.size() + " images fetched");
         addFacesToAllFacesTab(allFaces);
+        eigenfaces.setModelTrained(false);
     }
 
     private void initScrollPaneInAllFacesTab(final JSplitPane splitPaneAllFaces,
@@ -332,7 +346,7 @@ class MainWindow {
         mntmOpenImageToFind.setText("Open");
         mntmOpenImageToFind.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
         mntmOpenImageToFind.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.ALT_MASK));
-        mntmOpenImageToFind.setToolTipText("Open image of face to find in the database");
+        mntmOpenImageToFind.setToolTipText("Open image of face to find in the images downloaded from SQL database");
         identificationMenu.add(mntmOpenImageToFind);
     }
 
@@ -350,14 +364,13 @@ class MainWindow {
                     setEnabled(false);
                     mntmOpenImageToFind.setEnabled(false);
                     duringSearchingInDatabase = true;
-                    imagesInFindFacesTab.clear();
+                    imagesInFoundFacesTab.clear();
                     progressBar.setValue(0);
                     new DatabaseFaceSearcherSwingWorker().execute();
                 }
             }
 
             class DatabaseFaceSearcherSwingWorker extends SwingWorker<Void, Integer> {
-
                 private Eigenfaces.PredictedResult predictedResult;
                 private boolean trainingFailed = false;
                 private String failureDetails;
@@ -400,7 +413,7 @@ class MainWindow {
                         ImageListCell c = imagesInAllFacesTab.get(i);
                         FaceEntity f = c.getFaceEntity();
                         if (f.getPersonId() == predictedResult.predictedLabel) {
-                            imagesInFindFacesTab.addElement(c);
+                            imagesInFoundFacesTab.addElement(c);
                         }
                     }
                 }
@@ -440,10 +453,13 @@ class MainWindow {
                     duringSearchingInDatabase = false;
                     mntmOpenImageToFind.setEnabled(true);
                     setEnabled(true);
+                    progressBar.setValue(0);
                     final String msg = predictedResult == null
-                            ? "Prediction has failed (probably low level JNI OpenCV Face module error)."
+                            ? "Prediction has failed (probably low level JNI OpenCV Face module error). Make sure your training set is not empty and all images have non-negative labels' IDs."
                             : "Face is most similar to face number " + predictedResult.predictedLabel
-                                    + ". Images distance equals " + predictedResult.predictedConfidence + ".";
+                                    + ". Best image distance: " + predictedResult.predictedConfidence + ".";
+                    detailsPanelFoundFaces.setPersonId("probably " + predictedResult.predictedLabel
+                            + " (computed distance = " + predictedResult.predictedConfidence + ")");
                     JOptionPane.showMessageDialog(null, msg);
                 }
 
@@ -457,7 +473,7 @@ class MainWindow {
         mntmSearchForFaceInDatabase.setText("Find");
         mntmSearchForFaceInDatabase.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SEARCH_PNG)));
         mntmSearchForFaceInDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.ALT_MASK));
-        mntmSearchForFaceInDatabase.setToolTipText("Search for face in database");
+        mntmSearchForFaceInDatabase.setToolTipText("Search face in faces downloaded from SQL database");
         mntmSearchForFaceInDatabase.setEnabled(false);
         identificationMenu.add(mntmSearchForFaceInDatabase);
         return mntmSearchForFaceInDatabase;
@@ -495,7 +511,7 @@ class MainWindow {
         });
         mntmLoadPredefined.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_J, InputEvent.CTRL_MASK));
         mntmLoadPredefined.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_RELOAD_PNG)));
-        mntmLoadPredefined.setToolTipText("Reload images from database");
+        mntmLoadPredefined.setToolTipText("Reload images from SQL database");
         fileMenu.add(mntmLoadPredefined);
     }
 
@@ -504,39 +520,49 @@ class MainWindow {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO implement removing from database
-                log.info("[TODO] Removing all faces from database is not implemented yet");
+                log.info("Removing all faces from local database (NOT from SQL database)");
                 clearAllImagesInAllFacesTab();
             }
         });
         mntmClearAllFaces.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_MASK));
         mntmClearAllFaces.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_REMOVE_PNG)));
-        mntmClearAllFaces.setToolTipText("Remove all images from faces database");
+        mntmClearAllFaces.setToolTipText("Remove all images from local faces database, but not from SQL database");
         fileMenu.add(mntmClearAllFaces);
     }
 
     private void initSaveMenuItem(final JMenu fileMenu) {
-        final JMenuItem mntmSave = new JMenuItem(new AbstractAction("Save") {
+        final JMenuItem mntmSave = new JMenuItem(new AbstractAction("Save model") {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                final JFileChooser c = new JFileChooser();
-                final int result = c.showSaveDialog(mainWindowFrame);
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    // TODO add saving file code
-                    // log.info("Saved file path: " + c.getSelectedFile());
-                    log.info("[TODO] Saving results is not implemented yet");
+                if (!eigenfaces.getIsModelTrained()) {
+                    JOptionPane.showMessageDialog(mainWindowFrame, "Train your model first.");
+                } else {
+                    final JFileChooser c = new JFileChooser();
+                    final int result = c.showSaveDialog(mainWindowFrame);
+                    if (eigenfaces.getIsModelTrained()) {
+                        File f = c.getSelectedFile();
+                        String path;
+                        try {
+                            path = f.getCanonicalPath();
+                            eigenfaces.saveLearnedModelInXML(path);
+                        } catch (IOException e1) {
+                            JOptionPane.showMessageDialog(mainWindowFrame,
+                                    "Saving learned model in file has failed - see log to learn more.");
+                            log.severe(e1.getMessage() + e1.getCause());
+                        }
+                    }
                 }
             }
         });
         mntmSave.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_SAVE_PNG)));
         mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
-        mntmSave.setToolTipText("Save result in text file");
+        mntmSave.setToolTipText("Save learned model in XML file");
         fileMenu.add(mntmSave);
     }
 
     private void initOpenMenuItem(final JMenu fileMenu) {
-        final JMenuItem mntmOpen = new JMenuItem(new AbstractAction("Open") {
+        final JMenuItem mntmOpen = new JMenuItem(new AbstractAction("Add face to DB") {
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -546,16 +572,26 @@ class MainWindow {
                 c.setAcceptAllFileFilterUsed(false);
                 final int result = c.showOpenDialog(mainWindowFrame);
                 if (result == JFileChooser.APPROVE_OPTION) {
-                    // TODO adding faces to existing database
-                    // addFaces(Arrays.asList(c.getSelectedFiles()));
-                    eigenfaces.setModelTrained(false);
-                    log.info("Adding images to database is not implemented");
+                    boolean success = false;
+                    try {
+                        success = addFacesToAllFacesTabFromFile(Arrays.asList(c.getSelectedFiles()));
+                        eigenfaces.setModelTrained(false);
+                    } catch (IOException e1) {
+                        JOptionPane.showMessageDialog(mainWindowFrame,
+                                "Loading files has failed - see log to learn more");
+                        log.warning(e1.getMessage() + e1.getCause());
+                    }
+                    if (!success) {
+                        JOptionPane.showMessageDialog(mainWindowFrame,
+                                "Loading files has failed. At least one of the selected images has size different than images already uploaded to database.");
+                    }
                 }
             }
         });
         mntmOpen.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
         mntmOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
-        mntmOpen.setToolTipText("Open image files and add them to faces database");
+        mntmOpen.setToolTipText(
+                "Open images and add them to local database - this option doesn't add faces to SQL database");
         fileMenu.add(mntmOpen);
     }
 
@@ -580,6 +616,33 @@ class MainWindow {
         log.info("All faces removed from all faces tab");
     }
 
+    private boolean addFacesToAllFacesTabFromFile(List<File> faces) throws IOException {
+        log.info("Adding " + faces.size() + " faces from file(s):");
+        int w = 0, h = 0;
+        List<ImageListCell> transactionList = new ArrayList<>();
+        if (!imagesInAllFacesTab.isEmpty()) {
+            ImageListCell f = imagesInAllFacesTab.get(0);
+            BufferedImage bufImg = f.getImage();
+            w = bufImg.getWidth();
+            h = bufImg.getHeight();
+        }
+        for (File f : faces) {
+            BufferedImage img = ImageIO.read(f);
+            if (!imagesInAllFacesTab.isEmpty() && !(w == img.getWidth() && h == img.getHeight())) {
+                log.warning(f.getCanonicalPath()
+                        + " file has different size than images in database which is not acceptable by algorithm");
+                return false;
+            }
+            ImageListCell cell = new ImageListCell(f);
+            transactionList.add(cell);
+            log.finer(cell.getFilename());
+        }
+        for (ImageListCell c : transactionList) {
+            imagesInAllFacesTab.addElement(c);
+        }
+        return true;
+    }
+
     private void addFacesToAllFacesTab(List<FaceEntity> allFaces) {
         log.info("Loaded from database face entities names:");
         for (FaceEntity f : allFaces) {
@@ -593,8 +656,9 @@ class MainWindow {
     private void setImageToFind(File img) throws IOException {
         log.finer("Loaded image " + img.getAbsolutePath() + " to find in database");
         faceToFindInDatabase = new ImageListCell(img);
-        detailsPanelFindFaces.setDetails(faceToFindInDatabase);
-        previewPaneFindFaces.setImage(faceToFindInDatabase.getImage());
+        faceToFindInDatabase.setTimestamp(img);
+        detailsPanelFoundFaces.setDetails(faceToFindInDatabase);
+        previewPaneFoundFaces.setImage(faceToFindInDatabase.getImage());
         tabbedPane.setSelectedIndex(1);
     }
 }
