@@ -1,0 +1,182 @@
+\documentclass[]{article}
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{marginnote}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\graphicspath{{img/}}
+
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+%opening
+\title{KWTK - EigenFaces}
+\author{instrukcja użytkownika}
+
+\begin{document}
+\maketitle
+
+
+\subsection*{Zespół projektowy:}
+	inż. Patryk Bęza \newline
+	inż. Krzysztof Małaśnicki \newline
+	inż. Marek Kozak
+	
+\section*{Notki:}
+trochę TODO w manualu, pytanie jak się rozwinie aplikacja:\newline
+prezentowanie wyników\newline
+obróbka wstępna\newline
+
+\newpage
+
+
+\section[Uruchamianie]{Uruchamianie aplikacji}
+\label{sec:run}
+\marginpar{logowanie: \newline u:root\newline p:toor}
+Aplikacja podczas uruchomiania pyta nas o login i hasło logowania.
+Po zalogowaniu aplikacja pokazuje nam ekran główny, tj. lewą kartę. Na tej przestrzeni możemy bez przeszkód \hyperref[sec:load]{wczytywać}, \hyperref[sec:view]{przeglądać} oraz \hyperref[sec:save]{zapisywać} profile korzystając z bazy referencyjnej.
+
+
+\section[Ładowanie bazy]{Import danych do bazy referencyjnej}
+\label{sec:load}
+
+\subsection{Wczytywanie bazy domyślnej}
+Aplikacja jest wyposażona w domyślną bazę referencyjną, której celem jest prezentacja jej możliwości. Celem wczytania tej bazy należy wykonać jedną z poniższych czynności:
+\begin{itemize}
+\item wybrać z menu poleceń \textbf{File \textgreater \space Load Predefined},
+\item skorzystać ze skrótu klawiaturowego \textbf{Ctrl + J}.
+\end{itemize}
+Tak wczytaną bazę można poszerzać o dodatkowe profile z plików oraz  prowadzić na niej podstawowe operacje \hyperref[sec:view]{przeglądania} oraz \hyperref[sec:query]{przeszukiwania}.
+
+\subsection{Ładowanie profili z plików}
+Poszerzyć wczytaną bazę referencyjną o nowe profile można w analogiczny do przedstawionego poprzednio sposób:
+\begin{itemize}
+	\item wybrać z menu poleceń \textbf{File \textgreater \space Add face to DB},
+	\item skorzystać ze skrótu klawiaturowego \textbf{Ctrl + O}.
+\end{itemize}
+\paragraph*{Korzystanie z tej opcji może spowodować spowolnienie pracy aplikacji wymagając ponownego przeliczenia definicji wektora cech oraz określenia wartości dotychczasowych profili.}
+
+\subsection{Ładowanie profili z bazy danych}
+Obecnie w przygotowaniu.
+
+\subsection{Usuwanie bazy referencyjnej z pamięci}
+W przypadku załadowania niewłaściwej bazy referencyjnej lub potrzeby oczyszczenia środowiska pracy po wczytaniu bazy wbudowanej należy usunąć obecnie załadowaną do pamięci bazę w jeden z następujących sposobów:
+\begin{itemize}
+	\item wybrać z menu poleceń \textbf{File \textgreater \space Clear all},
+	\item skorzystać ze skrótu klawiaturowego \textbf{Ctrl + K}.
+\end{itemize}
+\paragraph*{Korzystanie z tej opcji może powodować utratę niezapisanych danych. Ponadto usuwana jest jedynie baza za pamięci programu, tj. bazy w plikach oraz na serwerze pozostaną niezmienione.}
+
+
+
+
+\section[Przeglądanie bazy]{Przeglądanie bazy referencyjnej}
+\label{sec:view}
+Funkcjonalność przeglądania bazy referencyjnej twarz po twarzy zapewnia nam lewa karta okna głównego aplikacji, \textbf{All faces}.
+
+\subsection{Wybór profilu do podglądu}
+Aby wybrać spośród miniatur profil, który wzbudził nasze zainteresowanie należy kliknąć na nim lewym przyciskiem myszy. Zaktualizuje nam to pole szczegółów (po prawej stronie) do danych na temat bieżącego zaznaczenia.
+
+\subsection{Szczegóły profilu}
+Pole szczegółów wyświetla nam podstawowe informacje dotyczące zaznaczonego profilu. W skład tych informacji wchodzą:
+\begin{itemize}
+	\item numer rekordu w bazie (ID),
+	\item numer osoby w bazie (Person ID),
+	\item numer zdjęcia w bazie dla osoby (Image ID),
+	\item nazwa pliku obrazu źródłowego (Filename),
+	\item typ pliku obrazu źródłowego (MIME type),
+	\item rozmiar obrazu źródłowego wyrażony w pikselach (Width, Height),
+	\item poziom przybliżenia obrazu (Zoom)
+	\item data dodania obiektu do bazy(Timestamp).
+\end{itemize}
+Ponadto za pomocą przycisków poniżej podglądu możemy regulować obecny poziom przybliżenia, tak aby móc przyjrzeć się danemu profilowi dokładniej.
+\newline
+Oprócz tych informacji pole szczegółów wyświetla także całkowita liczbę profili w bazie referencyjnej (Total images).
+\paragraph*{Poziom przybliżenia podlega regulacji co 0.05 przyjmując wartości dodatnie, jednak nie zaleca się przekraczać 5.00 ze względów wydajnościowych.}
+
+\section[Zapisywanie bazy]{Zapis bazy referencyjnej}
+\label{sec:save}
+Obecnie przetwarzaną bazę możemy zapisać w postaci modelu OpenCV za pomocą jednego ze sposobów:
+\begin{itemize}
+	\item wybrać z menu poleceń \textbf{File \textgreater \space Save model},
+	\item skorzystać ze skrótu klawiaturowego \textbf{Ctrl + S}.
+\end{itemize}
+
+\paragraph*{Tak stworzona kopia modelu przechowuje dane o wektorach cech w postaci jawnej, niezoptymalizowanej. Operacja może chwilę potrwać z uwagi na dosyć obszerny rozmiar pliku}.
+
+
+\section[Odpytywanie bazy]{Operacje na nieznanych profilach}
+\label{sec:query}
+Aplikacja pozwala także na przeszukiwanie bazy celem znalezienia profili możliwie jak najbardziej zgodnych. Operacja ta przebiega dwuetapowo. Aby korzystać w pełni z informacji dostarczanych w tym trybie warto przejść do prawej karty aplikacji, \textbf{Found faces}.
+
+\subsection{Wprowadzanie nieznanego profilu}
+Pierwszy etap to wprowadzenie poszukiwanego profilu dla którego będziemy szukać zgodności. Operację tę można przeprowadzić dwojako:
+\begin{itemize}
+	\item wybierając z menu poleceń \textbf{Identification \textgreater \space Open	},
+	\item korzystając ze skrótu klawiaturowego \textbf{Alt + O}.
+\end{itemize}
+
+Należy zadbać aby poszukiwany wzorzec był zgodny z danymi wejściowymi posiadanymi przez bazę, a mianowicie spełniał poniższe kryteria:
+\begin{itemize}
+	\item rozmiar obrazka to 320x243 px,
+	\item twarz znajduje się na środku obrazka zgodnie ze schematem przedstawionym w następnej sekcji.
+\end{itemize}
+
+\subsection{Obróbka wstępna}
+Proces unifikacji obrazu do postaci oczekiwanej przez algorytm, jest niezbędny dla jego prawidłowej pracy z rekordami z bazy referencyjnej.
+\begin{center}
+	\fbox{\includegraphics{base.png}}
+\end{center}
+Jak na obrazku powyżej twarz znajduje się w centrum, tak aby jej wysokość w 90\%, a szerokość w 50\% zapełniały obszar zdjęcia. Ważne są też wymiary obrazu. Baza w chwili obecnej operuje na obrazach wielkości 320x243 px.
+
+\subsection{Zmiana parametrów algorytmu}
+Aplikacja podczas swojego działania umożliwia ustawienie przez użytkownika własnych parametrów obsługi algorytmu, poprzez:
+\begin{itemize}
+	\item wybranie z menu poleceń \textbf{Identification \textgreater \space Settings	},
+	\item korzystając ze skrótu klawiaturowego \textbf{Ctrl + E}.
+\end{itemize}
+
+\paragraph*{Zmiana parametrów algorytmu prowadzi do ponownego wartościowania wszystkich profili w bazie referencyjnej.}
+
+\subsection{Poszukiwanie zgodnych profili}
+Jeżeli zakończyliśmy pracę z wprowadzanym profilem należy uruchomić przeszukiwanie baz:
+\begin{itemize}
+	\item wybierając z menu poleceń \textbf{Identification \textgreater \space Find},
+	\item korzystając ze skrótu klawiaturowego \textbf{Alt + S}.
+\end{itemize}
+Ta operacja ze względu na złożoność algorytmiczną może potrwać nieco dłużej, jednak aplikacja powinna sygnalizować trwanie obliczeń za pomocą paska postępu na dole okna. Po zakończonych obliczeniach najbardziej zgodne wzorce są wyświetlane \hyperref[sec:view]{analogicznie} do całej bazy, w prawej karcie.
+
+
+\section[Logowanie]{Raportowanie działań}
+Aplikacja podczas swojej pracy w sposób automatyczny raportuje swoje działania do pliku tekstowego do folderu log przyjmując nazwę:\newline
+\begin{center}
+\textbf{\lbrack YYYY-MM-DD\_HH-MM-SS\rbrack.log}\newline\end{center}
+W skład raportowanych danych wchodzą:
+\begin{itemize}
+	\item logowanie do aplikacji,
+	\item wczytywanie, dodawanie i usuwanie twarzy w bazie,
+	\item zmiany parametrów algorytmu oraz wyświetlania,
+	\item ładowanie komponentów aplikacji,
+	\item raporty o błędach.
+\end{itemize}
+Raporty automatyczne przyjmują następujący format:
+\begin{flushleft}
+\textbf{\lbrack mmm dd, yyyy hh:mm:ss xm\rbrack\space\lbrack komponent raportujący\rbrack\newline
+\lbrack status zadania\rbrack:\lbrack szczegóły wykonania\rbrack}
+\end{flushleft}
+
+
+
+\section[Zamykanie]{Zamykanie aplikacji}
+Zakończenie aplikacji nie usuwa bieżącej bazy. Jest ona przywracana w trakcie następnego uruchomienia. Aplikację można zamykać następującymi sposobami:
+\begin{itemize}
+	\item wybierając z menu poleceń \textbf{File \textgreater \space Quit},
+	\item klikając na krzyżyku w prawym górnym rogu okna aplikacji,
+	\item korzystając ze skrótu klawiaturowego \textbf{Ctrl + Q},
+	\item korzystając ze skrótu klawiaturowego \textbf{Alt + F4}.
+\end{itemize}
+
+\newpage
+\tableofcontents
+\end{document}
+
