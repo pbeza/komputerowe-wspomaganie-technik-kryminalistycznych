@@ -60,7 +60,7 @@ class MainWindow {
             IMG_SAVE_PNG = "/img/save.png", IMG_OPEN_PNG = "/img/open.png", IMG_SEARCH_PNG = "/img/search.png",
             IMG_SETTINGS_PNG = "/img/settings.png", TITLE = "Eigenfaces - Face identification program";
     private static final int WIDTH = 1024, HEIGHT = 512, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100,
-            TOOLTIP_DISPLAY_TIME_IN_MILLISECONDS = 60000;
+            TOOLTIP_DISPLAY_TIME_IN_MILLISECONDS = 60000, MAX_DISPLAYED_RESULTS = 30;
     private final DefaultListModel<ImageListCell> imagesInAllFacesTab = new DefaultListModel<ImageListCell>();
     private final DefaultListModel<ImageListCell> imagesInFoundFacesTab = new DefaultListModel<ImageListCell>();
     private ZoomableImagePanelWrapper previewPaneAllFaces;
@@ -371,7 +371,7 @@ class MainWindow {
             }
 
             class DatabaseFaceSearcherSwingWorker extends SwingWorker<Void, Integer> {
-                private Eigenfaces.PredictedResult predictedResult;
+                private List<Eigenfaces.PredictionPoint> predictedResult;
                 private boolean trainingFailed = false;
                 private String failureDetails;
                 private final static int TIMER_DELAY = 100;
@@ -413,16 +413,16 @@ class MainWindow {
                 }
 
                 private void addFacesOfFoundLabel() {
-                    for (int i = 0; i < imagesInAllFacesTab.size(); i++) {
-                        ImageListCell c = imagesInAllFacesTab.get(i);
-                        FaceEntity f = c.getFaceEntity();
-                        if (f.getPersonId() == predictedResult.predictedLabel) {
-                            imagesInFoundFacesTab.addElement(c);
-                        }
+                    for (int i = 0; i < Math.min(MAX_DISPLAYED_RESULTS, predictedResult.size()); i++) {
+                        Eigenfaces.PredictionPoint pp = predictedResult.get(i);
+                        int index = pp.getIndexInJList();
+                        ImageListCell c = imagesInAllFacesTab.get(index);
+                        imagesInFoundFacesTab.addElement(c);
+                        c.setText(Double.toString(pp.getConfidence()));
                     }
                 }
 
-                private Eigenfaces.PredictedResult predictLabel() {
+                private List<Eigenfaces.PredictionPoint> predictLabel() {
                     // TODO remove filepath - use BufferedImage from
                     // faceToFindInDatabase instead mangling with paths
                     String facePath = faceToFindInDatabase.getFilepath();
@@ -458,12 +458,13 @@ class MainWindow {
                     mntmOpenImageToFind.setEnabled(true);
                     setEnabled(true);
                     progressBar.setValue(0);
+                    Eigenfaces.PredictionPoint bestPrediction = predictedResult.get(0);
                     final String msg = predictedResult == null
                             ? "Prediction has failed (probably low level JNI OpenCV Face module error). Make sure your training set is not empty and all images have non-negative labels' IDs."
-                            : "Face is most similar to face number " + predictedResult.predictedLabel
-                                    + ". Best image distance: " + predictedResult.predictedConfidence + ".";
-                    detailsPanelFoundFaces.setPersonId("probably " + predictedResult.predictedLabel
-                            + " (computed distance = " + predictedResult.predictedConfidence + ")");
+                            : "Face is most similar to face number " + bestPrediction.getLabel()
+                                    + ". Best image distance: " + bestPrediction.getConfidence() + ".";
+                    detailsPanelFoundFaces.setPersonId("probably " + bestPrediction.getLabel()
+                            + " (computed distance = " + bestPrediction.getConfidence() + ")");
                     JOptionPane.showMessageDialog(null, msg);
                 }
 

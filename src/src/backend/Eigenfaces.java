@@ -8,12 +8,15 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
 import org.opencv.face.BasicFaceRecognizer;
 import org.opencv.face.Face;
 
@@ -23,11 +26,32 @@ public class Eigenfaces {
     private final static Logger log = Log.getLogger();
     private final BasicFaceRecognizer eigenfacesRecognizer;
     private boolean isModelTrained = false;
-    private final PredictedResult predictedResult = new PredictedResult();
 
-    public class PredictedResult {
-        public int predictedLabel;
-        public double predictedConfidence;
+    public class PredictionPoint extends Point implements Comparable<Point> {
+
+        private final int indexInJList;
+
+        public PredictionPoint(Point p, int indexInJList) {
+            super(p.x, p.y);
+            this.indexInJList = indexInJList;
+        }
+
+        public int getLabel() {
+            return (int) x;
+        }
+
+        public double getConfidence() {
+            return y;
+        }
+
+        public int getIndexInJList() {
+            return indexInJList;
+        }
+
+        @Override
+        public int compareTo(Point o) {
+            return Double.compare(y, o.y);
+        }
     }
 
     public Eigenfaces() {
@@ -85,36 +109,36 @@ public class Eigenfaces {
         eigenfacesRecognizer.train(learningSetFaces, matLearningSetFacesLabels);
         isModelTrained = true;
         // TODO add to DB default learned model
-        // eigenfacesRecognizer.save("learned_model.xml");
     }
 
     public void saveLearnedModelInXML(String filename) {
         eigenfacesRecognizer.save(filename);
     }
 
-    public PredictedResult predictFaces(BufferedImage faceToIdentify) throws IOException, URISyntaxException {
+    public List<PredictionPoint> predictFaces(BufferedImage faceToIdentify) throws IOException, URISyntaxException {
         byte[] face = convertBufferedImageToByteArray(faceToIdentify);
         return predictFaces(face);
     }
 
-    private PredictedResult predictFaces(byte[] faceToIdentify) throws IOException, URISyntaxException {
+    private List<PredictionPoint> predictFaces(byte[] faceToIdentify) throws IOException, URISyntaxException {
         Mat face = new Mat();
         face.put(0, 0, faceToIdentify);
         return predictFaces(face);
     }
 
-    public PredictedResult predictFaces(Mat faceToIdentify) {
+    public List<PredictionPoint> predictFaces(Mat faceToIdentify) {
         if (!isModelTrained) {
             throw new AssertionError("You must train model before starting identifying face");
         }
-        int[] label_out = new int[1];
-        double[] confidence_out = new double[1];
-        eigenfacesRecognizer.predict(faceToIdentify, label_out, confidence_out);
-        predictedResult.predictedLabel = label_out[0];
-        predictedResult.predictedConfidence = confidence_out[0];
-        log.info(String.format("Predicted class = %d with confidence %f", predictedResult.predictedLabel,
-                predictedResult.predictedConfidence));
-        return predictedResult;
+        MatOfPoint2f prediction = eigenfacesRecognizer.predict_dummy(faceToIdentify);
+        List<Point> points = prediction.toList();
+        List<PredictionPoint> predictionPoints = new ArrayList<>(points.size());
+        for (int i = 0; i < points.size(); i++) {
+            Point p = points.get(i);
+            predictionPoints.add(new PredictionPoint(p, i));
+        }
+        Collections.sort(predictionPoints);
+        return predictionPoints;
     }
 
     /**
