@@ -433,6 +433,7 @@ Aby uruchomić aplikację w trybie \texttt{debug}, należy włączyć \emph{Virt
 %------------------------------------------------------------------------------
 
 \subsection{Autoryzacja}
+\label{sec:autoryzacja}
 
 Po uruchomieniu aplikacji, przed wyświetleniem się okna głównego, zostaje przeprowadzona prosta autoryzacja przez wymóg podania poprawnej nazwy użytkownika oraz hasła.
 
@@ -516,25 +517,6 @@ Ten rozdział opisuje wyniki przeprowadzonych testów funkcjonalnych aplikacji.
 
 %------------------------------------------------------------------------------
 
-\subsection{Dane testowe}
-
-\emph{TODO}
-
-%------------------------------------------------------------------------------
-
-\subsection{Wyniki testów}
-
-\emph{TODO}
-
-%------------------------------------------------------------------------------
-
-\section{Wnioski}
-\label{sec:wnioski}
-
-\emph{TODO}
-
-%------------------------------------------------------------------------------
-
 \newpage
 
 \begin{appendices}
@@ -555,32 +537,47 @@ Hasło: & \texttt{--dD3AcDc\$l@sH+\^{}x0RCrYpT0Gr@p\char`_hY--}\\
 
 \subsection{Podział pracy pisemnej}
 
-Poniższa tabela przestawia wykaz rozdziałów opracowanych przez poszczególnych członków zespołu.
+Poniższa tabela przestawia wykaz dokumentów opracowanych przez poszczególnych członków zespołu. W nawiasach podano szacowany, procentowy czas/zaangażowanie poszczególnych osób w pracę nad dokumentacją w \LaTeX.
 
 \begin{table}[H]
 \center
-\begin{tabular}{p{2.5cm}|p{4cm}|p{4cm}|p{4cm}}
-& Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
-\parbox{3cm}{\ \\Opracowane \\rozdziały} & \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:maszyna-wirtualna}, \ref{sec:aplikacja}, \ref{sec:testy}, \ref{sec:wnioski} & Instrukcja użytkowanika (manual) & --\\
+\begin{tabular}{p{2cm}|p{4.1cm}|p{4.1cm}|p{4.1cm}}
+& Patryk Bęza (90\%) & Marek Kozak (10\%) & Krzysztof Małaśnicki (0\%) \\\hline\hline
+\parbox{3cm}{\ \\Opracowane \\dokumenty} & Dokumentacja techniczna, czyli cały niniejszy dokument (rozdziały: \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:maszyna-wirtualna}, \ref{sec:aplikacja}, \ref{sec:testy}) & Instrukcja użytkowanika (manual) & --\\
 \end{tabular}
 \end{table}
 
 \subsection{Podział implementacji}
 
-Poniższa tabela przestawia podział prac implementacyjnych w ramach projektu.
+Poniżej wyszczególniono podział prac implementacyjnych w ramach projektu. W nawiasach podano szacowany, procentowy czas/zaangażowanie poszczególnych osób w implementację i konfigurację projektu.
 
-\begin{table}[H]
-\center
-\begin{tabular}{p{2.5cm}|p{4cm}|p{4cm}|p{4cm}}
-& Patryk Bęza & Marek Kozak & Krzysztof Małaśnicki \\\hline\hline
-\multirow{3}{*}{\parbox{3cm}{\ \\Opracowane \\funkcjonalności}} & $\bullet$ Konfiguracja środowiska, modyfikacja kodu i kompilacja \emph{OpenCV} z modułem \emph{Faces} na system \emph{Windows} i \emph{Linux} & -- & $\bullet$ Dodanie pierwszej wersji \emph{progress bar'a} i przeniesienie kilku elementów z karty \emph{All faces} do \emph{Found faces}\\
-& $\bullet$ Obsługa algorytmu \emph{eigenfaces} w Javie & &\\
-& $\bullet$ Implementacja interfejsu graficznego & &\\
-& $\bullet$ Implementacja skryptu generującego plik CSV z listą zdjęć z bazy danych w \emph{Pythonie} & &\\
-& $\bullet$ Skonfigurowanie bazy danych \emph{PostgreSQL} i \emph{Hibernate'a} & &\\
-& $\bullet$ Skonfigurowanie maszyny wirtualnej & &\\
-\end{tabular}
-\end{table}
+\begin{itemize}
+\item Patryk Bęza (95\%):
+	\begin{enumerate}
+		\item Implementacja całego programu i konfiguracja środowisk towarzyszących. W szczególności: implementacja wszystkich funkcjonalności aplikacji poza implementacją pierwszej wersji paska postępu. Szczegółowy wykaz wykonanych zadań:
+		\item Kompilacja biblioteki \emph{OpenCV~Contrib} razem z \emph{wrapperem} dla Javy na systemy operacyjne \emph{Windows} i \emph{Linux}~(patrz rozdział:~\ref{sec:trudnosci}).
+		\item Obsługa logiki wywołań funkcji obsługujących algorytm \emph{eigenfaces} z biblioteki \emph{OpenCV~Contib} po stronie kodu w Javie.
+		\item Kontakt z \emph{developerem} w sprawie pomocy w dokonaniu drobnych zmian w bibliotece \emph{OpenCV~Faces} w C++ i dokonanie tych zmian~(patrz rozdział:~\ref{sec:trudnosci}).
+		\item Implementacja interfejsu graficznego poza pierwszą wersją paska postępu.
+		\item Implementacja skryptu generującego plik CSV z listą zdjęć z bazy danych w \emph{Pythonie}.
+		\item Obsługa bazy danych za pomocą \emph{Hibernate} w Javie, w szczególności przygotowanie funkcji do automatycznego załadowania 165 zdjęć twarzy do bazy danych \emph{PostgreSQL}.
+		\item Konfiguracja bazy danych \emph{PostgreSQL}, w szczególności utworzenie tabeli ze zdjęciami twarzy i jej wypełnienie rekordami ze zdjęciami twarzy.
+		\item Implementacja logowania zdarzeń w programie do logów.
+		\item Implementacja logowania do aplikacji~(patrz rozdział:~\ref{sec:autoryzacja}).
+		\item Implementacja możliwości przybliżania i oddalania zdjęcia.
+		\item Implementacja wyświetlania szczegółów dotyczących aktualnie wybranego zdjęcia.
+		\item Implementacja okna ustawień programu.
+		\item Przygotowanie maszyny wirtualnej \emph{VirtualBox}.
+	\end{enumerate}
+\item Krzysztof Małaśnicki (5\%):
+	\begin{enumerate}
+		\item Dodanie pierwszej wersji \emph{progress bar'a} i przeniesienie kilku gotowych elementów z karty \emph{All faces} do \emph{Found faces}.
+	\end{enumerate}
+\item Marek Kozak (0\%):
+	\begin{enumerate}
+		\item Brak.
+	\end{enumerate}
+\end{itemize}
 
 \end{appendices}
 
