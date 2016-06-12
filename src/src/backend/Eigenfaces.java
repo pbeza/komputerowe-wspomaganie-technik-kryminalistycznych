@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.swing.JOptionPane;
+
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -24,8 +26,10 @@ import backend.db.FaceEntity;
 
 public class Eigenfaces {
     private final static Logger log = Log.getLogger();
-    private final BasicFaceRecognizer eigenfacesRecognizer;
+    private BasicFaceRecognizer eigenfacesRecognizer;
     private boolean isModelTrained = false;
+    private double threshold = Double.MAX_VALUE;
+    private int eigenfacesNumber = 0;
 
     public class PredictionPoint extends Point implements Comparable<Point> {
 
@@ -58,9 +62,22 @@ public class Eigenfaces {
         log.info("Loading OpenCV libraries...");
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         log.info("Loading OpenCV libraries successfully loaded");
-        // TODO use more flexible constructor:
-        // Face.createEigenFaceRecognizer(int num_components, double threshold)
-        eigenfacesRecognizer = Face.createEigenFaceRecognizer();
+    }
+
+    public int getEigenfacesNumber() {
+        return eigenfacesNumber;
+    }
+
+    public void setEigenfacesNumber(int eigenfacesNumber) {
+        this.eigenfacesNumber = eigenfacesNumber;
+    }
+
+    public double getThreshold() {
+        return threshold;
+    }
+
+    public void setThreshold(double threshold) {
+        this.threshold = threshold;
     }
 
     public boolean getIsModelTrained() {
@@ -106,13 +123,18 @@ public class Eigenfaces {
             log.warning("Failed to delete " + tmpGifFilepath + " temporary file");
         }
         Mat matLearningSetFacesLabels = labelsToMat(learningSetFacesLabels);
+        eigenfacesRecognizer = Face.createEigenFaceRecognizer(eigenfacesNumber, threshold);
         eigenfacesRecognizer.train(learningSetFaces, matLearningSetFacesLabels);
         isModelTrained = true;
         // TODO add to DB default learned model
     }
 
     public void saveLearnedModelInXML(String filename) {
-        eigenfacesRecognizer.save(filename);
+        if (isModelTrained) {
+            eigenfacesRecognizer.save(filename);
+        } else {
+            JOptionPane.showMessageDialog(null, "Train your model first!");
+        }
     }
 
     public List<PredictionPoint> predictFaces(BufferedImage faceToIdentify) throws IOException, URISyntaxException {

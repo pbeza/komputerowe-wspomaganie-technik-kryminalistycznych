@@ -4,33 +4,42 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
-import java.text.NumberFormat;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.NumberFormatter;
 
+import backend.Log;
 import net.miginfocom.swing.MigLayout;
 
 class SettingsDialog extends JDialog {
 
-    private static final String DIALOG_TITLE = "Algorithm settings";
-    private static final int WIDTH = 500, HEIGHT = 200, COLUMNS = 20, MIN_ALLOWED_EIGENFACES_NUMBER = 0,
-            MAX_ALLOWED_EIGENFACES_NUMBER = Integer.MAX_VALUE, DEFAULT_EIGENFACES_NUMBER = 0;
-    private static final double MIN_ALLOWED_THRESHOLD_NUMBER = 0.0, MAX_ALLOWED_THRESHOLD_NUMBER = Double.MAX_VALUE,
-            DEFAULT_THRESHOLD = Double.MAX_VALUE;
+    private final static Logger log = Log.getLogger();
+    private static final String DIALOG_TITLE = "Algorithm settings", LEFT_COLUMN_CONSTRAINTS = "alignx trailing",
+            RIGHT_COLUMN_CONSTRAINTS = "wrap";
+    private static final int WIDTH = 500, HEIGHT = 200, EMPTY_BORDER_MARGIN = 5, MIN_ALLOWED_EIGENFACES_NUMBER = 0,
+            MAX_ALLOWED_EIGENFACES_NUMBER = Integer.MAX_VALUE, DEFAULT_ALLOWED_EIGENFACES_NUMBER = 0,
+            FACES_SPINNER_STEP_SIZE = 1, MIN_MAX_NUMBER_OF_DISPLAYED_RESULTS = 1;
+    public static final int MAX_MAX_NUMBER_OF_DISPLAYED_RESULTS = 1000, DEFAULT_MAX_NUMBER_OF_DISPLAYED_RESULTS = 30,
+            MAX_DISPLAYED_FACES_STEP_SIZE = 1, SPINNER_WIDTH = 200;
+    private static final double DEFAULT_ALLOWED_THRESHOLD = Double.MAX_VALUE, MIN_ALLOWED_THRESHOLD = 1.0,
+            MAX_ALLOWED_THRESHOLD = Double.MAX_VALUE, THRESHOLD_SPINNER_STEP_SIZE = 0.1;
     private final JPanel contentPanel = new JPanel();
     private boolean pressedOk = false;
-    private final JFormattedTextField eigenfacesNumberFormattedTextField, thresholdFormattedTextField;
+    private final JSpinner eigenfacesJSpinner = new JSpinner(), thresholdJSpinner = new JSpinner(),
+            maxNumbersOfDisplayedResultsJSpinner = new JSpinner();
 
     /**
      * Create the dialog.
      */
-    public SettingsDialog(Frame owner) {
+    public SettingsDialog(Frame owner, int eigenfacesNumber, double threshold, int maxNumbersOfDisplayedResults) {
         super(owner);
         setTitle(DIALOG_TITLE);
         setModalityType(ModalityType.APPLICATION_MODAL);
@@ -38,54 +47,14 @@ class SettingsDialog extends JDialog {
         setSize(new Dimension(WIDTH, HEIGHT));
         setResizable(false);
         getContentPane().setLayout(new BorderLayout());
-        contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        contentPanel.setBorder(
+                new EmptyBorder(EMPTY_BORDER_MARGIN, EMPTY_BORDER_MARGIN, EMPTY_BORDER_MARGIN, EMPTY_BORDER_MARGIN));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
-        contentPanel.setLayout(new MigLayout("fill", "center"));
+        contentPanel.setLayout(new MigLayout("fill", "left"));
 
-        final String leftColumnConstraints = "alignx trailing", rightColumnConstraints = "wrap";
-
-        // Eigenfaces number label
-
-        JLabel eigenfacesNumberLabel = new JLabel("Components / eigenfaces");
-        contentPanel.add(eigenfacesNumberLabel, leftColumnConstraints);
-
-        // Formatter for eigenfaces number formatted text field
-
-        NumberFormat format = NumberFormat.getInstance();
-        NumberFormatter formatter = new NumberFormatter(format);
-        formatter.setValueClass(Integer.class);
-        formatter.setMinimum(MIN_ALLOWED_EIGENFACES_NUMBER);
-        formatter.setMaximum(MAX_ALLOWED_EIGENFACES_NUMBER);
-
-        // Eigenfaces number formatted text field
-
-        eigenfacesNumberFormattedTextField = new JFormattedTextField(formatter);
-        eigenfacesNumberFormattedTextField.setToolTipText("Number of eigenfaces / components.");
-        eigenfacesNumberFormattedTextField.setText(Integer.toString(DEFAULT_EIGENFACES_NUMBER));
-        eigenfacesNumberFormattedTextField.setColumns(COLUMNS);
-        contentPanel.add(eigenfacesNumberFormattedTextField, rightColumnConstraints);
-
-        // Threshold label
-
-        JLabel lblThreshold = new JLabel("Threshold");
-        contentPanel.add(lblThreshold, leftColumnConstraints);
-
-        // Formatter for eigenfaces number formatted text field
-
-        NumberFormat format2 = NumberFormat.getInstance();
-        NumberFormatter formatter2 = new NumberFormatter(format2);
-        formatter2.setValueClass(Double.class);
-        formatter2.setMinimum(MIN_ALLOWED_THRESHOLD_NUMBER);
-        formatter2.setMaximum(MAX_ALLOWED_THRESHOLD_NUMBER);
-
-        // Threshold formatted text field
-
-        thresholdFormattedTextField = new JFormattedTextField(formatter2);
-        thresholdFormattedTextField.setToolTipText(
-                "If image's distance from identified image is greater than threshold, than image is discarded. By default it is set to Double.MAX_VALUE.");
-        thresholdFormattedTextField.setText(Double.toString(DEFAULT_THRESHOLD));
-        thresholdFormattedTextField.setColumns(COLUMNS);
-        contentPanel.add(thresholdFormattedTextField, rightColumnConstraints);
+        addEigenfacesNumberRow(eigenfacesNumber);
+        addThresholdRow(threshold);
+        addMaxNumbersOfDisplayedResults(maxNumbersOfDisplayedResults);
 
         // Bottom panel
 
@@ -98,8 +67,21 @@ class SettingsDialog extends JDialog {
         JButton okButton = new JButton("OK");
         okButton.setActionCommand("OK");
         okButton.addActionListener(e -> {
-            pressedOk = false;
-            SettingsDialog.this.setVisible(false);
+            try {
+                thresholdJSpinner.commitEdit();
+                eigenfacesJSpinner.commitEdit();
+            } catch (Exception e1) {
+                log.warning("Commiting settings value has failed.");
+                return;
+            }
+            if (thresholdJSpinner.getValue() == null) {
+                JOptionPane.showMessageDialog(null, "Threshold value must be nonegative floating value.");
+            } else if (eigenfacesJSpinner.getValue() == null) {
+                JOptionPane.showMessageDialog(null, "Eigenfaces number must be nonegative integer.");
+            } else {
+                pressedOk = true;
+                SettingsDialog.this.setVisible(false);
+            }
         });
         buttonPane.add(okButton);
         getRootPane().setDefaultButton(okButton);
@@ -109,10 +91,62 @@ class SettingsDialog extends JDialog {
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setActionCommand("Cancel");
         cancelButton.addActionListener(e -> {
-            pressedOk = true;
+            pressedOk = false;
             SettingsDialog.this.setVisible(false);
         });
         buttonPane.add(cancelButton);
+    }
+
+    private void setSpinnerWidth(JSpinner spinner) {
+        JComponent field = spinner.getEditor();
+        Dimension prefSize = field.getPreferredSize();
+        prefSize = new Dimension(SPINNER_WIDTH, prefSize.height);
+        field.setPreferredSize(prefSize);
+    }
+
+    private void addThresholdRow(double threshold) {
+        JLabel lblThreshold = new JLabel("Threshold");
+        contentPanel.add(lblThreshold, LEFT_COLUMN_CONSTRAINTS);
+
+        thresholdJSpinner.setToolTipText(
+                "If distance between identified image and best found face's image is greater than threshold, than image is discarded and won't be displayed. Default value is maximum possible which is Double.MAX_VALUE.");
+        thresholdJSpinner.setValue(threshold);
+        thresholdJSpinner.setModel(new SpinnerNumberModel(DEFAULT_ALLOWED_THRESHOLD, MIN_ALLOWED_THRESHOLD,
+                MAX_ALLOWED_THRESHOLD, THRESHOLD_SPINNER_STEP_SIZE));
+        thresholdJSpinner.setEditor(new JSpinner.NumberEditor(thresholdJSpinner, "0.######E0"));
+        contentPanel.add(thresholdJSpinner, RIGHT_COLUMN_CONSTRAINTS);
+
+        setSpinnerWidth(thresholdJSpinner);
+    }
+
+    private void addEigenfacesNumberRow(int eigenfacesNumber) {
+        JLabel eigenfacesNumberLabel = new JLabel("Components / eigenfaces");
+        contentPanel.add(eigenfacesNumberLabel, LEFT_COLUMN_CONSTRAINTS);
+
+        eigenfacesJSpinner.setToolTipText(
+                "Number of eigenfaces (components). 0 is handled in special way: it indicates that OpenCV should use its default value for face's components number.");
+        eigenfacesJSpinner.setValue(eigenfacesNumber);
+        eigenfacesJSpinner.setModel(new SpinnerNumberModel(DEFAULT_ALLOWED_EIGENFACES_NUMBER,
+                MIN_ALLOWED_EIGENFACES_NUMBER, MAX_ALLOWED_EIGENFACES_NUMBER, FACES_SPINNER_STEP_SIZE));
+        eigenfacesJSpinner.setEditor(new JSpinner.NumberEditor(eigenfacesJSpinner));
+        contentPanel.add(eigenfacesJSpinner, RIGHT_COLUMN_CONSTRAINTS);
+
+        setSpinnerWidth(eigenfacesJSpinner);
+    }
+
+    private void addMaxNumbersOfDisplayedResults(int maxNumbersOfDisplayedResults) {
+        JLabel maxNumbersOfDisplayedResultsLabel = new JLabel("Max number of displayed results");
+        contentPanel.add(maxNumbersOfDisplayedResultsLabel, LEFT_COLUMN_CONSTRAINTS);
+
+        maxNumbersOfDisplayedResultsJSpinner.setToolTipText("Maximum number of displayed results.");
+        maxNumbersOfDisplayedResultsJSpinner.setValue(maxNumbersOfDisplayedResults);
+        maxNumbersOfDisplayedResultsJSpinner.setModel(
+                new SpinnerNumberModel(DEFAULT_MAX_NUMBER_OF_DISPLAYED_RESULTS, MIN_MAX_NUMBER_OF_DISPLAYED_RESULTS,
+                        MAX_MAX_NUMBER_OF_DISPLAYED_RESULTS, MAX_DISPLAYED_FACES_STEP_SIZE));
+        maxNumbersOfDisplayedResultsJSpinner.setEditor(new JSpinner.NumberEditor(maxNumbersOfDisplayedResultsJSpinner));
+        contentPanel.add(maxNumbersOfDisplayedResultsJSpinner, RIGHT_COLUMN_CONSTRAINTS);
+
+        setSpinnerWidth(maxNumbersOfDisplayedResultsJSpinner);
     }
 
     private boolean okPressed() {
@@ -125,10 +159,14 @@ class SettingsDialog extends JDialog {
     }
 
     public double getThreshold() {
-        return (double) thresholdFormattedTextField.getValue();
+        return (double) thresholdJSpinner.getValue();
     }
 
     public int getEigenfacesNumber() {
-        return (int) eigenfacesNumberFormattedTextField.getValue();
+        return (int) eigenfacesJSpinner.getValue();
+    }
+
+    public int getMaxNumberOfDisplayedResults() {
+        return (int) maxNumbersOfDisplayedResultsJSpinner.getValue();
     }
 }

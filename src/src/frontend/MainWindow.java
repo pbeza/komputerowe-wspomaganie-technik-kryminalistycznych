@@ -60,7 +60,7 @@ class MainWindow {
             IMG_SAVE_PNG = "/img/save.png", IMG_OPEN_PNG = "/img/open.png", IMG_SEARCH_PNG = "/img/search.png",
             IMG_SETTINGS_PNG = "/img/settings.png", TITLE = "Eigenfaces - Face identification program";
     private static final int WIDTH = 1024, HEIGHT = 512, MIN_WINDOW_WIDTH = 300, MIN_WINDOW_HEIGHT = 100,
-            TOOLTIP_DISPLAY_TIME_IN_MILLISECONDS = 60000, MAX_DISPLAYED_RESULTS = 30;
+            TOOLTIP_DISPLAY_TIME_IN_MILLISECONDS = 60000;
     private final DefaultListModel<ImageListCell> imagesInAllFacesTab = new DefaultListModel<ImageListCell>();
     private final DefaultListModel<ImageListCell> imagesInFoundFacesTab = new DefaultListModel<ImageListCell>();
     private ZoomableImagePanelWrapper previewPaneAllFaces;
@@ -72,6 +72,7 @@ class MainWindow {
     private boolean duringSearchingInDatabase = false;
     private ImageListCell faceToFindInDatabase;
     private JFrame mainWindowFrame;
+    private final SettingsDialog settingsDialog;
     private final static DatabaseConnectionManager dbConnectionManager = DatabaseConnectionManager.getInstance();
 
     public static void main(String[] args) {
@@ -124,6 +125,8 @@ class MainWindow {
         initAllFacesTab(splitPaneAllFaces);
         initFoundFacesTab();
         loadPredefinedImagesToAllFacesTab(); // TODO it should be asynchronous
+        settingsDialog = new SettingsDialog(mainWindowFrame, eigenfaces.getEigenfacesNumber(),
+                eigenfaces.getThreshold(), SettingsDialog.DEFAULT_MAX_NUMBER_OF_DISPLAYED_RESULTS);
     }
 
     private void initMainWindow() {
@@ -297,12 +300,16 @@ class MainWindow {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                final SettingsDialog p = new SettingsDialog(mainWindowFrame);
-                p.setLocationRelativeTo(null);
-                p.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                if (p.showDialog()) {
-                    // TODO update settings
-                    log.info("TODO: update settings");
+                settingsDialog.setLocationRelativeTo(null);
+                settingsDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                if (settingsDialog.showDialog()) {
+                    eigenfaces.setModelTrained(false);
+                    double threshold = settingsDialog.getThreshold();
+                    eigenfaces.setThreshold(threshold);
+                    int eigenfacesNumber = settingsDialog.getEigenfacesNumber();
+                    eigenfaces.setEigenfacesNumber(eigenfacesNumber);
+                    JOptionPane.showMessageDialog(null, "Settings updated successfully.");
+                    log.info("Settings has been updated");
                 }
             }
         });
@@ -413,7 +420,8 @@ class MainWindow {
                 }
 
                 private void addFacesOfFoundLabel() {
-                    for (int i = 0; i < Math.min(MAX_DISPLAYED_RESULTS, predictedResult.size()); i++) {
+                    int maxDisplayedResults = settingsDialog.getMaxNumberOfDisplayedResults();
+                    for (int i = 0; i < Math.min(maxDisplayedResults, predictedResult.size()); i++) {
                         Eigenfaces.PredictionPoint pp = predictedResult.get(i);
                         int index = pp.getIndexInJList();
                         ImageListCell c = imagesInAllFacesTab.get(index);
@@ -458,14 +466,19 @@ class MainWindow {
                     mntmOpenImageToFind.setEnabled(true);
                     setEnabled(true);
                     progressBar.setValue(0);
-                    Eigenfaces.PredictionPoint bestPrediction = predictedResult.get(0);
-                    final String msg = predictedResult == null
-                            ? "Prediction has failed (probably low level JNI OpenCV Face module error). Make sure your training set is not empty and all images have non-negative labels' IDs."
-                            : "Face is most similar to face number " + bestPrediction.getLabel()
-                                    + ". Best image distance: " + bestPrediction.getConfidence() + ".";
-                    detailsPanelFoundFaces.setPersonId("probably " + bestPrediction.getLabel()
-                            + " (computed distance = " + bestPrediction.getConfidence() + ")");
-                    JOptionPane.showMessageDialog(null, msg);
+                    final String title = "Prediction computation result";
+                    if (predictedResult == null) {
+                        String msg = "Prediction has failed (probably low level JNI OpenCV Face module error). Make sure your training set is not empty and all images have non-negative labels' IDs.";
+                        JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE);
+                    } else {
+                        Eigenfaces.PredictionPoint bestPrediction = predictedResult.get(0);
+                        final String msg = "Face ID of the most similar face: " + bestPrediction.getLabel()
+                                + " (distance: " + bestPrediction.getConfidence()
+                                + ").\n\nRest of the matched photos is sorted in descending order with respect\nto the similarity distance. Hover face's icon to see computed distance.";
+                        detailsPanelFoundFaces.setPersonId("probably " + bestPrediction.getLabel()
+                                + " (computed distance = " + bestPrediction.getConfidence() + ")");
+                        JOptionPane.showMessageDialog(null, msg, title, JOptionPane.INFORMATION_MESSAGE);
+                    }
                 }
 
                 @Override
@@ -577,18 +590,13 @@ class MainWindow {
                 c.setAcceptAllFileFilterUsed(false);
                 final int result = c.showOpenDialog(mainWindowFrame);
                 if (result == JFileChooser.APPROVE_OPTION) {
-                    boolean success = false;
                     try {
-                        success = addFacesToAllFacesTabFromFile(Arrays.asList(c.getSelectedFiles()));
+                        addFacesToAllFacesTabFromFile(Arrays.asList(c.getSelectedFiles()));
                         eigenfaces.setModelTrained(false);
                     } catch (IOException e1) {
                         JOptionPane.showMessageDialog(mainWindowFrame,
                                 "Loading files has failed - see log to learn more");
                         log.warning(e1.getMessage() + e1.getCause());
-                    }
-                    if (!success) {
-                        JOptionPane.showMessageDialog(mainWindowFrame,
-                                "Loading files has failed. At least one of the selected images has size different than images already uploaded to database.");
                     }
                 }
             }
@@ -621,7 +629,7 @@ class MainWindow {
         log.info("All faces removed from all faces tab");
     }
 
-    private boolean addFacesToAllFacesTabFromFile(List<File> faces) throws IOException {
+    private void addFacesToAllFacesTabFromFile(List<File> faces) throws IOException {
         log.info("Adding " + faces.size() + " faces from file(s):");
         int w = 0, h = 0;
         List<ImageListCell> transactionList = new ArrayList<>();
@@ -633,10 +641,16 @@ class MainWindow {
         }
         for (File f : faces) {
             BufferedImage img = ImageIO.read(f);
+            if (img == null) {
+                JOptionPane.showMessageDialog(null, "Image format not recognized");
+                return;
+            }
             if (!imagesInAllFacesTab.isEmpty() && !(w == img.getWidth() && h == img.getHeight())) {
-                log.warning(f.getCanonicalPath()
-                        + " file has different size than images in database which is not acceptable by algorithm");
-                return false;
+                String msg = f.getCanonicalPath()
+                        + " file has different size than images in database which is not acceptable by algorithm";
+                JOptionPane.showMessageDialog(null, msg);
+                log.warning(msg);
+                return;
             }
             ImageListCell cell = new ImageListCell(f);
             transactionList.add(cell);
@@ -645,7 +659,6 @@ class MainWindow {
         for (ImageListCell c : transactionList) {
             imagesInAllFacesTab.addElement(c);
         }
-        return true;
     }
 
     private void addFacesToAllFacesTab(List<FaceEntity> allFaces) {
