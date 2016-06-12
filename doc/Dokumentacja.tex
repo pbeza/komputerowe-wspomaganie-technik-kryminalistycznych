@@ -581,6 +581,46 @@ Poniżej wyszczególniono podział prac implementacyjnych w ramach projektu. W n
 
 \end{appendices}
 
+\subsection{Statystyki \texttt{git stats}}
+
+Na rysunku~\ref{fig:git-stats} przedstawiono sumaryczną zależność liczby linii kodu i dokumentacji, wgranych do repozytorium \texttt{git} projektu, od czasu i autora. Statystyki zostały wygenerowane w pełni automatycznie w dniu 12.06.2016, przez program \texttt{git~stats}, wydany na licencji \texttt{GPLv2/GPLv3}~\cite{www:git-stats}.
+
+Na rysunku~\ref{fig:git-stats} zostało przedstawionych 5 krzywych reprezentujących aktywność poszczególnych użytkowników. Ilość krzywych nie równa się ilości autorów niniejszego projektu, co wynika z tego, że użytkownicy zmienili swoje wyświetlane nazwy użytkownika, po dokonaniu pierwszego \emph{commitu}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{l|l}
+Imię i nazwisko autora & Nazwa użytkownika \texttt{git}\\\hline\hline
+\multirow{2}{*}{Patryk Bęza} & \texttt{Patryk Bęza}\\\cline{2-2}
+& \texttt{Patryk}\\\hline
+\multirow{2}{*}{Krzysztof Małaśnicki} & \texttt{Krzysztof Malasnicki}\\\cline{2-2}
+& \texttt{A A}\\\hline
+Marek Kozak & \texttt{absvurd}
+\end{tabular}
+\caption{Przyporządkowanie nazw użytkowników do imion i nazwisk autorów}
+\end{table}
+
+\begin{figure}[H]
+\center
+\includegraphics[width=0.92\textwidth]{img/git_stats-lines_of_code_by_author}
+\caption{Statystyki \texttt{git~stats} ilości linii wgranych do repozytorium kodu}
+\label{fig:git-stats}
+\end{figure}
+
+\begin{figure}[H]
+\center
+\includegraphics[width=0.92\textwidth]{img/git_stats-commits_by_author}
+\caption{Statystyki \texttt{git~stats} ilości \emph{commitów} w repozytorium kodu}
+\label{fig:git-stats}
+\end{figure}
+
+\begin{figure}[H]
+\center
+\includegraphics[width=0.92\textwidth]{img/git_stats-commits}
+\caption{Tabela \texttt{git stats} ze statystykami dotyczącymi aktywności \emph{commitów}}
+\label{fig:git-stats}
+\end{figure}
+
 %------------------------------------------------------------------------------
 
 \clearpage
