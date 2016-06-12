@@ -163,6 +163,16 @@ Pierwszorzędnym celem aplikacji \emph{nie} jest szybkie działanie, co można u
 
 %------------------------------------------------------------------------------
 
+\subsection{Zmiany założeń względem dokumentacji wstępnej}
+
+Trudności, które wynikły w czasie projektu (patrz rozdziały:~\ref{sec:trudnosci}, \ref{sec:podzial-prac}) wymusiły częściową zmianę wymagań postawionych przed aplikacją w czasie pisania dokumentacji wstępnej. W szczególności zrezygnowano z wyświetlania zgodności twarzy znalezionej z wyszukiwaną twarzą, wyrażonej w procentach. Zamiast tego wykorzystano miarę używaną przez użytą bibliotekę \emph{OpenCV}, nazywaną odległością (\emph{ang.~distance}). Twarze znalezione są posortowane względem tej miary rosnąco. Miarę tę można wyświetlić najeżdżając myszą na wybrane, znalezione przez aplikację zdjęcie.
+
+Ponadto zrezygnowano z funkcjonalności znanej z takich programów jak \emph{Gimp} i \emph{Photoshop} pod nazwą \emph{crop}, która pozwalałaby przycinać zdjęcie do zaznaczonych przez użytkownika wymiarów. Wiązałoby się to bowiem z trudnym do wymuszenia na użytkowniku ograniczeniem w zaznaczeniu części zdjęcia, z zachowaniem proporcji całego zdjęcia, a następnie przeskalowania zdjęcia do rozmiaru pozostałych zdjęć. Rozmiar wszystkich zdjęć z założenia musi być identyczny. Alternatywnie możnaby było pozwolić użytkownikowi zaznaczać dowolny obszar zdjęcia, a potem skalować go do zadanego wymiaru pozostałych zdjęć, ale taka funkcjonalność nie była konieczna przy testach z bazą danych, w której zdjęcia twarzy były zunifikowane -- tzn. mają takie same wymiary, a twarze są wyśrodkowane na zdjęciu. Ponadto taka funkcjonalność jest sporym wydatkiem pracy, który zamiast tego został przeznaczony na rozbudowę nieplanowanej funkcjonalności, jakim było np. okno ustawień.
+
+Zmiany nie dotyczyły tylko ograniczenia funkcjonalności, ale również jej powiększenia w niektórych aspektach. Nieplanowanym bowiem było zapisywanie nauczonego modelu do pliku XML oraz okno ustawień algorytmu, które pojawiło się w ostatecznej wersji projektu. Pozwala ono zmienić parametry obliczeń: próg akceptowalnej odległości zdjęć (\emph{ang.~threshold}), maksymalną ilość wyświetlanych, znalezionych zdjęć oraz ilość komponentów \emph{eigenfaces}\footnote{Wartość 0 (zero) jest specjalnie traktowana i oznacza automatyczne dopasowanie ilości komponentów \emph{eigenfaces} przez \emph{OpenCV}.} używanych w trakcie obliczeń.
+
+%------------------------------------------------------------------------------
+
 \section{Algorytm}
 \label{sec:algorytm}
 
@@ -522,6 +532,7 @@ Ten rozdział opisuje wyniki przeprowadzonych testów funkcjonalnych aplikacji.
 \begin{appendices}
 
 \section{Podział prac}
+\label{sec:podzial-prac}
 
 Cała praca nad projektem była prowadzona w ramach prowadzonego repozytorium kodu \texttt{git} -- jest tam zarówno kod źródłowy aplikacji jak i kod \LaTeX~dokumentacji. Podgląd historii podziału prac i postępów prac w kolejnych tygodniach projektu można podejrzeć na stronie projektu:
 \begin{center}
@@ -543,7 +554,7 @@ Poniższa tabela przestawia wykaz dokumentów opracowanych przez poszczególnych
 \center
 \begin{tabular}{p{2cm}|p{4.1cm}|p{4.1cm}|p{4.1cm}}
 & Patryk Bęza (90\%) & Marek Kozak (10\%) & Krzysztof Małaśnicki (0\%) \\\hline\hline
-\parbox{3cm}{\ \\Opracowane \\dokumenty} & Dokumentacja techniczna, czyli cały niniejszy dokument (rozdziały: \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:maszyna-wirtualna}, \ref{sec:aplikacja}, \ref{sec:testy}) & Instrukcja użytkowanika (manual) & --\\
+\parbox{3cm}{\ \\Opracowane \\dokumenty} & Dokumentacja techniczna, czyli cały niniejszy dokument (rozdziały: \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:maszyna-wirtualna}, \ref{sec:aplikacja}, \ref{sec:testy}) & Instrukcja użytkownika (manual) & --\\
 \end{tabular}
 \end{table}
 
