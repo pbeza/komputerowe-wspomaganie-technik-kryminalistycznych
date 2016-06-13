@@ -18,6 +18,8 @@
 \usepackage{array}
 \usepackage{enumitem}
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{hyperref}
 %\usepackage{indentfirst}
 \usepackage{longtable}
@@ -396,6 +398,41 @@ Za główne dane wejściowe aplikacji uważamy:
 	\item znormalizowane\footnote{Przez znormalizowane zdjęcia rozumiemy zdjęcia o takich samych wymiarach z twarzą wyśrodkowaną na zdjęciu.} zdjęcie identyfikowanej osoby,
 	\item baza danych znanych twarzy\footnote{W trakcie pisania niniejszej dokumentacji, w bazie danych znajduje się 165 zdjęć 15 osób -- po 11 zdjęć twarzy każdej z osób -- każde z 11 zdjęć z inną mimiką twarzy.}.
 \end{enumerate}
+Przykładowe zdjęcia twarzy osób, które znalazły się w bazie danych, wraz ze zdjęciami testowymi, które są zmodyfikowanymi twarzami osób z bazy danych, przestawiono na rysunku~\ref{fig:osoby}. Twarze testowe, które stworzono modyfikując zdjęcia oryginalne w programie graficznym \emph{Gimp}, można znaleźć w katalogu projektu \path{faces/Tests}, ,,obok'' katalogu ze zdjęciami oryginalnymi, tj.~\path{faces/YaleFacedatabaseA}.
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.3\textwidth}
+		\includegraphics[width=\textwidth]{img/yale-faces/subject03-normal}
+		\caption{Mimika zwykła}
+	\end{subfigure}
+	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
+	%(or a blank line to force the subfigure onto a new line)
+	\begin{subfigure}[b]{0.3\textwidth}
+		\includegraphics[width=\textwidth]{img/yale-faces/subject03-glasses}
+		\caption{Z okularami}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}
+		\includegraphics[width=\textwidth]{img/yale-faces/subject03-surprised}
+		\caption{Zaskoczenie}
+		\label{fig:mouse}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}
+		\includegraphics[width=\textwidth]{img/yale-faces/modified-subject03-glasses-1}
+		\caption{Zdjęcie testowe~\#1}
+		\label{fig:mouse}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}
+		\includegraphics[width=\textwidth]{img/yale-faces/modified-subject03-glasses-3}
+		\caption{Zdjęcie testowe~\#2}
+		\label{fig:mouse}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}
+		\includegraphics[width=\textwidth]{img/yale-faces/modified-subject03-glasses-4}
+		\caption{Zdjęcie testowe~\#3}
+		\label{fig:mouse}
+	\end{subfigure}
+	\caption{Przykładowe zdjęcia twarzy osoby oznaczonej identyfikatorem \texttt{personID~=~3}}\label{fig:osoby}
+\end{figure}
 
 %------------------------------------------------------------------------------
 
@@ -622,14 +659,14 @@ Marek Kozak & \texttt{absvurd}
 \center
 \includegraphics[width=0.92\textwidth]{img/git_stats-commits_by_author}
 \caption{Statystyki \texttt{git~stats} ilości \emph{commitów} w repozytorium kodu}
-\label{fig:git-stats}
+\label{fig:git-stats-2}
 \end{figure}
 
 \begin{figure}[H]
 \center
 \includegraphics[width=0.92\textwidth]{img/git_stats-commits}
 \caption{Tabela \texttt{git stats} ze statystykami dotyczącymi aktywności \emph{commitów}}
-\label{fig:git-stats}
+\label{fig:git-stats-3}
 \end{figure}
 
 %------------------------------------------------------------------------------
