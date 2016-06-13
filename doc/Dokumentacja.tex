@@ -176,7 +176,7 @@ Zmiany nie dotyczyły tylko ograniczenia funkcjonalności, ale również jej pow
 \section{Algorytm}
 \label{sec:algorytm}
 
-Do rozpoznawania twarzy została zastosowana \emph{metoda analizy głównych składowych}~(ang.~\emph{Principal Component Analysis} -- w~skrócie:~PCA), zaproponowana niezależnie przez angielskiego matematyka \emph{Karla Pearson'a}~(1901) oraz ekonoma i statystyka \emph{Harolda Hotelling'a}~(1933).
+Do rozpoznawania twarzy została zastosowana \emph{metoda analizy głównych składowych}~(ang.~\emph{Principal Component Analysis} -- w~skrócie:~PCA), zaproponowana niezależnie przez angielskiego matematyka \emph{Karla Pearson'a}~(1901) oraz ekonoma i statystyka \emph{Harolda Hotelling'a}~(1933)~\cite{pearson}.
 
 W niniejszym dziale przedstawiono uzasadnienie wyboru algorytmu, opis metody PCA oraz \emph{eigenfaces}, na podstawie publikacji autorów metody \emph{eigenfaces} -- prof.~\emph{Matthew Turk'a} i prof.~\emph{Alex'a Pentland'a}\cite{turk}.
 
@@ -269,7 +269,7 @@ Algorytm \emph{eigenfaces} został wybrany z kilku powodów:
 	\item Nie wymaga dużej ilości pamięci i dużej mocy obliczeniowej;
 	\item W przeciwieństwie do sztucznych sieci neuronowych, algorytm korzysta z stosunkowo łatwej idei, dającej się wyrazić w krokach, z których każdy jest operacją realizowaną za pomocą prostej algebry;
 	\item Proces nauki jest w pełni automatyczny;
-	\item Jest zaimplementowany w repozytorium \emph{OpenCV Contrib}.
+	\item Jest zaimplementowany w repozytorium \emph{OpenCV~Contrib}.
 \end{enumerate}
 Poza wyżej wymienionymi zaletami, algorytm ten ma również kilka istotnych wad, z których chyba największą jest wrażliwość na zmianę oświetlenia, zmianę skali zdjęcia i translacje. Wady te jednak nie były na tyle duże, aby przyćmiły mnogość wyżej wymienionych zalet -- w szczególności chyba największej z zalet -- możliwości identyfikacji w czasie rzeczywistym po przeprowadzonej fazie nauki.
 
@@ -512,7 +512,7 @@ Wyżej wymienione problemy były oczywiście jednorazowe, tzn. użytkownik końc
 
 Obsługa programu jest dość intuicyjna, wspierana \emph{tooltip'ami}, które się pojawiają po najechaniu kursorem nad przyciski menu. Interfejs graficzny programu składa się z menu i dwóch kart: \texttt{All faces} i \texttt{Found faces}. Każda z  kart jest podzielona pionowo na dwie części: lewą i prawą.
 
-Po lewej stronie karty \texttt{All faces} mamy pogląd na wszystkie zdjęcia, jakie zostały wczytane z bazy danych \emph{PostgreSQL}. Po kliknięciu na zdjęcie, po prawej stronie karty, mamy możliwość przybliżania i oddalania zdjęcia w wybranym obszarze oraz przywrócenia rozmiaru oryginalnego.
+Po lewej stronie karty \texttt{All~faces} mamy pogląd na wszystkie zdjęcia, jakie zostały wczytane z bazy danych \emph{PostgreSQL}. Po kliknięciu na zdjęcie, po prawej stronie karty, mamy możliwość przybliżania i oddalania zdjęcia w wybranym obszarze oraz przywrócenia rozmiaru oryginalnego.
 
 Po wybraniu z menu zdjęcia poddawanego identyfikacji, zatwierdzeniu rozpoczęcia przeszukiwania bazy danych i zakończeniu obliczeń, w karcie \texttt{Found faces} pojawiają się zdjęcia, które są najbardziej zbliżone do identyfikowanej twarzy. %Kolejność wyświetlania zdjęć w tej karcie jest rosnąca względem miary odległości podobieństwa twarzy \emph{eigenfaces}.
 
