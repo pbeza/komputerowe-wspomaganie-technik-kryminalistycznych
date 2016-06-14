@@ -74,6 +74,7 @@ class MainWindow {
     private JFrame mainWindowFrame;
     private final SettingsDialog settingsDialog;
     private final static DatabaseConnectionManager dbConnectionManager = DatabaseConnectionManager.getInstance();
+    private int maxPersonId;
 
     public static void main(String[] args) {
         log.fine("Starting main thread.");
@@ -124,7 +125,7 @@ class MainWindow {
         final JSplitPane splitPaneAllFaces = initAllFacesSplitPane();
         initAllFacesTab(splitPaneAllFaces);
         initFoundFacesTab();
-        loadPredefinedImagesToAllFacesTab(); // TODO it should be asynchronous
+        loadPredefinedImagesToAllFacesTab();
         settingsDialog = new SettingsDialog(mainWindowFrame, eigenfaces.getEigenfacesNumber(),
                 eigenfaces.getThreshold(), SettingsDialog.DEFAULT_MAX_NUMBER_OF_DISPLAYED_RESULTS);
     }
@@ -268,6 +269,19 @@ class MainWindow {
         log.info("Connection with database closed - " + allFaces.size() + " images fetched");
         addFacesToAllFacesTab(allFaces);
         eigenfaces.setModelTrained(false);
+        // For determining next person ID when adding new face
+        setMaxPersonId(allFaces);
+    }
+
+    private int setMaxPersonId(List<FaceEntity> faceEntities) {
+        maxPersonId = Integer.MIN_VALUE;
+        for (FaceEntity f : faceEntities) {
+            int personId = f.getPersonId();
+            if (personId > maxPersonId) {
+                maxPersonId = personId;
+            }
+        }
+        return maxPersonId;
     }
 
     private void initScrollPaneInAllFacesTab(final JSplitPane splitPaneAllFaces,
@@ -330,6 +344,10 @@ class MainWindow {
                     log.fine(msg);
                     JOptionPane.showMessageDialog(null, msg);
                 } else {
+                    if (imagesInAllFacesTab.size() < 2) {
+                        JOptionPane.showMessageDialog(null, "You need at least two images loaded in 'All faces' tab.");
+                        return;
+                    }
                     JFileChooser c = new JFileChooser(System.getProperty("user.dir"));
                     c.setMultiSelectionEnabled(false);
                     c.addChoosableFileFilter(
@@ -604,7 +622,7 @@ class MainWindow {
         mntmOpen.setIcon(new ImageIcon(MainWindow.class.getResource(IMG_OPEN_PNG)));
         mntmOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
         mntmOpen.setToolTipText(
-                "Open images and add them to local database - this option doesn't add faces to SQL database");
+                "Open potentially multiple images of the same person and add them to local database - this option doesn't add faces to SQL database");
         fileMenu.add(mntmOpen);
     }
 
@@ -626,6 +644,7 @@ class MainWindow {
         detailsPanelAllFaces.clearDetails(0);
         previewPaneAllFaces.clearImage();
         ImageListCell.resetImagesNumbering();
+        maxPersonId = 0;
         log.info("All faces removed from all faces tab");
     }
 
@@ -639,6 +658,7 @@ class MainWindow {
             w = bufImg.getWidth();
             h = bufImg.getHeight();
         }
+        maxPersonId++;
         for (File f : faces) {
             BufferedImage img = ImageIO.read(f);
             if (img == null) {
@@ -647,12 +667,12 @@ class MainWindow {
             }
             if (!imagesInAllFacesTab.isEmpty() && !(w == img.getWidth() && h == img.getHeight())) {
                 String msg = f.getCanonicalPath()
-                        + " file has different size than images in database which is not acceptable by algorithm";
+                        + " file has different size than images in database which is not acceptable by eigenfaces algorithm";
                 JOptionPane.showMessageDialog(null, msg);
                 log.warning(msg);
                 return;
             }
-            ImageListCell cell = new ImageListCell(f);
+            ImageListCell cell = new ImageListCell(f, maxPersonId);
             transactionList.add(cell);
             log.finer(cell.getFilename());
         }

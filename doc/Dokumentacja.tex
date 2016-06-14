@@ -122,7 +122,7 @@
     \includegraphics[width=0.45\textwidth]{img/faces}
 \end{figure}
 
-Niniejszy dokument powstał w~ramach dokumentacji projektu zespołowego z~przedmiotu \emph{\href{http://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html}{Komputerowe wspomaganie technik kryminalistycznych}} w semestrze letnim roku akademickiego~2015/2016 na \emph{\href{http://www.mini.pw.edu.pl/}{Wydziale MiNI}~\href{https://www.pw.edu.pl/}{Politechniki Warszawskiej}}. Ma on za zadanie udokumentować ideę działania aplikacji identyfikującą twarze, uzasadnienie wyboru zastosowanych algorytmów, sposób jej użycia, wykorzystane narzędzia i biblioteki, wyniki testów oraz wnioski.
+Niniejszy dokument powstał w~ramach dokumentacji projektu zespołowego z~przedmiotu \emph{\href{http://staff.elka.pw.edu.pl/~mszezyns/CAF/index.html}{Komputerowe wspomaganie technik kryminalistycznych}} w semestrze letnim roku akademickiego~2015/2016 na \emph{\href{http://www.mini.pw.edu.pl/}{Wydziale MiNI}~\href{https://www.pw.edu.pl/}{Politechniki Warszawskiej}}. Ma on za zadanie udokumentować ideę działania aplikacji identyfikującą twarze, uzasadnienie wyboru zastosowanych algorytmów, sposób jej użycia, wykorzystane narzędzia i biblioteki.
 
 \end{abstract}
 
@@ -172,6 +172,8 @@ Trudności, które wynikły w czasie projektu (patrz rozdziały:~\ref{sec:trudno
 Ponadto zrezygnowano z funkcjonalności znanej z takich programów jak \emph{Gimp} i \emph{Photoshop} pod nazwą \emph{crop}, która pozwalałaby przycinać zdjęcie do zaznaczonych przez użytkownika wymiarów. Wiązałoby się to bowiem z trudnym do wymuszenia na użytkowniku ograniczeniem w zaznaczeniu części zdjęcia, z zachowaniem proporcji całego zdjęcia, a następnie przeskalowania zdjęcia do rozmiaru pozostałych zdjęć. Rozmiar wszystkich zdjęć z założenia musi być identyczny. Alternatywnie możnaby było pozwolić użytkownikowi zaznaczać dowolny obszar zdjęcia, a potem skalować go do zadanego wymiaru pozostałych zdjęć, ale taka funkcjonalność nie była konieczna przy testach z bazą danych, w której zdjęcia twarzy były zunifikowane -- tzn. mają takie same wymiary, a twarze są wyśrodkowane na zdjęciu. Ponadto taka funkcjonalność jest sporym wydatkiem pracy, który zamiast tego został przeznaczony na rozbudowę nieplanowanej funkcjonalności, jakim było np. okno ustawień.
 
 Zmiany nie dotyczyły tylko ograniczenia funkcjonalności, ale również jej powiększenia w niektórych aspektach. Nieplanowanym bowiem było zapisywanie nauczonego modelu do pliku XML oraz okno ustawień algorytmu, które pojawiło się w ostatecznej wersji projektu. Pozwala ono zmienić parametry obliczeń: próg akceptowalnej odległości zdjęć (\emph{ang.~threshold}), maksymalną ilość wyświetlanych, znalezionych zdjęć oraz ilość komponentów \emph{eigenfaces}\footnote{Wartość 0 (zero) jest specjalnie traktowana i oznacza automatyczne dopasowanie ilości komponentów \emph{eigenfaces} przez \emph{OpenCV}.} używanych w trakcie obliczeń.
+
+Ponadto, rozszerzeniem względem wymagań postawionych przed projektem, jest możliwość dodawania zdjęć do lokalnej bazy danych, tzn. dodawanie zdjęć do zakładki \texttt{All~faces}, ale nie do bazy \emph{PostgreSQL}. Umożliwia to testowanie aplikacji na dowolnym zbiorze uczącym -- wystarczy wyczyścić całą\footnote{Wybiórcze usuwanie pojedynczych zdjęć twarzy z bazy lokalnej i \emph{PostgreSQL} nie zostało zaimplementowane.} bazę danych przyciskiem \texttt{Clear all}, a następnie dodać wybrane zdjęcia. Co ważne, opcja dodająca zdjęcia do bazy lokalnej, działa w ten sposób, że pozwala ona wybrać wiele dodawanych zdjęć naraz -- wszystkim tym zdjęciom zostanie nadany ten sam \texttt{personID}. Wynika z tego konieczność dodawania zbioru zdjęć tej samej osoby za jednym razem. W przeciwnym razie zdjęcia będą miały inny \texttt{personID}, a więc będą uważane przez algorytm za zdjęcia innej osoby.
 
 %------------------------------------------------------------------------------
 
@@ -314,7 +316,7 @@ Hasło: & \texttt{kwtk-MiNI\&PW-2015/2016}\\
 
 \subsection{Konfiguracja systemu}
 
-Projekt jest napisany w Javie w wersji \emph{8}\footnote{Wykorzystano m.in. bibliotekę \texttt{java.time} i wyrażenia \emph{lambda}, które nie są dostępne w poprzednich wersjach Javy. Domyślnie na \emph{Debianie} jest jeszcze stara wersja Java~7, dlatego Javę~8 została \href{http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html}{doinstalowana}.}, więc z natury powinien być przenośny pomiędzy wszystkimi systemami operacyjnymi, na których można zainstalować maszynę wirtualną Javy. W rzeczywistości nie jest to takie proste, ponieważ w projekcie wykorzystano biblioteki \emph{OpenCV}, które wykorzystują mechanizm \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java-Native-Interface}}. Biblioteka \emph{OpenCV} została napisana w C++ w ten sposób, aby dało się ją skompilować dla różnych systemów operacyjnych, w tym m.in. dla \emph{Linux'a} i \emph{Windowsa}. W ramach projektu została skompilowana ta sama wersja biblioteki dla 64-bitowych systemów \emph{Windows} i \emph{Linux} (odpowiednio biblioteka: \texttt{opencv\_java310.dll} i \texttt{libopencv\_java310.so}) z drobną modyfikacją w kodzie C++ (patrz:~\ref{sec:trudnosci}). W trakcie testów przetestowano z powodzeniem aplikację na obu tych systemach.
+Projekt jest napisany w Javie w wersji \emph{8}\footnote{Wykorzystano m.in. bibliotekę \texttt{java.time} i wyrażenia \emph{lambda}, które nie są dostępne w poprzednich wersjach Javy. Domyślnie na \emph{Debianie} jest jeszcze stara wersja Java~7, dlatego Javę~8 została \href{http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html}{doinstalowana}.}, więc z natury powinien być przenośny pomiędzy wszystkimi systemami operacyjnymi, na których można zainstalować maszynę wirtualną Javy. W rzeczywistości nie jest to takie proste, ponieważ w projekcie wykorzystano biblioteki \emph{OpenCV}, które wykorzystują mechanizm \href{https://en.wikipedia.org/wiki/Java_Native_Interface}{\emph{Java-Native-Interface}}. Biblioteka \emph{OpenCV} została napisana w C++ w ten sposób, aby dało się ją skompilować dla różnych systemów operacyjnych, w tym m.in. dla \emph{Linux'a} i \emph{Windowsa}. W ramach projektu została skompilowana ta sama wersja biblioteki dla 64-bitowych systemów \emph{Windows} i \emph{Linux} (odpowiednio biblioteka: \texttt{opencv\_java310.dll} i \texttt{libopencv\_java310.so}) z drobną modyfikacją w kodzie C++ (patrz:~\ref{sec:trudnosci}). W trakcie pierwszych testów aplikacji przetestowano ją na obu tych systemach, jednak po dokonaniu zmian w kodzie, o których mowa w rozdziale~\ref{sec:trudnosci}, zrezygnowano z dalszego wspierania systemu \emph{Windows}, ponieważ wiązałoby się to z ponowną, czasochłonną kompilacją lekko zmodyfikowanej biblioteki~\emph{OpenCV}.
 
 Oprogramowanie wykorzystane w ramach projektu jest w całości otwartoźródłowe i \emph{wolne}\footnote{\emph{Wolne} w znaczeniu użytej licencji, pozwalającej na wprowadzanie zmian i nieodpłatne wykorzystywanie: źródeł, bibliotek, baz danych itd.}. Większość zależności aplikacji jest zawarta w projekcie -- np. moduł \emph{OpenCV} i biblioteka \emph{Hibernate}, służąca za \href{https://en.wikipedia.org/wiki/Object-relational_mapping}{\emph{ORM}} przy dostępie do bazy danych. Jedynym modułem, który nie można zawrzeć w postaci \emph{Eclipse'owego} projektu jest baza danych \emph{PostgreSQL}\footnote{\emph{PostgreSQL} można zainstalować, instalując pakiet \texttt{postgres}, dostępny w standardowym repozytorium większości znanych dystrybucji \emph{Linux'a}. Na \emph{Debianie} i \emph{Ubuntu} do zainstalowania wystarczy: \texttt{apt-get install postgres}.}, przechowująca zdjęcia twarzy identyfikowanych osób. Wymagała ona osobnej konfiguracji, polegającej m.in. na: \href{http://stackoverflow.com/questions/10861260/how-to-create-user-for-a-db-in-postgresql}{stworzeniu użytkownika} i hasła dostępu do bazy danych, stworzeniu tabeli \texttt{faces} w bazie danych, wypełnienie jej zdjęciami twarzy identyfikowanych osób i przyznanie dostępu użytkownikowi do tabeli \texttt{faces}.
 
@@ -399,7 +401,7 @@ Za główne dane wejściowe aplikacji uważamy:
 	\item baza danych znanych twarzy\footnote{W trakcie pisania niniejszej dokumentacji, w bazie danych znajduje się 165 zdjęć 15 osób -- po 11 zdjęć twarzy każdej z osób -- każde z 11 zdjęć z inną mimiką twarzy.}.
 \end{enumerate}
 Przykładowe zdjęcia twarzy osób, które znalazły się w bazie danych, wraz ze zdjęciami testowymi, które są zmodyfikowanymi twarzami osób z bazy danych, przestawiono na rysunku~\ref{fig:osoby}. Twarze testowe, które stworzono modyfikując zdjęcia oryginalne w programie graficznym \emph{Gimp}, można znaleźć w katalogu projektu \path{faces/Tests}, ,,obok'' katalogu ze zdjęciami oryginalnymi, tj.~\path{faces/YaleFacedatabaseA}.
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\begin{subfigure}[b]{0.3\textwidth}
 		\includegraphics[width=\textwidth]{img/yale-faces/subject03-normal}
@@ -557,13 +559,6 @@ Bardziej szczegółowa instrukcja obsługi aplikacji została ujęta w osobnym d
 
 %------------------------------------------------------------------------------
 
-\section{Testy}
-\label{sec:testy}
-
-Ten rozdział opisuje wyniki przeprowadzonych testów funkcjonalnych aplikacji.
-
-%------------------------------------------------------------------------------
-
 \newpage
 
 \begin{appendices}
@@ -591,7 +586,7 @@ Poniższa tabela przestawia wykaz dokumentów opracowanych przez poszczególnych
 \center
 \begin{tabular}{p{2cm}|p{4.1cm}|p{4.1cm}|p{4.1cm}}
 & Patryk Bęza (90\%) & Marek Kozak (10\%) & Krzysztof Małaśnicki (0\%) \\\hline\hline
-\parbox{3cm}{\ \\Opracowane \\dokumenty} & Dokumentacja techniczna, czyli cały niniejszy dokument (rozdziały: \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:maszyna-wirtualna}, \ref{sec:aplikacja}, \ref{sec:testy}) & Instrukcja użytkownika (manual) & --\\
+\parbox{3cm}{\ \\Opracowane \\dokumenty} & Dokumentacja techniczna, czyli cały niniejszy dokument (rozdziały: \ref{sec:wstep}, \ref{sec:algorytm}, \ref{sec:maszyna-wirtualna}, \ref{sec:aplikacja}) & Instrukcja użytkownika (manual) & --\\
 \end{tabular}
 \end{table}
 

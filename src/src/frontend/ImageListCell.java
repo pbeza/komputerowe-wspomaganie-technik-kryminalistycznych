@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.sql.Timestamp;
@@ -16,6 +17,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
+import backend.Log;
 import backend.db.FaceEntity;
 
 /**
@@ -23,6 +25,7 @@ import backend.db.FaceEntity;
  */
 class ImageListCell extends JLabel {
 
+    private final static Log log = Log.getLogger();
     private final static double IMAGE_RATIO = 243.0 / 320.0;
     private final static int ICON_WIDTH = 180, ICON_HEIGHT = (int) (ICON_WIDTH * IMAGE_RATIO), MIN_IMAGE_ID = 1;
     private final static Dimension ICON_SIZE = new Dimension(ICON_WIDTH, ICON_HEIGHT);
@@ -31,6 +34,22 @@ class ImageListCell extends JLabel {
     private final BufferedImage image;
     private final FaceEntity faceEntity;
     private String filepath; // TODO remove it! Use BufferedImage instead
+
+    // This constructor is dedicated for images added to local database
+    // personId must NOT collide with persons' IDs loaded from DB
+    public ImageListCell(File img, int personId) throws IOException {
+        this(img);
+        faceEntity.setPersonId(personId);
+        // HOTFIX
+        byte[] imgArr;
+        try {
+            imgArr = Files.readAllBytes(Paths.get(img.getCanonicalPath()));
+            faceEntity.setImage(imgArr);
+        } catch (IOException e) {
+            log.severe("Failed to readAllBytes from image which was tried to add to local DB " + img.getCanonicalPath()
+                    + ". Details: " + e.getMessage());
+        }
+    }
 
     public ImageListCell(File img) throws IOException {
         this(ImageIO.read(img), img.getName(), Files.probeContentType(img.toPath()));
