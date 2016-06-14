@@ -21,18 +21,12 @@
 	inż. Patryk Bęza \newline
 	inż. Krzysztof Małaśnicki \newline
 	inż. Marek Kozak
-	
-\section*{Notki:}
-trochę TODO w manualu, pytanie jak się rozwinie aplikacja:\newline
-prezentowanie wyników\newline
-obróbka wstępna\newline
-
 \newpage
 
 
 \section[Uruchamianie]{Uruchamianie aplikacji}
 \label{sec:run}
-\marginpar{logowanie: \newline u:root\newline p:toor}
+\marginpar{logowanie: \newline u:\texttt{root}\newline p:\texttt{toor}}
 Aplikacja podczas uruchomiania pyta nas o login i hasło logowania.
 Po zalogowaniu aplikacja pokazuje nam ekran główny, tj. lewą kartę. Na tej przestrzeni możemy bez przeszkód \hyperref[sec:load]{wczytywać}, \hyperref[sec:view]{przeglądać} oraz \hyperref[sec:save]{zapisywać} profile korzystając z bazy referencyjnej.
 
@@ -148,7 +142,8 @@ Ta operacja ze względu na złożoność algorytmiczną może potrwać nieco dł
 
 
 \section[Logowanie]{Raportowanie działań}
-Aplikacja podczas swojej pracy w sposób automatyczny raportuje swoje działania do pliku tekstowego do folderu log przyjmując nazwę:\newline
+Aplikacja podczas swojej pracy w sposób automatyczny raportuje swoje działania do pliku tekstowego do folderu:\\
+\path{/home/kwtk/komputerowe-wspomaganie-technik-kryminalistycznych/src/src/logs}\\przyjmując nazwę:\newline
 \begin{center}
 \textbf{\lbrack YYYY-MM-DD\_HH-MM-SS\rbrack.log}\newline\end{center}
 W skład raportowanych danych wchodzą:
