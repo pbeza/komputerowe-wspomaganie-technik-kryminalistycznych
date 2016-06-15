@@ -1,0 +1,103 @@
+\documentclass[]{article}
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{marginnote}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\graphicspath{{img/}}
+
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+%opening
+\title{KWTK - EigenFaces}
+\author{Raport z testów}
+
+\begin{document}
+\maketitle
+
+
+\subsection*{Zespół projektowy:}
+	inż. Patryk Bęza \newline
+	inż. Krzysztof Małaśnicki \newline
+	inż. Marek Kozak
+	
+\newpage
+
+
+\section[Testy]{Propozycje testów do przeprowadzenia}
+\label{sec:test}
+
+\subsection{Testy logowania}
+Seria testów ma przebadać działanie połączenia aplikacji z bazą.
+\subsubsection{Poprawne dane}
+Test polega na typowym logowaniu za pomocą danych root:toor, przy poprawnym działaniu bazy PostgreSQL.
+\subsubsection{Niepoprawne dane}
+Test polega na próbie logowania do aplikacji korzystając z niepoprawnych danych, przy poprawnym działaniu bazy PostgreSQL.
+\subsubsection{Brak serwera logowania}
+Test polega na próbie logowania podczas nieaktywności bazy danych.
+
+\subsection{Testy algorytmu}
+Celem serii testów jest analiza celności stosowanego algorytmu oraz jego słabych stron.
+\subsubsection{Dane z bazy}
+Po załadowaniu bazy rekordów wybierane jest jedno ze zdjęć zawartych w bazie celem poszukiwania.
+\subsubsection{Dane lekko zmodyfikowane}
+Seria testów polegających na wyszukiwaniu graficznie zmodyfikowanych poprzez dorysowanie elementów operacje macierzowe lub filtry graficzne.
+\subsubsection{Dane ekstremalnie zmodyfikowane}
+Seria testów polegających na wyszukiwaniu wzorców samej sylwetki, jej negatywu oraz twarzy wklejonej w sylwetkę innego profilu.
+\subsubsection{Dane w niewłaściwym formacie}
+Test polega na zapytaniu o profil o rozmiarze niezgodnym z bazą lub niewłaściwym typie pliku.
+\subsubsection{Walidacja krzyżowa}
+Podstawowy test walidacji krzyżowej, polegającym na wyrzuceniu zdjęcia z fazy nauki, a potem próbie jego wyszukiwania.
+
+\section[Wyniki]{Wyniki z przeprowadzonych testów}
+\subsection{Testy logowania}
+\subsubsection{Poprawne dane}
+Pomyślne zalogowanie prowadzi do kolejnego okna aplikacji.
+\subsubsection{Niepoprawne dane}
+Dla niepoprawnych danych logowania (user: abc, pass: edf) program zwraca komunikat o błędzie logowania i kończy działanie aplikacji.
+\subsubsection{Brak serwera logowania}
+Wyłączono serwisy postgresql, próbowano uruchomić aplikację. Dostajemy komunikat "Java exception has occured" i następuje zakończenie aplikacji.
+
+\subsection{Testy algorytmu}
+
+\subsubsection{Dane z bazy}
+Dla obrazów z bazy danych aplikacja zwraca dokładnie zdjęcie które było już w bazie danych z distance = 0.0. Kolejne wyniki wskazują na tą samą osobę w odległości ~11k
+\subsubsection{Dane lekko zmodyfikowane}
+\begin{itemize}
+	\item subject03.glasses.1, znaleziony poprawny wynik, dystans=1252, kolejne zdjęcia dystans ~12k
+	\item subject07.glasses.2 znaleziony poprawny wynik, dystans~10k, kolejne zdjęcia dystans ~12k
+	\item subject11.rightlight.2 wynik najlepszy niepoprawny, dystans~15k, dystans od pierwszego zgodnego ~15k
+	\item subject13.normal.2 w wynikach brak poszukiwanej osoby, dystans od najbliższego zdjęcia ~18.5k
+	\item subject15.wink.1 wynik najlepszy niepoprawny, dystans~18.9k, dystans od pierwszego zgodnego ~19.3k
+\end{itemize}
+\subsubsection{Dane ekstremalnie zmodyfikowane}
+\begin{itemize}
+	\item białe tło, kontur osoby wypełniony kolorem czarnym, dystans do najbliższego wyniku ~17k 
+	\item czarne tło, kontur osoby wypełniony kolorem białym, dystans do najbliższego wyniku ~46k
+	\item podmiana części twarzy subject01.glasses (na generała Franco), pierwotne zdjęcie znalezione poprawnie, dystans ~6.8k 
+\end{itemize}
+\subsubsection{Dane w niewłaściwym formacie}
+\begin{itemize}
+	\item Niewłaściwy rozmiar pliku, błąd wyłapany na etapie poszukiwana w bazie, wyświetlony komunikat o błędzie biblioteki
+	\item Niewłaściwy typ pliku: aplikacja ignoruje wybrany plik.
+	\item Poprawny typ, złe rozszerzenie: typ MIME jest jako zgodny z rozszerzeniem
+\end{itemize}
+\subsubsection{Walidacja krzyżowa}
+Walidacja krzyżowa przebiega poprawnie, znajduje poprawne osoby zwracając w odległości poniżej 10k.
+
+\section[Wnioski]{Dodatkowe uwagi dotyczące aplikacji}
+\label{sec:more}
+Klika dodatkowych uwag dot. funkcjonalności oraz działania aplikacji:
+\begin{itemize}
+\item Aplikacja pozwala na eksport modelu w formie xml, co jednak zdaje się być nadmiarowe, z uwagi na fakt, że nie pozwala na import modelu.
+\item W oknie wyników nie można oglądać równocześnie podglądu wyszukiwanej twarzy oraz wyników wyszukiwania. Ponadto po przejściu do podglądu wyniku zdaje się być niemożliwy powrót do poszukiwanego profilu.
+\item W oknie podglądu po zakończeniu wyszukiwania zwracana jest wartość \textbf{Total images} na 0.
+\item Aplikacja nie zapamiętuje folderu szukanych zdjęć, co bywa uciążliwe.
+\end{itemize}
+
+
+\newpage
+\tableofcontents
+\end{document}
+
